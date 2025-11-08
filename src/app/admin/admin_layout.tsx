@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Users, Home, LogOut } from "lucide-react";
+import { Menu, X, LayoutDashboard, Users, Home, LogOut, Hotel } from "lucide-react";
 import { logoutAdminAction } from "@/actions/authActions"; // your server action
 
 type NavItem = {
@@ -34,6 +34,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navItems: NavItem[] = [
     { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { path: "/admin/applications", label: "Applications", icon: Users },
+    { path: "/admin/hotels", label: "Hotels", icon: Hotel },
   ];
 
   const isActive = (path: string) =>
