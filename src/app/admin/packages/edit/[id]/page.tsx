@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useActionState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import Select from "react-select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,39 +38,36 @@ import { fetchAllPoliciesAction } from "@/actions/policyActions";
 interface FieldErrors {
   [key: string]: string[];
 }
-
 interface FormState {
   error?: FieldErrors | { message?: string[] };
   data?: any;
 }
+const initialState: FormState = { error: {} };
 
 interface IHotel {
   _id: string;
   name: string;
   type: "Makkah" | "Madina";
-  location: string;
-  star: number;
 }
-
-interface IUmrahPackage {
+interface IFeature {
   _id: string;
-  name: string;
-  price: number;
-  duration: number;
-  airline: string;
-  departureCity: string;
-  badge?: string;
-  image?: string;
-  travelers: number;
-  rating?: number;
-  reviews?: number;
-  popular?: boolean;
-  hotels: { makkah?: string; madinah?: string };
-  features: string[];
-  itinerary: string[];
-  includes: string[];
-  excludes: string[];
-  policies: string[];
+  feature_text: string;
+}
+interface IItinerary {
+  _id: string;
+  title: string;
+}
+interface IInclude {
+  _id: string;
+  include_text: string;
+}
+interface IExclude {
+  _id: string;
+  exclude_text: string;
+}
+interface IPolicy {
+  _id: string;
+  heading: string;
 }
 
 export default function EditUmrahPackageForm() {
@@ -78,36 +75,31 @@ export default function EditUmrahPackageForm() {
   const router = useRouter();
   const packageId = id as string;
 
-  const [packageData, setPackageData] = useState<IUmrahPackage | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [formState, setFormState] = useState<FormState>(initialState);
+  const [isPending, setIsPending] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const [hotels, setHotels] = useState<IHotel[]>([]);
-  const [features, setFeatures] = useState<{ _id: string; feature_text: string }[]>([]);
-  const [itineraries, setItineraries] = useState<{ _id: string; title: string }[]>([]);
-  const [includes, setIncludes] = useState<{ _id: string; include_text: string }[]>([]);
-  const [excludes, setExcludes] = useState<{ _id: string; exclude_text: string }[]>([]);
-  const [policies, setPolicies] = useState<{ _id: string; heading: string }[]>([]);
+  const [features, setFeatures] = useState<IFeature[]>([]);
+  const [itineraries, setItineraries] = useState<IItinerary[]>([]);
+  const [includes, setIncludes] = useState<IInclude[]>([]);
+  const [excludes, setExcludes] = useState<IExclude[]>([]);
+  const [policies, setPolicies] = useState<IPolicy[]>([]);
+  const [pkgData, setPkgData] = useState<any>(null);
 
-  const initialState: FormState = { error: {} };
+  const [selectedFeatures, setSelectedFeatures] = useState<{ value: string; label: string }[]>([]);
+  const [selectedItineraries, setSelectedItineraries] = useState<{ value: string; label: string }[]>([]);
+  const [selectedIncludes, setSelectedIncludes] = useState<{ value: string; label: string }[]>([]);
+  const [selectedExcludes, setSelectedExcludes] = useState<{ value: string; label: string }[]>([]);
+  const [selectedPolicies, setSelectedPolicies] = useState<{ value: string; label: string }[]>([]);
 
-  const [formState, dispatch, isPending] = useActionState(
-    async (prevState: FormState, formData: FormData) => {
-      return await updateUmrahPackageAction(prevState, packageId, formData);
-    },
-    initialState
-  );
-
-  const errorFor = (field: string) => {
-    return formState.error &&
-      typeof formState.error === "object" &&
-      field in formState.error
+  const errorFor = (field: string) =>
+    formState.error && typeof formState.error === "object"
       ? (formState.error as Record<string, string[]>)[field]?.[0]
       : null;
-  };
 
   useEffect(() => {
-    async function loadData() {
+    const loadData = async () => {
       try {
         const [
           pkgRes,
@@ -127,7 +119,17 @@ export default function EditUmrahPackageForm() {
           fetchAllPoliciesAction(),
         ]);
 
-        if (pkgRes?.data) setPackageData(pkgRes.data);
+        if (pkgRes?.data) {
+          const pkg = pkgRes.data;
+          setPkgData(pkg);
+
+          setSelectedFeatures(pkg.features.map((f: any) => ({ value: f._id || f, label: f.feature_text || "" })));
+          setSelectedItineraries(pkg.itinerary.map((i: any) => ({ value: i._id || i, label: i.title || "" })));
+          setSelectedIncludes(pkg.includes.map((i: any) => ({ value: i._id || i, label: i.include_text || "" })));
+          setSelectedExcludes(pkg.excludes.map((e: any) => ({ value: e._id || e, label: e.exclude_text || "" })));
+          setSelectedPolicies(pkg.policies.map((p: any) => ({ value: p._id || p, label: p.heading || "" })));
+        }
+
         if (hotelsRes?.data) setHotels(hotelsRes.data);
         if (featuresRes?.data) setFeatures(featuresRes.data);
         if (itinerariesRes?.data) setItineraries(itinerariesRes.data);
@@ -135,278 +137,209 @@ export default function EditUmrahPackageForm() {
         if (excludesRes?.data) setExcludes(excludesRes.data);
         if (policiesRes?.data) setPolicies(policiesRes.data);
       } catch {
-        toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
-      } finally {
-        setLoading(false);
+        toast({
+          title: "Error",
+          description: "Failed to load data",
+          variant: "destructive",
+        });
       }
-    }
-
+    };
     loadData();
   }, [packageId]);
 
-  useEffect(() => {
-    if (formState.data && !formState.error) {
-      setSuccessDialogOpen(true);
-    }
+  if (!pkgData) {
+    return <p className="text-center text-gray-500 mt-10">Loading package...</p>;
+  }
 
-    if (formState.error && "message" in formState.error) {
+  const makkahHotels = hotels.filter((h) => h.type === "Makkah");
+  const madinahHotels = hotels.filter((h) => h.type === "Madina");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+    setFormState({ error: {} });
+
+    const formData = new FormData(e.currentTarget);
+    selectedFeatures.forEach((f) => formData.append("features[]", f.value));
+    selectedItineraries.forEach((i) => formData.append("itinerary[]", i.value));
+    selectedIncludes.forEach((i) => formData.append("includes[]", i.value));
+    selectedExcludes.forEach((e) => formData.append("excludes[]", e.value));
+    selectedPolicies.forEach((p) => formData.append("policies[]", p.value));
+
+    const popularCheckbox = e.currentTarget.querySelector<HTMLInputElement>("#popular");
+    formData.set("popular", popularCheckbox?.checked ? "true" : "false");
+
+    try {
+      const res = await updateUmrahPackageAction(formState, packageId, formData);
+      if (res?.data) {
+        setSuccessDialogOpen(true);
+      } else {
+        setFormState(res);
+      }
+    } catch {
       toast({
         title: "Error",
-        description: (formState.error as any).message?.[0] || "Something went wrong",
+        description: "Failed to update package",
         variant: "destructive",
       });
+    } finally {
+      setIsPending(false);
     }
-  }, [formState]);
-
-  if (loading) {
-    return <div className="text-center py-10 text-gray-500">Loading package data...</div>;
-  }
-
-  if (!packageData) {
-    return <p className="text-center text-red-500">Package not found.</p>;
-  }
-
-  const makkahHotels = hotels.filter(h => h.type === "Makkah");
-  const madinahHotels = hotels.filter(h => h.type === "Madina");
+  };
 
   return (
     <>
       <Card className="max-w-3xl mx-auto shadow-lg bg-white dark:bg-gray-800 pt-4">
-        <CardHeader className="border-none text-center">
+        <CardHeader className="text-center">
           <CardTitle>Edit Umrah Package</CardTitle>
         </CardHeader>
 
         <CardContent>
-          <form action={dispatch} className="space-y-6 max-w-2xl mx-auto">
-            {/* Package Name */}
-            <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
+            <div>
               <Label htmlFor="name">Package Name</Label>
-              <Input
-                id="name"
-                name="name"
-                required
-                defaultValue={packageData.name}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
-              {errorFor("name") && <p className="text-sm text-red-500">{errorFor("name")}</p>}
+              <Input id="name" name="name" defaultValue={pkgData.name} required />
             </div>
 
-            {/* Price */}
-            <div className="space-y-2">
-              <Label htmlFor="price">Price</Label>
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                required
-                defaultValue={packageData.price}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
-              {errorFor("price") && <p className="text-sm text-red-500">{errorFor("price")}</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="price">Price</Label>
+                <Input id="price" name="price" type="number" defaultValue={pkgData.price} required />
+              </div>
+              <div>
+                <Label htmlFor="duration">Duration</Label>
+                <Input id="duration" name="duration" type="number" defaultValue={pkgData.duration} required />
+              </div>
             </div>
 
-            {/* Duration */}
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration (days)</Label>
-              <Input
-                id="duration"
-                name="duration"
-                type="number"
-                required
-                defaultValue={packageData.duration}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
-              {errorFor("duration") && <p className="text-sm text-red-500">{errorFor("duration")}</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="airline">Airline</Label>
+                <Input id="airline" name="airline" defaultValue={pkgData.airline} required />
+              </div>
+              <div>
+                <Label htmlFor="departureCity">Departure City</Label>
+                <Input id="departureCity" name="departureCity" defaultValue={pkgData.departureCity} required />
+              </div>
             </div>
 
-            {/* Airline */}
-            <div className="space-y-2">
-              <Label htmlFor="airline">Airline</Label>
-              <Input
-                id="airline"
-                name="airline"
-                required
-                defaultValue={packageData.airline}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
-            </div>
-
-            {/* Departure City */}
-            <div className="space-y-2">
-              <Label htmlFor="departureCity">Departure City</Label>
-              <Input
-                id="departureCity"
-                name="departureCity"
-                required
-                defaultValue={packageData.departureCity}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
-            </div>
-
-            {/* Badge */}
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="badge">Badge</Label>
-              <Input
-                id="badge"
-                name="badge"
-                defaultValue={packageData.badge}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
+              <Input id="badge" name="badge" defaultValue={pkgData.badge} />
             </div>
 
-            {/* Image URL */}
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="image">Image URL</Label>
-              <Input
-                id="image"
-                name="image"
-                type="url"
-                defaultValue={packageData.image}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
+              <Input id="image" name="image" type="url" defaultValue={pkgData.image} />
             </div>
 
-            {/* Travelers */}
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="travelers">Travelers</Label>
-              <Input
-                id="travelers"
-                name="travelers"
-                type="number"
-                required
-                defaultValue={packageData.travelers}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
+              <Input id="travelers" name="travelers" type="number" defaultValue={pkgData.travelers} required />
             </div>
 
-            {/* Rating */}
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="rating">Rating</Label>
-              <Input
-                id="rating"
-                name="rating"
-                type="number"
-                min={0}
-                max={5}
-                step={0.1}
-                defaultValue={packageData.rating}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
+              <Input id="rating" name="rating" type="number" step="0.1" defaultValue={pkgData.rating} />
             </div>
 
-            {/* Reviews */}
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="reviews">Reviews Count</Label>
-              <Input
-                id="reviews"
-                name="reviews"
-                type="number"
-                min={0}
-                defaultValue={packageData.reviews}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-              />
+              <Input id="reviews" name="reviews" type="number" defaultValue={pkgData.reviews} />
             </div>
 
-            {/* Popular */}
-            <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input id="popular" name="popular" type="checkbox" defaultChecked={pkgData.popular} />
               <Label htmlFor="popular">Popular</Label>
-              <Input
-                id="popular"
-                name="popular"
-                type="checkbox"
-                defaultChecked={packageData.popular}
-              />
             </div>
 
             {/* Hotels */}
-            <div className="space-y-2">
-              <Label htmlFor="makkahHotel">Makkah Hotel</Label>
-              <select
-                id="makkahHotel"
-                name="hotels[makkah]"
-                required
-                defaultValue={packageData.hotels?.makkah || ""}
-                className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded"
-              >
-                <option value="">Select Makkah Hotel</option>
-                {makkahHotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Makkah Hotel</Label>
+                <select
+                  id="makkahHotel"
+                  name="hotels[makkah]"
+                  defaultValue={pkgData.hotels?.makkah || ""}
+                  className="border p-2 rounded-md w-full"
+                >
+                  <option value="">Select</option>
+                  {makkahHotels.map((h) => (
+                    <option key={h._id} value={h._id}>
+                      {h.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <Label htmlFor="madinahHotel">Madinah Hotel</Label>
-              <select
-                id="madinahHotel"
-                name="hotels[madinah]"
-                required
-                defaultValue={packageData.hotels?.madinah || ""}
-                className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded"
-              >
-                <option value="">Select Madinah Hotel</option>
-                {madinahHotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
-              </select>
+              <div>
+                <Label>Madinah Hotel</Label>
+                <select
+                  id="madinahHotel"
+                  name="hotels[madinah]"
+                  defaultValue={pkgData.hotels?.madinah || ""}
+                  className="border p-2 rounded-md w-full"
+                >
+                  <option value="">Select</option>
+                  {madinahHotels.map((h) => (
+                    <option key={h._id} value={h._id}>
+                      {h.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Multi-select fields */}
-            <div className="space-y-2">
-              <Label htmlFor="features">Features</Label>
-              <select
-                id="features"
-                name="features[]"
-                multiple
-                defaultValue={packageData.features || []}
-                className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded"
-              >
-                {features.map(f => <option key={f._id} value={f._id}>{f.feature_text}</option>)}
-              </select>
-
-              <Label htmlFor="itineraries">Itineraries</Label>
-              <select
-                id="itineraries"
-                name="itinerary[]"
-                multiple
-                defaultValue={packageData.itinerary || []}
-                className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded"
-              >
-                {itineraries.map(f => <option key={f._id} value={f._id}>{f.title}</option>)}
-              </select>
-
-              <Label htmlFor="includes">Includes</Label>
-              <select
-                id="includes"
-                name="includes[]"
-                multiple
-                defaultValue={packageData.includes || []}
-                className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded"
-              >
-                {includes.map(f => <option key={f._id} value={f._id}>{f.include_text}</option>)}
-              </select>
-
-              <Label htmlFor="excludes">Excludes</Label>
-              <select
-                id="excludes"
-                name="excludes[]"
-                multiple
-                defaultValue={packageData.excludes || []}
-                className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded"
-              >
-                {excludes.map(f => <option key={f._id} value={f._id}>{f.exclude_text}</option>)}
-              </select>
-
-              <Label htmlFor="policies">Policies</Label>
-              <select
-                id="policies"
-                name="policies[]"
-                multiple
-                defaultValue={packageData.policies || []}
-                className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded"
-              >
-                {policies.map(f => <option key={f._id} value={f._id}>{f.heading}</option>)}
-              </select>
+            <div>
+              <Label>Features</Label>
+              <Select
+                isMulti
+                options={features.map((f) => ({ value: f._id, label: f.feature_text }))}
+                value={selectedFeatures}
+                onChange={(newVal) => setSelectedFeatures([...newVal] as { value: string; label: string }[])}
+              />
             </div>
 
-            {/* General Error */}
-            {"message" in (formState.error ?? {}) && (
-              <p className="text-sm text-red-500">{(formState.error as any).message?.[0]}</p>
-            )}
+            <div>
+              <Label>Itinerary</Label>
+              <Select
+                isMulti
+                options={itineraries.map((i) => ({ value: i._id, label: i.title }))}
+                value={selectedItineraries}
+                onChange={(newVal) => setSelectedItineraries([...newVal] as { value: string; label: string }[])}
+              />
+            </div>
+
+            <div>
+              <Label>Includes</Label>
+              <Select
+                isMulti
+                options={includes.map((i) => ({ value: i._id, label: i.include_text }))}
+                value={selectedIncludes}
+                onChange={(newVal) => setSelectedIncludes([...newVal] as { value: string; label: string }[])}
+              />
+            </div>
+
+            <div>
+              <Label>Excludes</Label>
+              <Select
+                isMulti
+                options={excludes.map((e) => ({ value: e._id, label: e.exclude_text }))}
+                value={selectedExcludes}
+                onChange={(newVal) => setSelectedExcludes([...newVal] as { value: string; label: string }[])}
+              />
+            </div>
+
+            <div>
+              <Label>Policies</Label>
+              <Select
+                isMulti
+                options={policies.map((p) => ({ value: p._id, label: p.heading }))}
+                value={selectedPolicies}
+                onChange={(newVal) => setSelectedPolicies([...newVal] as { value: string; label: string }[])}
+              />
+            </div>
 
             <CardFooter className="flex justify-end border-none">
               <Button type="submit" disabled={isPending}>
@@ -418,7 +351,6 @@ export default function EditUmrahPackageForm() {
         </CardContent>
       </Card>
 
-      {/* Success Dialog */}
       <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
         <DialogContent>
           <DialogHeader>

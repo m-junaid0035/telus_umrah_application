@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Select, { MultiValue } from "react-select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import {
@@ -32,15 +32,45 @@ import { fetchAllExcludesAction } from "@/actions/excludeActions";
 import { fetchAllPoliciesAction } from "@/actions/policyActions";
 
 // Types
-export interface IHotel { _id: string; name: string; type: "Makkah" | "Madina"; location: string; star: number; }
-export interface IFeature { _id: string; feature_text: string; createdAt: string; updatedAt: string; }
-export interface IItinerary { _id: string; day_start: number; day_end?: number; title: string; description: string; createdAt: string; updatedAt: string; }
-export interface IInclude { _id: string; include_text: string; createdAt: string; updatedAt: string; }
-export interface IExclude { _id: string; exclude_text: string; createdAt: string; updatedAt: string; }
-export interface IPolicy { _id: string; heading: string; description: string; createdAt: string; updatedAt: string; }
+export interface IHotel {
+  _id: string;
+  name: string;
+  type: "Makkah" | "Madina";
+  location: string;
+  star: number;
+}
+export interface IFeature {
+  _id: string;
+  feature_text: string;
+}
+export interface IItinerary {
+  _id: string;
+  day_start: number;
+  day_end?: number;
+  title: string;
+  description: string;
+}
+export interface IInclude {
+  _id: string;
+  include_text: string;
+}
+export interface IExclude {
+  _id: string;
+  exclude_text: string;
+}
+export interface IPolicy {
+  _id: string;
+  heading: string;
+  description: string;
+}
 
-interface FieldErrors { [key: string]: string[]; }
-interface FormState { error?: FieldErrors | { message?: string[] }; data?: any; }
+interface FieldErrors {
+  [key: string]: string[];
+}
+interface FormState {
+  error?: FieldErrors | { message?: string[] };
+  data?: any;
+}
 
 const initialState: FormState = { error: {} };
 
@@ -55,6 +85,13 @@ export default function CreateUmrahPackageForm() {
   const [excludes, setExcludes] = useState<IExclude[]>([]);
   const [policies, setPolicies] = useState<IPolicy[]>([]);
 
+  // ✅ Properly typed states for react-select
+  const [selectedFeatures, setSelectedFeatures] = useState<{ value: string; label: string }[]>([]);
+  const [selectedItineraries, setSelectedItineraries] = useState<{ value: string; label: string }[]>([]);
+  const [selectedIncludes, setSelectedIncludes] = useState<{ value: string; label: string }[]>([]);
+  const [selectedExcludes, setSelectedExcludes] = useState<{ value: string; label: string }[]>([]);
+  const [selectedPolicies, setSelectedPolicies] = useState<{ value: string; label: string }[]>([]);
+
   const [formState, setFormState] = useState<FormState>(initialState);
   const [isPending, setIsPending] = useState(false);
 
@@ -62,13 +99,20 @@ export default function CreateUmrahPackageForm() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [hotelsRes, featuresRes, itinerariesRes, includesRes, excludesRes, policiesRes] = await Promise.all([
+        const [
+          hotelsRes,
+          featuresRes,
+          itinerariesRes,
+          includesRes,
+          excludesRes,
+          policiesRes,
+        ] = await Promise.all([
           fetchAllHotelsAction(),
           fetchAllFeaturesAction(),
           fetchAllItinerariesAction(),
           fetchAllIncludesAction(),
           fetchAllExcludesAction(),
-          fetchAllPoliciesAction()
+          fetchAllPoliciesAction(),
         ]);
 
         if (hotelsRes?.data) setHotels(hotelsRes.data);
@@ -78,38 +122,63 @@ export default function CreateUmrahPackageForm() {
         if (excludesRes?.data) setExcludes(excludesRes.data);
         if (policiesRes?.data) setPolicies(policiesRes.data);
       } catch {
-        toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
+        toast({
+          title: "Error",
+          description: "Failed to load data",
+          variant: "destructive",
+        });
       }
     };
     loadData();
   }, []);
 
- const errorFor = (field: string) => {
-  if (!formState.error || typeof formState.error !== "object") return null;
-  const errors = formState.error as Record<string, string[]>;
-  return errors[field]?.[0] ?? null;
-};
+  const errorFor = (field: string) => {
+    if (!formState.error || typeof formState.error !== "object") return null;
+    const errors = formState.error as Record<string, string[]>;
+    return errors[field]?.[0] ?? null;
+  };
 
+  const makkahHotels = hotels.filter((h) => h.type === "Makkah");
+  const madinahHotels = hotels.filter((h) => h.type === "Madina");
 
-  const makkahHotels = hotels.filter(h => h.type === "Makkah");
-  const madinahHotels = hotels.filter(h => h.type === "Madina");
-
+  // ✅ Submit handler with FormData appending for selected options
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsPending(true);
     setFormState({ error: {} });
 
     const formData = new FormData(e.currentTarget);
+
+    // Append manually for react-select values
+    selectedFeatures.forEach((f) => formData.append("features[]", f.value));
+    selectedItineraries.forEach((i) => formData.append("itinerary[]", i.value));
+    selectedIncludes.forEach((i) => formData.append("includes[]", i.value));
+    selectedExcludes.forEach((e) => formData.append("excludes[]", e.value));
+    selectedPolicies.forEach((p) => formData.append("policies[]", p.value));
+
+    // ✅ Handle checkbox properly
+    const popularCheckbox = e.currentTarget.querySelector<HTMLInputElement>("#popular");
+    formData.set("popular", popularCheckbox?.checked ? "true" : "false");
+
     try {
       const res = await createUmrahPackageAction(formState, formData);
       if (res?.data) {
         setSuccessDialogOpen(true);
         e.currentTarget.reset();
+        setSelectedFeatures([]);
+        setSelectedItineraries([]);
+        setSelectedIncludes([]);
+        setSelectedExcludes([]);
+        setSelectedPolicies([]);
       } else {
         setFormState(res);
       }
     } catch {
-      toast({ title: "Error", description: "Failed to create package", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to create package",
+        variant: "destructive",
+      });
     } finally {
       setIsPending(false);
     }
@@ -124,124 +193,145 @@ export default function CreateUmrahPackageForm() {
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
-            {/* Package Name */}
+            {/* Basic Info */}
             <div className="space-y-2">
               <Label htmlFor="name">Package Name</Label>
-              <Input id="name" name="name" required className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
+              <Input id="name" name="name" required />
               {errorFor("name") && <p className="text-sm text-red-500">{errorFor("name")}</p>}
             </div>
 
-            {/* Price */}
-            <div className="space-y-2">
-              <Label htmlFor="price">Price</Label>
-              <Input id="price" name="price" type="number" required className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
-              {errorFor("price") && <p className="text-sm text-red-500">{errorFor("price")}</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="price">Price</Label>
+                <Input id="price" name="price" type="number" required />
+              </div>
+              <div>
+                <Label htmlFor="duration">Duration (days)</Label>
+                <Input id="duration" name="duration" type="number" required />
+              </div>
             </div>
 
-            {/* Duration */}
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration (days)</Label>
-              <Input id="duration" name="duration" type="number" required className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
-              {errorFor("duration") && <p className="text-sm text-red-500">{errorFor("duration")}</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="airline">Airline</Label>
+                <Input id="airline" name="airline" required />
+              </div>
+              <div>
+                <Label htmlFor="departureCity">Departure City</Label>
+                <Input id="departureCity" name="departureCity" required />
+              </div>
             </div>
 
-            {/* Airline */}
-            <div className="space-y-2">
-              <Label htmlFor="airline">Airline</Label>
-              <Input id="airline" name="airline" required className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="badge">Badge</Label>
+                <Input id="badge" name="badge" />
+              </div>
+              <div>
+                <Label htmlFor="image">Image URL</Label>
+                <Input id="image" name="image" type="url" />
+              </div>
             </div>
 
-            {/* Departure City */}
-            <div className="space-y-2">
-              <Label htmlFor="departureCity">Departure City</Label>
-              <Input id="departureCity" name="departureCity" required className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="travelers">Travelers</Label>
+                <Input id="travelers" name="travelers" type="number" required />
+              </div>
+              <div>
+                <Label htmlFor="rating">Rating</Label>
+                <Input id="rating" name="rating" type="number" step="0.1" />
+              </div>
             </div>
 
-            {/* Badge */}
-            <div className="space-y-2">
-              <Label htmlFor="badge">Badge</Label>
-              <Input id="badge" name="badge" className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
-            </div>
-
-            {/* Image URL */}
-            <div className="space-y-2">
-              <Label htmlFor="image">Image URL</Label>
-              <Input id="image" name="image" type="url" className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
-            </div>
-
-            {/* Travelers */}
-            <div className="space-y-2">
-              <Label htmlFor="travelers">Travelers</Label>
-              <Input id="travelers" name="travelers" type="number" required className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
-            </div>
-
-            {/* Rating */}
-            <div className="space-y-2">
-              <Label htmlFor="rating">Rating</Label>
-              <Input id="rating" name="rating" type="number" min={0} max={5} step={0.1} className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
-            </div>
-
-            {/* Reviews */}
-            <div className="space-y-2">
-              <Label htmlFor="reviews">Reviews Count</Label>
-              <Input id="reviews" name="reviews" type="number" min={0} className="border-none shadow-sm bg-gray-50 dark:bg-gray-700" />
-            </div>
-
-            {/* Popular */}
-            <div className="space-y-2">
-              <Label htmlFor="popular">Popular</Label>
-              <Input id="popular" name="popular" type="checkbox" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="reviews">Reviews Count</Label>
+                <Input id="reviews" name="reviews" type="number" />
+              </div>
+              <div className="flex items-center gap-2 mt-6">
+                <input id="popular" name="popular" type="checkbox" />
+                <Label htmlFor="popular">Popular</Label>
+              </div>
             </div>
 
             {/* Hotels */}
-            <div className="space-y-2">
-              <Label htmlFor="makkahHotel">Makkah Hotel</Label>
-              <select id="makkahHotel" name="hotels[makkah]" required className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                <option value="">Select Makkah Hotel</option>
-                {makkahHotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="makkahHotel">Makkah Hotel</Label>
+                <select id="makkahHotel" name="hotels[makkah]" required className="border p-2 w-full rounded-md">
+                  <option value="">Select Makkah Hotel</option>
+                  {makkahHotels.map((h) => (
+                    <option key={h._id} value={h._id}>{h.name}</option>
+                  ))}
+                </select>
+              </div>
 
-              <Label htmlFor="madinahHotel">Madinah Hotel</Label>
-              <select id="madinahHotel" name="hotels[madinah]" required className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                <option value="">Select Madinah Hotel</option>
-                {madinahHotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
-              </select>
+              <div>
+                <Label htmlFor="madinahHotel">Madinah Hotel</Label>
+                <select id="madinahHotel" name="hotels[madinah]" required className="border p-2 w-full rounded-md">
+                  <option value="">Select Madinah Hotel</option>
+                  {madinahHotels.map((h) => (
+                    <option key={h._id} value={h._id}>{h.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Multi-select fields */}
-            <div className="space-y-2">
-              <Label htmlFor="features">Features</Label>
-              <select id="features" name="features[]" multiple className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                {features.map(f => <option key={f._id} value={f._id}>{f.feature_text}</option>)}
-              </select>
+            {/* Multi Selects */}
+            <div className="space-y-4">
+              <div>
+                <Label>Features</Label>
+                <Select
+                  isMulti
+                  options={features.map((f) => ({ value: f._id, label: f.feature_text }))}
+                  value={selectedFeatures}
+                  onChange={(newValue) => setSelectedFeatures([...newValue] as { value: string; label: string }[])}
+                />
+              </div>
 
-              <Label htmlFor="itineraries">Itineraries</Label>
-              <select id="itineraries" name="itinerary[]" multiple className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                {itineraries.map(f => <option key={f._id} value={f._id}>{f.title}</option>)}
-              </select>
+              <div>
+                <Label>Itineraries</Label>
+                <Select
+                  isMulti
+                  options={itineraries.map((i) => ({ value: i._id, label: i.title }))}
+                  value={selectedItineraries}
+                  onChange={(newValue) => setSelectedItineraries([...newValue] as { value: string; label: string }[])}
+                />
+              </div>
 
-              <Label htmlFor="includes">Includes</Label>
-              <select id="includes" name="includes[]" multiple className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                {includes.map(f => <option key={f._id} value={f._id}>{f.include_text}</option>)}
-              </select>
+              <div>
+                <Label>Includes</Label>
+                <Select
+                  isMulti
+                  options={includes.map((i) => ({ value: i._id, label: i.include_text }))}
+                  value={selectedIncludes}
+                  onChange={(newValue) => setSelectedIncludes([...newValue] as { value: string; label: string }[])}
+                />
+              </div>
 
-              <Label htmlFor="excludes">Excludes</Label>
-              <select id="excludes" name="excludes[]" multiple className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                {excludes.map(f => <option key={f._id} value={f._id}>{f.exclude_text}</option>)}
-              </select>
+              <div>
+                <Label>Excludes</Label>
+                <Select
+                  isMulti
+                  options={excludes.map((e) => ({ value: e._id, label: e.exclude_text }))}
+                  value={selectedExcludes}
+                  onChange={(newValue) => setSelectedExcludes([...newValue] as { value: string; label: string }[])}
+                />
+              </div>
 
-              <Label htmlFor="policies">Policies</Label>
-              <select id="policies" name="policies[]" multiple className="w-full border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                {policies.map(f => <option key={f._id} value={f._id}>{f.heading}</option>)}
-              </select>
+              <div>
+                <Label>Policies</Label>
+                <Select
+                  isMulti
+                  options={policies.map((p) => ({ value: p._id, label: p.heading }))}
+                  value={selectedPolicies}
+                  onChange={(newValue) => setSelectedPolicies([...newValue] as { value: string; label: string }[])}
+                />
+              </div>
             </div>
 
-            {/* General Error */}
-            {"message" in (formState.error ?? {}) && (
-              <p className="text-sm text-red-500">{(formState.error as any).message?.[0]}</p>
-            )}
-
-            <CardFooter className="flex justify-end border-none">
+            <CardFooter className="flex justify-end border-none pt-4">
               <Button type="submit" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isPending ? "Creating..." : "Create Package"}
@@ -259,7 +349,14 @@ export default function CreateUmrahPackageForm() {
           </DialogHeader>
           <p>Package created successfully!</p>
           <DialogFooter>
-            <Button onClick={() => { setSuccessDialogOpen(false); router.push("/admin/packages"); }}>OK</Button>
+            <Button
+              onClick={() => {
+                setSuccessDialogOpen(false);
+                router.push("/admin/packages");
+              }}
+            >
+              OK
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
