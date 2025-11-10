@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Users, Home, LogOut, Hotel, Feather } from "lucide-react";
+import { Menu, X, LayoutDashboard, Users, Home, LogOut, Hotel, Feather, Route } from "lucide-react";
 import { logoutAdminAction } from "@/actions/authActions"; // your server action
 import { features } from "process";
 
@@ -37,6 +37,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: "/admin/applications", label: "Applications", icon: Users },
     { path: "/admin/hotels", label: "Hotels", icon: Hotel },
     { path: "/admin/features", label: "Features", icon: Feather },
+    { path: "/admin/itineraries", label: "Itineraries", icon: Route },
   ];
 
   const isActive = (path: string) =>
