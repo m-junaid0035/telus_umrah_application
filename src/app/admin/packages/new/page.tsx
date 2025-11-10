@@ -150,11 +150,11 @@ export default function CreateUmrahPackageForm() {
     const formData = new FormData(e.currentTarget);
 
     // Append manually for react-select values
-    selectedFeatures.forEach((f) => formData.append("features[]", f.value));
-    selectedItineraries.forEach((i) => formData.append("itinerary[]", i.value));
-    selectedIncludes.forEach((i) => formData.append("includes[]", i.value));
-    selectedExcludes.forEach((e) => formData.append("excludes[]", e.value));
-    selectedPolicies.forEach((p) => formData.append("policies[]", p.value));
+    selectedFeatures.forEach((f) => formData.append("features", f.value));
+    selectedItineraries.forEach((i) => formData.append("itinerary", i.value));
+    selectedIncludes.forEach((i) => formData.append("includes", i.value));
+    selectedExcludes.forEach((e) => formData.append("excludes", e.value));
+    selectedPolicies.forEach((p) => formData.append("policies", p.value));
 
     // ✅ Handle checkbox properly
     const popularCheckbox = e.currentTarget.querySelector<HTMLInputElement>("#popular");

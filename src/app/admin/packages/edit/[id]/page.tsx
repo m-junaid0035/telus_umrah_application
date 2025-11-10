@@ -160,11 +160,11 @@ export default function EditUmrahPackageForm() {
     setFormState({ error: {} });
 
     const formData = new FormData(e.currentTarget);
-    selectedFeatures.forEach((f) => formData.append("features[]", f.value));
-    selectedItineraries.forEach((i) => formData.append("itinerary[]", i.value));
-    selectedIncludes.forEach((i) => formData.append("includes[]", i.value));
-    selectedExcludes.forEach((e) => formData.append("excludes[]", e.value));
-    selectedPolicies.forEach((p) => formData.append("policies[]", p.value));
+    selectedFeatures.forEach((f) => formData.append("features", f.value));
+    selectedItineraries.forEach((i) => formData.append("itinerary", i.value));
+    selectedIncludes.forEach((i) => formData.append("includes", i.value));
+    selectedExcludes.forEach((e) => formData.append("excludes", e.value));
+    selectedPolicies.forEach((p) => formData.append("policies", p.value));
 
     const popularCheckbox = e.currentTarget.querySelector<HTMLInputElement>("#popular");
     formData.set("popular", popularCheckbox?.checked ? "true" : "false");
