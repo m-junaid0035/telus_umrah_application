@@ -87,12 +87,12 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-1 text-blue-400" />
-                <span>UG-14, Lucky center, 7-8 Jail Road, PO. Box 717 GPO, Lahore, 54000 Pakistan</span>
+                <span>UG-14,Lucky center, 7-8 Jail Road, Lahore, 54000 Pakistan</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-blue-400" />
-                <span>Toll Free no.: 080033333</span>
-              </li>
+                <span>Toll Free no.080033333</span>
+              </li> 
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-blue-400" />
                 <span>Tel: (+92) 42 37595151</span>
@@ -103,7 +103,11 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-400" />
-                <span>multitravel@hotmail.com</span>
+                <span>multitravel@gmail.com</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-blue-400" />
+                <span>sale@telusumrah.com</span>
               </li>
             </ul>
           </div>
