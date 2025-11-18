@@ -6,18 +6,6 @@ export function CustomUmrahPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pt-40 pb-20">
       <div className="container mx-auto px-4">
-        {/* Page Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-white mb-4">Customize Your Umrah Package</h1>
-          <p className="text-white/80 text-lg max-w-2xl mx-auto">
-            Create your perfect spiritual journey with our comprehensive customization options. 
-            Fill in your preferences and we'll design the ideal Umrah package for you.
-          </p>
-        </motion.div>
 
         {/* Form */}
         <div className="max-w-6xl mx-auto">
@@ -38,7 +26,7 @@ export function CustomUmrahPage() {
             <div className="flex flex-wrap justify-center gap-6 mt-4 text-white/80">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span>UAN: 080033333</span>
+                <span>Toll Free: 080033333</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
@@ -46,7 +34,7 @@ export function CustomUmrahPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>multitravel@hotmail.com</span>
+                <span>support@telusumrah.com</span>
               </div>
             </div>
           </div>

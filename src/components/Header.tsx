@@ -1,12 +1,10 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Plane, Menu, X, Phone, Mail, MapPin, ChevronDown, Globe, DollarSign, LogOut, Settings, User as UserIcon, BookmarkPlus, Package, Sparkles } from 'lucide-react';
+import { Plane, Menu, X, Phone, Mail, MapPin, ChevronDown, Globe, DollarSign, LogOut, Settings, User as UserIcon, BookmarkPlus, Package, Sparkles, Hotel, Info, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,15 +17,20 @@ import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
 import telusUmrahLogo from '@/assets/da561ea93488a57b45c1621c80c95e0815322c9e.png';
 import telusUmrahLogoWhite from '@/assets/38af052b7ba388561a7dda5e437b3035c02ec0c6.png';
+import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
+import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
 
 export function Header() {
   const currentPage = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [umrahPackagesOpen, setUmrahPackagesOpen] = useState(false);
+  const [hotelsOpen, setHotelsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('EN');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'login' | 'signup'>('login');
   const { user, logout, isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -41,13 +44,22 @@ export function Header() {
 
   const navItems = [
     { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' },
+  ];
+
+  const aboutItems = [
+    { name: 'About Us', path: '/about', icon: Info },
+    { name: 'FAQ', path: '/faq', icon: HelpCircle },
   ];
 
   const umrahPackageItems = [
     { name: 'Browse Packages', path: '/umrah-packages', icon: Package },
     { name: 'Customize Umrah', path: '/customize-umrah', icon: Sparkles },
+  ];
+
+  const hotelItems = [
+    { name: 'Makkah Hotels', path: '/makkah-hotels' },
+    { name: 'Madina Hotels', path: '/madina-hotels' },
+    { name: 'Hotel List', path: '/hotels' },
   ];
 
   const languages = [
@@ -68,23 +80,27 @@ export function Header() {
     { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
   ];
 
+  const isHomePage = currentPage === '/';
+  const shouldShowWhiteBg = !isHomePage || scrolled;
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
       {/* Top Bar */}
-      <div
-        className={`bg-gradient-to-r from-blue-900 to-blue-800 text-white hidden lg:block transition-all duration-300 overflow-hidden ${scrolled ? 'h-0 opacity-0 py-0' : 'h-9 opacity-100 py-2'
-          }`}
+      <div 
+        className={`bg-gradient-to-r from-blue-900 to-blue-800 text-white hidden lg:block transition-all duration-300 overflow-hidden ${
+          (scrolled || !isHomePage) ? 'h-0 opacity-0 py-0' : 'h-9 opacity-100 py-2'
+        }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <Phone className="w-3 h-3" />
-                <span>UAN: 080033333 | Tel: (+92) 42 37595151</span>
+                <span>Toll Free: 080033333</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3 h-3" />
-                <span>multitravel@hotmail.com</span>
+                <span>support@telusumrah.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-3 h-3" />
@@ -149,25 +165,24 @@ export function Header() {
       </div>
 
       {/* Main Header */}
-      <header className={`backdrop-blur-md transition-all duration-300 ${scrolled ? 'bg-white/98 shadow-md' : 'bg-transparent'
-        }`}>
+      <header className={`backdrop-blur-md transition-all duration-300 ${
+        shouldShowWhiteBg ? 'bg-white/98 shadow-md' : 'bg-transparent'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
             <Link href="/">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <Image
-                  src={scrolled ? telusUmrahLogo : telusUmrahLogoWhite}
-                  alt="Telus Umrah - Complete Spiritual Journey"
-                  className="h-16 w-auto transition-all group-hover:scale-105"
-                  width={256} // approximate width; adjust if needed
-                  height={64} // approximate height; adjust if needed
-                />
-              </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-3 cursor-pointer group"
+            >
+              <img 
+                src={shouldShowWhiteBg ? telusUmrahLogo.src : telusUmrahLogoWhite.src} 
+                alt="Telus Umrah - Complete Spiritual Journey" 
+                className="h-16 w-auto transition-all group-hover:scale-105"
+              />
+            </motion.div>
             </Link>
 
             {/* Desktop Navigation */}
@@ -178,26 +193,29 @@ export function Header() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`px-5 py-2 rounded-lg transition-all relative group ${scrolled
+                    className={`px-5 py-2 rounded-lg transition-all relative group ${
+                      shouldShowWhiteBg
                         ? currentPage === item.path
                           ? 'text-blue-600'
                           : 'text-gray-700 hover:text-blue-600'
                         : currentPage === item.path
                           ? 'text-white'
                           : 'text-white/90 hover:text-white'
-                      }`}
+                    }`}
                   >
                     {item.name}
                     {currentPage === item.path && (
                       <motion.div
                         layoutId="activeTab"
-                        className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${scrolled ? 'bg-blue-600' : 'bg-white'
-                          }`}
+                        className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${
+                          shouldShowWhiteBg ? 'bg-blue-600' : 'bg-white'
+                        }`}
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
-                    <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${scrolled ? 'bg-blue-50' : 'bg-white/10'
-                      }`} />
+                    <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${
+                      shouldShowWhiteBg ? 'bg-blue-50' : 'bg-white/10'
+                    }`} />
                   </motion.div>
                 </Link>
               ))}
@@ -216,18 +234,21 @@ export function Header() {
                       ? 'text-white'
                       : 'text-white/90 hover:text-white'
                   }`}>
+                  
                   <span>Umrah Packages</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${umrahPackagesOpen ? 'rotate-180' : ''}`} />
                   {(currentPage === '/umrah-packages' || currentPage === '/customize-umrah') && (
                     <motion.div
                       layoutId="activeTab"
-                      className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${scrolled ? 'bg-blue-600' : 'bg-white'
-                        }`}
+                      className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${
+                        shouldShowWhiteBg ? 'bg-blue-600' : 'bg-white'
+                      }`}
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
-                  <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${scrolled ? 'bg-blue-50' : 'bg-white/10'
-                    }`} />
+                  <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${
+                    shouldShowWhiteBg ? 'bg-blue-50' : 'bg-white/10'
+                  }`} />
                 </button>
 
                 <AnimatePresence>
@@ -261,21 +282,172 @@ export function Header() {
                 </AnimatePresence>
               </div>
 
-              {/* CTA Buttons */}
-              <div className={`flex items-center gap-3 ml-4 pl-4 border-l transition-colors ${scrolled ? 'border-gray-200' : 'border-white/30'
+              {/* Hotels Dropdown */}
+              <div
+                className="relative"
+                onMouseEnter={() => setHotelsOpen(true)}
+                onMouseLeave={() => setHotelsOpen(false)}
+              >
+                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${scrolled
+                    ? (currentPage === '/makkah-hotels' || currentPage === '/madina-hotels')
+                      ? 'text-blue-600'
+                      : 'text-gray-700 hover:text-blue-600'
+                    : (currentPage === '/makkah-hotels' || currentPage === '/madina-hotels')
+                      ? 'text-white'
+                      : 'text-white/90 hover:text-white'
                 }`}>
-                <Link href="/contact#contact-form">
-                  <Button
-                    variant="outline"
-                    className={`transition-all ${scrolled
-                        ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                        : 'border-white text-blue-600 hover:bg-white/10'
+                  <span>Hotels</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${hotelsOpen ? 'rotate-180' : ''}`} />
+                  {(currentPage === '/makkah-hotels' || currentPage === '/madina-hotels') && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${
+                        shouldShowWhiteBg ? 'bg-blue-600' : 'bg-white'
                       }`}
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${
+                    shouldShowWhiteBg ? 'bg-blue-50' : 'bg-white/10'
+                  }`} />
+                </button>
+
+                <AnimatePresence>
+                  {hotelsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden"
+                    >
+                      <div className="p-2">
+                        {hotelItems.map((item) => {
+                          return (
+                            <Link
+                              key={item.path}
+                              href={item.path}
+                              className="w-full flex items-center px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors text-left group"
+                            >
+                              <span className="text-gray-700 group-hover:text-blue-600">
+                                {item.name}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* About Dropdown */}
+              <div
+                className="relative"
+                onMouseEnter={() => setAboutOpen(true)}
+                onMouseLeave={() => setAboutOpen(false)}
+              >
+                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${scrolled
+                    ? (currentPage === '/about' || currentPage === '/faq')
+                      ? 'text-blue-600'
+                      : 'text-gray-700 hover:text-blue-600'
+                    : (currentPage === '/about' || currentPage === '/faq')
+                      ? 'text-white'
+                      : 'text-white/90 hover:text-white'
+                }`}>
+                  <span>About</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${aboutOpen ? 'rotate-180' : ''}`} />
+                  {(currentPage === '/about' || currentPage === '/faq') && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${
+                        shouldShowWhiteBg ? 'bg-blue-600' : 'bg-white'
+                      }`}
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${
+                    shouldShowWhiteBg ? 'bg-blue-50' : 'bg-white/10'
+                  }`} />
+                </button>
+
+                <AnimatePresence>
+                  {aboutOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden"
+                    >
+                      <div className="p-2">
+                        {aboutItems.map((item) => {
+                          const IconComponent = item.icon;
+                          return (
+                            <Link
+                              key={item.path}
+                              href={item.path}
+                              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors text-left group"
+                            >
+                              <IconComponent className="w-5 h-5 text-blue-600" />
+                              <span className="text-gray-700 group-hover:text-blue-600">
+                                {item.name}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Contact Link */}
+              <Link href="/contact">
+                <motion.div
+                  className={`px-5 py-2 rounded-lg transition-all relative group ${
+                 scrolled
+                      ? currentPage === '/contact'
+                        ? 'text-blue-600'
+                        : 'text-gray-700 hover:text-blue-600'
+                      : currentPage === '/contact'
+                        ? 'text-white'
+                        : 'text-white/90 hover:text-white'
+                  }`}
+                >
+                  Contact
+                  {currentPage === '/contact' && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${
+                        shouldShowWhiteBg ? 'bg-blue-600' : 'bg-white'
+                      }`}
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${
+                    shouldShowWhiteBg ? 'bg-blue-50' : 'bg-white/10'
+                  }`} />
+                </motion.div>
+              </Link>
+
+              {/* CTA Buttons */}
+              <div className={`flex items-center gap-3 ml-4 pl-4 border-l transition-colors ${
+                shouldShowWhiteBg ? 'border-gray-200' : 'border-white/30'
+              }`}>
+                <Link href="/contact#contact-form">
+                  <Button 
+                    variant="outline" 
+                    className={`transition-all ${
+                      shouldShowWhiteBg 
+                        ? 'border-blue-600 text-blue-600 hover:bg-blue-50' 
+                        : 'border-white text-blue-600 hover:bg-white/10'
+                    }`}
                   >
                     Get Quote
                   </Button>
                 </Link>
-
+                
                 {isAuthenticated ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger className="focus:outline-none">
@@ -311,26 +483,46 @@ export function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button
-                    onClick={() => setLoginDialogOpen(true)}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all"
-                  >
-                    Login / Signup
-                  </Button>
+                  <>
+                    <Button 
+                      onClick={() => {
+                        setDialogMode('login');
+                        setLoginDialogOpen(true);
+                      }}
+                      variant="outline"
+                      className={`transition-all ${
+                        shouldShowWhiteBg 
+                          ? 'border-blue-600 text-blue-600 hover:bg-blue-50' 
+                          : 'border-white text-blue-600 hover:bg-white/10'
+                      }`}
+                    >
+                      Login
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        setDialogMode('signup');
+                        setLoginDialogOpen(true);
+                      }}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all"
+                    >
+                      Signup
+                    </Button>
+                  </>
                 )}
               </div>
             </nav>
 
             {/* Mobile Menu Button */}
             <button
-              className={`md:hidden p-2 rounded-lg transition-colors ${scrolled ? 'hover:bg-gray-100' : 'hover:bg-white/10'
-                }`}
+              className={`md:hidden p-2 rounded-lg transition-colors ${
+                shouldShowWhiteBg ? 'hover:bg-gray-100' : 'hover:bg-white/10'
+              }`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
-                <X className={`w-6 h-6 transition-colors ${scrolled ? 'text-gray-700' : 'text-white'}`} />
+                <X className={`w-6 h-6 transition-colors ${shouldShowWhiteBg ? 'text-gray-700' : 'text-white'}`} />
               ) : (
-                <Menu className={`w-6 h-6 transition-colors ${scrolled ? 'text-gray-700' : 'text-white'}`} />
+                <Menu className={`w-6 h-6 transition-colors ${shouldShowWhiteBg ? 'text-gray-700' : 'text-white'}`} />
               )}
             </button>
           </div>
@@ -351,10 +543,11 @@ export function Header() {
                     key={item.path}
                     href={item.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`block w-full text-left px-4 py-3 rounded-lg transition-all ${currentPage === item.path
+                    className={`block w-full text-left px-4 py-3 rounded-lg transition-all ${
+                      currentPage === item.path
                         ? 'bg-blue-600 text-white'
                         : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                    }`}
                   >
                     {item.name}
                   </Link>
@@ -370,29 +563,92 @@ export function Header() {
                         key={item.path}
                         href={item.path}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentPage === item.path
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                          currentPage === item.path
                             ? 'bg-blue-600 text-white'
                             : 'text-gray-700 hover:bg-gray-100'
-                          }`}
+                        }`}
                       >
-                        <IconComponent className={`w-5 h-5 ${currentPage === item.path ? 'text-white' : 'text-blue-600'
-                          }`} />
+                        <IconComponent className={`w-5 h-5 ${
+                          currentPage === item.path ? 'text-white' : 'text-blue-600'
+                        }`} />
                         <span>{item.name}</span>
                       </Link>
                     );
                   })}
                 </div>
 
+                {/* Mobile Hotels */}
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="text-xs text-gray-500 px-4 py-2">Hotels</div>
+                  {hotelItems.map((item) => {
+                    return (
+                      <Link
+                        key={item.path}
+                        href={item.path}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`w-full flex items-center px-4 py-3 rounded-lg transition-all ${
+                          currentPage === item.path
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span>{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Mobile About */}
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="text-xs text-gray-500 px-4 py-2">About</div>
+                  {aboutItems.map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <Link
+                        key={item.path}
+                        href={item.path}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                          currentPage === item.path
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <IconComponent className={`w-5 h-5 ${
+                          currentPage === item.path ? 'text-white' : 'text-blue-600'
+                        }`} />
+                        <span>{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Mobile Contact */}
+                <div className="pt-2 border-t border-gray-200">
+                  <Link
+                    href="/contact"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block w-full text-left px-4 py-3 rounded-lg transition-all ${
+                      currentPage === '/contact'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Contact
+                  </Link>
+                </div>
+
                 <div className="pt-2 border-t border-gray-200 space-y-2">
                   <Link href="/contact#contact-form" onClick={() => setMobileMenuOpen(false)}>
-                    <Button
-                      variant="outline"
+                    <Button 
+                      variant="outline" 
                       className="w-full border-blue-600 text-blue-600"
                     >
                       Get Quote
                     </Button>
                   </Link>
-
+                  
                   {isAuthenticated ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
@@ -419,12 +675,12 @@ export function Header() {
                         <Settings className="w-4 h-4 mr-2" />
                         Settings
                       </Button>
-                      <Button
+                      <Button 
                         onClick={() => {
                           logout();
                           setMobileMenuOpen(false);
                         }}
-                        variant="outline"
+                        variant="outline" 
                         className="w-full justify-start text-red-600 border-red-600 hover:bg-red-50"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
@@ -432,15 +688,29 @@ export function Header() {
                       </Button>
                     </div>
                   ) : (
-                    <Button
-                      onClick={() => {
-                        setLoginDialogOpen(true);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700"
-                    >
-                      Login / Signup
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => {
+                          setDialogMode('login');
+                          setLoginDialogOpen(true);
+                          setMobileMenuOpen(false);
+                        }}
+                        variant="outline"
+                        className="flex-1 border-blue-600 text-blue-600"
+                      >
+                        Login
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setDialogMode('signup');
+                          setLoginDialogOpen(true);
+                          setMobileMenuOpen(false);
+                        }}
+                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700"
+                      >
+                        Signup
+                      </Button>
+                    </div>
                   )}
                 </div>
 
@@ -523,7 +793,11 @@ export function Header() {
       </header>
 
       {/* Login Dialog */}
-      <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
+      <LoginDialog 
+        open={loginDialogOpen} 
+        onOpenChange={setLoginDialogOpen} 
+        defaultMode={dialogMode}
+      />
     </div>
   );
 }

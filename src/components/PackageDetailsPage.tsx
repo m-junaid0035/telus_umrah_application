@@ -1,7 +1,6 @@
-"use client";
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
@@ -28,17 +27,22 @@ import {
   Eye,
   Map,
   FileText,
+  X,
   AlertCircle,
   Info,
   ChevronRight,
   Share2,
   Heart,
   Building2,
-  X
+  ArrowRight
 } from 'lucide-react';
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
+
+// Import Makkah and Madina icons
+import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
+import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
 
 // Package data (same as UmrahPackagesPage)
 const allPackages = [
@@ -71,9 +75,9 @@ const allPackages = [
     itinerary: [
       { day: 1, title: "Departure from Karachi", description: "Flight departure to Jeddah. Meet & greet at airport. Transfer to Makkah hotel." },
       { day: 2, title: "Umrah Performance", description: "Perform Umrah rituals with guidance. Rest and prayers at Haram." },
-      { day: 3 - 7, title: "Makkah Stay", description: "Daily prayers at Haram. Optional Ziyarat tours to Islamic historical sites." },
+      { day: 3-7, title: "Makkah Stay", description: "Daily prayers at Haram. Optional Ziyarat tours to Islamic historical sites." },
       { day: 8, title: "Transfer to Madinah", description: "Check out from Makkah hotel. Travel to Madinah by road." },
-      { day: 9 - 13, title: "Madinah Stay", description: "Prayers at Masjid Nabawi. Visit Islamic landmarks and historical sites." },
+      { day: 9-13, title: "Madinah Stay", description: "Prayers at Masjid Nabawi. Visit Islamic landmarks and historical sites." },
       { day: 14, title: "Return to Pakistan", description: "Check out and transfer to Jeddah airport for return flight." }
     ],
     includes: [
@@ -130,9 +134,9 @@ const allPackages = [
     itinerary: [
       { day: 1, title: "Departure from Lahore", description: "Direct Saudi Airlines flight to Jeddah. VIP meet & greet. Transfer to Makkah." },
       { day: 2, title: "Umrah Performance", description: "Complete Umrah rituals with experienced guide. Orientation session." },
-      { day: 3 - 8, title: "Makkah Stay", description: "Daily prayers at Haram. Guided Ziyarat tours including Jabal Rahmah, Cave Hira." },
+      { day: 3-8, title: "Makkah Stay", description: "Daily prayers at Haram. Guided Ziyarat tours including Jabal Rahmah, Cave Hira." },
       { day: 9, title: "Transfer to Madinah", description: "Comfortable coach transfer to Madinah with rest stops." },
-      { day: 10 - 14, title: "Madinah Stay", description: "Prayers at Masjid Nabawi. Visit Quba Mosque, Uhud, Qiblatain Mosque." },
+      { day: 10-14, title: "Madinah Stay", description: "Prayers at Masjid Nabawi. Visit Quba Mosque, Uhud, Qiblatain Mosque." },
       { day: 15, title: "Return Journey", description: "Airport transfer and return flight to Lahore." }
     ],
     includes: [
@@ -191,9 +195,9 @@ const allPackages = [
     itinerary: [
       { day: 1, title: "Premium Departure", description: "Emirates flight to Jeddah. Business class option available. VIP lounge access." },
       { day: 2, title: "Umrah with Scholar", description: "Perform Umrah with Islamic scholar guidance. Premium ihram and essentials provided." },
-      { day: 3 - 10, title: "Extended Makkah Stay", description: "Daily Haram prayers. Premium Ziyarat tours with historical insights. Shopping assistance." },
+      { day: 3-10, title: "Extended Makkah Stay", description: "Daily Haram prayers. Premium Ziyarat tours with historical insights. Shopping assistance." },
       { day: 11, title: "Luxury Transfer", description: "Private coach to Madinah with refreshments and comfort stops." },
-      { day: 12 - 19, title: "Extended Madinah Stay", description: "Prayers at Masjid Nabawi. Extensive Ziyarat including Badr, Quba, Seven Mosques." },
+      { day: 12-19, title: "Extended Madinah Stay", description: "Prayers at Masjid Nabawi. Extensive Ziyarat including Badr, Quba, Seven Mosques." },
       { day: 20, title: "Return in Comfort", description: "Private transfer to airport. Return Emirates flight." }
     ],
     includes: [
@@ -257,9 +261,9 @@ const allPackages = [
     itinerary: [
       { day: 1, title: "First Class Experience", description: "Qatar Airways business/first class. VIP lounge. Fast-track immigration. Luxury transfer." },
       { day: 2, title: "VIP Umrah Service", description: "Private Umrah guidance with scholar. VIP wheelchair assistance. Premium ihram set." },
-      { day: 3 - 13, title: "Luxury Makkah Experience", description: "Suite with Haram view. Private Ziyarat with historian. Personal shopping assistant." },
+      { day: 3-13, title: "Luxury Makkah Experience", description: "Suite with Haram view. Private Ziyarat with historian. Personal shopping assistant." },
       { day: 14, title: "Premium Transfer", description: "Private luxury vehicle to Madinah with personal driver and refreshments." },
-      { day: 15 - 24, title: "Exclusive Madinah Stay", description: "Suite with Nabawi view. Private scholar sessions. VIP access to special areas." },
+      { day: 15-24, title: "Exclusive Madinah Stay", description: "Suite with Nabawi view. Private scholar sessions. VIP access to special areas." },
       { day: 25, title: "Luxury Return", description: "Private airport transfer. Fast-track check-in. Business/first class return." }
     ],
     includes: [
@@ -322,9 +326,9 @@ const allPackages = [
     itinerary: [
       { day: 1, title: "Family Departure", description: "Etihad family-friendly flight. Kids' entertainment. Family meet & greet. Spacious transfer." },
       { day: 2, title: "Family Umrah", description: "Umrah guidance suitable for all ages. Special assistance for children and elderly." },
-      { day: 3 - 9, title: "Makkah Family Time", description: "Family rooms near Haram. Kid-friendly Ziyarat. Family dining options. Play areas." },
+      { day: 3-9, title: "Makkah Family Time", description: "Family rooms near Haram. Kid-friendly Ziyarat. Family dining options. Play areas." },
       { day: 10, title: "Comfortable Transfer", description: "Family-friendly coach to Madinah with entertainment and comfort stops." },
-      { day: 11 - 17, title: "Madinah Family Stay", description: "Spacious family suites. Child-appropriate tours. Family dining. Shopping time." },
+      { day: 11-17, title: "Madinah Family Stay", description: "Spacious family suites. Child-appropriate tours. Family dining. Shopping time." },
       { day: 18, title: "Family Return", description: "Airport assistance for families. Return flight with kids' amenities." }
     ],
     includes: [
@@ -383,9 +387,9 @@ const allPackages = [
     itinerary: [
       { day: 1, title: "Ramadan Arrival", description: "Special Ramadan flight timing. VIP meet & greet. Iftar arrangement on arrival." },
       { day: 2, title: "First Umrah", description: "Perform Umrah during blessed month. Special prayers and spiritual guidance." },
-      { day: 3 - 11, title: "Blessed Makkah Days", description: "Daily Iftar in hotel. Taraweeh at Haram. Special Laylat al-Qadr arrangements. Suhoor timing." },
+      { day: 3-11, title: "Blessed Makkah Days", description: "Daily Iftar in hotel. Taraweeh at Haram. Special Laylat al-Qadr arrangements. Suhoor timing." },
       { day: 12, title: "Journey to Madinah", description: "Transfer with Iftar pack. Arrival before Maghrib." },
-      { day: 13 - 19, title: "Ramadan in Madinah", description: "Taraweeh at Masjid Nabawi. Special night prayers. Ziyarat between prayers. Iftar arrangements." },
+      { day: 13-19, title: "Ramadan in Madinah", description: "Taraweeh at Masjid Nabawi. Special night prayers. Ziyarat between prayers. Iftar arrangements." },
       { day: 20, title: "Blessed Return", description: "Final prayers and duas. Return journey during Ramadan." }
     ],
     includes: [
@@ -417,12 +421,13 @@ const allPackages = [
     }
   }
 ];
+
 interface PackageDetailsPageProps {
   id: string;
 }
 export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
 
-  const router = useRouter(); // only in pages directory
+  const router = useRouter();
   const { user } = useAuth();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -474,7 +479,7 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-
+        
         {/* Content Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
           <div className="container mx-auto">
@@ -486,7 +491,7 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Packages
             </Button>
-
+            
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-3">
@@ -518,17 +523,18 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-4 h-4 ${i < Math.floor(pkg.rating)
+                        className={`w-4 h-4 ${
+                          i < Math.floor(pkg.rating)
                             ? 'fill-yellow-400 text-yellow-400'
                             : 'text-white/40'
-                          }`}
+                        }`}
                       />
                     ))}
                     <span className="ml-1">{pkg.rating} ({pkg.reviews} reviews)</span>
                   </div>
                 </div>
               </div>
-
+              
               <div className="bg-white rounded-lg p-4 md:p-6 shadow-2xl">
                 <p className="text-sm text-gray-600 mb-1">Starting from</p>
                 <p className="text-blue-600 text-3xl md:text-4xl mb-1">
@@ -581,36 +587,52 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Makkah Hotel */}
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Hotel className="w-5 h-5 text-blue-600" />
-                        <h3 className="text-gray-900">Makkah Hotel</h3>
+                    <Link 
+                      href={`/hotels/makkah/${pkg.hotels.makkah.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      className="block"
+                    >
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2">
+                            <img src={makkahIcon.src} alt="Makkah" className="w-5 h-5" />
+                            <h3 className="text-gray-900">Makkah Hotel</h3>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <p className="text-gray-800 mb-2">{pkg.hotels.makkah.name}</p>
+                        <p className="text-sm text-gray-600 mb-3">{pkg.hotels.makkah.distance}</p>
+                        <div className="flex items-center gap-1">
+                          {[...Array(pkg.hotels.makkah.stars)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          ))}
+                          <span className="text-sm text-gray-600 ml-2">{pkg.hotels.makkah.stars} Star</span>
+                        </div>
                       </div>
-                      <p className="text-gray-800 mb-2">{pkg.hotels.makkah.name}</p>
-                      <p className="text-sm text-gray-600 mb-3">{pkg.hotels.makkah.distance}</p>
-                      <div className="flex items-center gap-1">
-                        {[...Array(pkg.hotels.makkah.stars)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                        <span className="text-sm text-gray-600 ml-2">{pkg.hotels.makkah.stars} Star</span>
-                      </div>
-                    </div>
+                    </Link>
 
                     {/* Madinah Hotel */}
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Hotel className="w-5 h-5 text-green-600" />
-                        <h3 className="text-gray-900">Madinah Hotel</h3>
+                    <Link 
+                      href={`/hotels/madinah/${pkg.hotels.madinah.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      className="block"
+                    >
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2">
+                            <img src={madinaIcon.src} alt="Madina" className="w-5 h-5" />
+                            <h3 className="text-gray-900">Madinah Hotel</h3>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <p className="text-gray-800 mb-2">{pkg.hotels.madinah.name}</p>
+                        <p className="text-sm text-gray-600 mb-3">{pkg.hotels.madinah.distance}</p>
+                        <div className="flex items-center gap-1">
+                          {[...Array(pkg.hotels.madinah.stars)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          ))}
+                          <span className="text-sm text-gray-600 ml-2">{pkg.hotels.madinah.stars} Star</span>
+                        </div>
                       </div>
-                      <p className="text-gray-800 mb-2">{pkg.hotels.madinah.name}</p>
-                      <p className="text-sm text-gray-600 mb-3">{pkg.hotels.madinah.distance}</p>
-                      <div className="flex items-center gap-1">
-                        {[...Array(pkg.hotels.madinah.stars)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                        <span className="text-sm text-gray-600 ml-2">{pkg.hotels.madinah.stars} Star</span>
-                      </div>
-                    </div>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
@@ -694,7 +716,7 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                         <FileText className="w-5 h-5 text-blue-600" />
                         <h3 className="text-gray-900">Terms & Policies</h3>
                       </div>
-
+                      
                       {pkg.policies && (
                         <div className="space-y-4">
                           <div className="bg-blue-50 rounded-lg p-4">
@@ -704,7 +726,7 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                             </h4>
                             <p className="text-sm text-gray-700">{pkg.policies.cancellation}</p>
                           </div>
-
+                          
                           <div className="bg-green-50 rounded-lg p-4">
                             <h4 className="text-gray-900 mb-2 flex items-center gap-2">
                               <Info className="w-4 h-4 text-green-600" />
@@ -712,7 +734,7 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                             </h4>
                             <p className="text-sm text-gray-700">{pkg.policies.payment}</p>
                           </div>
-
+                          
                           <div className="bg-purple-50 rounded-lg p-4">
                             <h4 className="text-gray-900 mb-2 flex items-center gap-2">
                               <Info className="w-4 h-4 text-purple-600" />
@@ -767,7 +789,7 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-gray-900 mb-4">Package Summary</h3>
-
+                  
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Duration</span>

@@ -1,11 +1,11 @@
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import {
-  Sparkles,
-  Shield,
-  Clock,
+import {  useRouter } from 'next/navigation';
+import { 
+  Sparkles, 
+  Shield, 
+  Clock, 
   HeadphonesIcon,
   Award,
   Globe,
@@ -22,10 +22,14 @@ import {
   Palmtree,
   FileText,
   Building,
-  Star
+  Star,
+  Calendar,
+  MapPin
 } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Card, CardContent } from './ui/card';
 
 // Import airline logos from Figma assets
 import sereneAirLogo from '@/assets/d0c55b978a086a73b2fb50854cf04ff81b6aac0b.png';
@@ -39,6 +43,15 @@ import etihadLogo from '@/assets/713718ae1d0268b59f79364ed8d891884e2f5326.png';
 import shaheenAirLogo from '@/assets/dc2814087104402377fd7a3913ebe47172426e2f.png';
 import emiratesLogo from '@/assets/bbf68fd4ecd3e7277285a22042637fbaafc25a7c.png';
 import airblueLogo from '@/assets/46162b64c705ab0c6c4e53a96bd897744d3a77d9.png';
+
+// Import hero carousel images
+import heroImage1 from '@/assets/f04256d4638239166ecad5f001ee7ffe910704b6.png';
+import heroImage2 from '@/assets/f3ba011d2f586be8d86155c907d6c190755bf879.png';
+import heroImage3 from '@/assets/04d3a5a5fba1a74db087029d3ce48fbe6729fffb.png';
+
+// Import Makkah and Madina icons
+import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
+import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
 
 const features = [
   {
@@ -85,75 +98,138 @@ const airlines = [
   { name: 'Shaheen Air', logo: shaheenAirLogo },
 ];
 
-const destinations = [
+// Helper function to get airline logo
+const getAirlineLogo = (airlineName: string) => {
+  const airlineMap: { [key: string]: string } = {
+    'Pakistan International Airlines': piaLogo.src,
+    'Saudi Airlines': saudiaLogo.src,
+    'Emirates': emiratesLogo.src,
+    'Qatar Airways': qatarAirwaysLogo.src,
+    'Turkish Airlines': turkishAirlinesLogo.src,
+    'Etihad Airways': etihadLogo.src,
+    'Gulf Air': gulfAirLogo.src,
+    'Thai Airways': thaiAirwaysLogo.src,
+    'Serene Air': sereneAirLogo.src,
+    'Airblue': airblueLogo.src,
+    'Shaheen Air': shaheenAirLogo.src,
+  };
+  return airlineMap[airlineName] || piaLogo;
+};
+
+const popularHotels = [
   {
-    name: 'Paris, France',
-    image: 'https://images.unsplash.com/photo-1431274172761-fca41d930114?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYXJpcyUyMGVpZmZlbCUyMHRvd2VyfGVufDF8fHx8MTc2MjAyOTU4OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    deals: 'From $599',
-    description: 'City of Lights',
+    name: 'Swissotel Makkah',
+    location: 'Makkah',
+    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80',
+    price: 'From PKR 85,000/night',
+    description: '4-Star Hotel',
+    stars: 4,
+    distance: '300m from Haram',
+    city: 'makkah',
+    slug: 'swissotel-makkah'
   },
   {
-    name: 'Dubai, UAE',
-    image: 'https://images.unsplash.com/photo-1657106251952-2d584ebdf886?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkdWJhaSUyMHNreWxpbmUlMjBuaWdodHxlbnwxfHx8fDE3NjE5ODkxMjV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    deals: 'From $799',
-    description: 'Luxury & Adventure',
+    name: 'Oberoi Madinah',
+    location: 'Madina',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
+    price: 'From PKR 115,000/night',
+    description: '5-Star Hotel',
+    stars: 5,
+    distance: 'Walking Distance to Masjid Nabawi',
+    city: 'madinah',
+    slug: 'oberoi-madinah'
   },
   {
-    name: 'Bali, Indonesia',
-    image: 'https://images.unsplash.com/photo-1729606559610-c0c6aeea85c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiYWxpJTIwYmVhY2glMjByZXNvcnR8ZW58MXx8fHwxNzYyMDQxNTU4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    deals: 'From $499',
-    description: 'Tropical Paradise',
+    name: 'Hilton Suites Makkah',
+    location: 'Makkah',
+    image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80',
+    price: 'From PKR 125,000/night',
+    description: '5-Star Hotel',
+    stars: 5,
+    distance: 'Walking Distance to Haram',
+    city: 'makkah',
+    slug: 'hilton-suites-makkah'
   },
   {
-    name: 'Tokyo, Japan',
-    image: 'https://images.unsplash.com/photo-1623566713971-1f7ad1dc7bfb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0b2t5byUyMGNpdHklMjB0cmF2ZWx8ZW58MXx8fHwxNzYyMDQxNTU4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    deals: 'From $899',
-    description: 'Modern Tradition',
+    name: 'Crowne Plaza Madinah',
+    location: 'Madina',
+    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80',
+    price: 'From PKR 78,000/night',
+    description: '4-Star Hotel',
+    stars: 4,
+    distance: '200m from Masjid Nabawi',
+    city: 'madinah',
+    slug: 'crowne-plaza-madinah'
   },
   {
-    name: 'Maldives',
-    image: 'https://images.unsplash.com/photo-1614505241347-7f4765c1035e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWxkaXZlcyUyMHJlc29ydCUyMGx1eHVyeXxlbnwxfHx8fDE3NjIwNDE1NTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    deals: 'From $1,299',
-    description: 'Island Escape',
+    name: 'Al Safwah Royal Orchid',
+    location: 'Makkah',
+    image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80',
+    price: 'From PKR 45,000/night',
+    description: '3-Star Hotel',
+    stars: 3,
+    distance: '800m from Haram',
+    city: 'makkah',
+    slug: 'al-safwah-royal-orchid'
   },
   {
-    name: 'New York, USA',
-    image: 'https://images.unsplash.com/photo-1759614581731-4c7090648de0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBhaXJwbGFuZSUyMHRyYXZlbCUyMGJ1c2luZXNzfGVufDF8fHx8MTc2MjA0MTU1Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    deals: 'From $399',
-    description: 'The Big Apple',
+    name: 'Al Eiman Royal',
+    location: 'Madina',
+    image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&q=80',
+    price: 'From PKR 42,000/night',
+    description: '3-Star Hotel',
+    stars: 3,
+    distance: '500m from Masjid Nabawi',
+    city: 'madinah',
+    slug: 'al-eiman-royal'
   },
 ];
 
+// Our Services Data
+// To customize service images, simply replace the image URL below
 const services = [
-  {
-    name: 'Flight Booking',
-    icon: Plane,
+  { 
+    name: 'Flight Booking', 
     description: 'Book flights to worldwide destinations',
+    // Replace the image URL below with your custom image
     image: 'https://images.unsplash.com/photo-1719058292683-a358b17bc282?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmbGlnaHQlMjBhaXJwbGFuZSUyMGJvb2tpbmd8ZW58MXx8fHwxNzYyMTA5NTkwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
   },
-  {
-    name: 'Hotel Reservation',
-    icon: Hotel,
+  { 
+    name: 'Hotel Reservation', 
     description: 'Luxury hotels at best prices',
-    image: 'https://images.unsplash.com/photo-1614506660579-c6c478e2f349?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMHJlc29ydHxlbnwxfHx8fDE3NjIwNjgxNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
+    // Replace the image URL below with your custom image
+    image: 'https://images.unsplash.com/photo-1700878354382-46816bf47ffc?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
-  {
-    name: 'Travel Packages',
-    icon: Palmtree,
-    description: 'Complete vacation packages',
-    image: 'https://images.unsplash.com/photo-1761069449669-1b17dc39831b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmF2ZWwlMjB2YWNhdGlvbiUyMHBhY2thZ2VzfGVufDF8fHx8MTc2MjMzNTk0NXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  {
-    name: 'Visa Services',
-    icon: FileText,
+  { 
+    name: 'Visa Services', 
     description: 'Hassle-free visa processing',
+    // Replace the image URL below with your custom image
     image: 'https://images.unsplash.com/photo-1655722725332-9925c96dd627?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYXNzcG9ydCUyMHZpc2ElMjB0cmF2ZWx8ZW58MXx8fHwxNzYyMDgwMDk2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
   },
-  {
-    name: 'Umrah Service',
-    icon: Building,
+  { 
+    name: 'Umrah Service', 
     description: 'Complete Umrah pilgrimage services',
-    image: 'https://images.unsplash.com/photo-1571909552531-1601eaec8f79?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxrYWFiYSUyMG1lY2NhJTIwdW1yYWglMjBwaWxncmltYWdlfGVufDF8fHx8MTc2MjMzNTc0OXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
+    // Replace the image URL below with your custom image
+    image: 'https://images.unsplash.com/photo-1564769625905-50e93615e769?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+];
+
+// Hero carousel images
+const heroCarouselImages = [
+  {
+    image: heroImage1,
+    title: 'Experience the Sacred Journey',
+    subtitle: 'Your spiritual path to Mecca starts here',
+  },
+  {
+    image: heroImage2,
+    title: 'Luxurious Accommodations with Kaaba View',
+    subtitle: 'Premium hotels with stunning views of the Holy Kaaba',
+  },
+  {
+    image: heroImage3,
+    title: 'Visit the Prophet\'s Mosque in Madinah',
+    subtitle: 'Complete your spiritual journey to the holy city',
   },
 ];
 
@@ -161,12 +237,13 @@ export function HomePage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   // Check scroll position to show/hide arrows
   const checkScroll = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
+    
     setCanScrollLeft(container.scrollLeft > 0);
     setCanScrollRight(
       container.scrollLeft < container.scrollWidth - container.clientWidth - 10
@@ -176,15 +253,24 @@ export function HomePage() {
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
+    
     checkScroll();
     container.addEventListener('scroll', checkScroll);
     window.addEventListener('resize', checkScroll);
-
+    
     return () => {
       container.removeEventListener('scroll', checkScroll);
       window.removeEventListener('resize', checkScroll);
     };
+  }, []);
+
+  // Auto-play carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroCarouselImages.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Scroll functions
@@ -202,103 +288,80 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative min-h-screen overflow-hidden pt-20">
-        {/* Background Image with Overlay */}
+      {/* Hero Section with Carousel */}
+      <section className="relative h-screen overflow-hidden">
+        {/* Carousel Container */}
         <div className="absolute inset-0">
-          <ImageWithFallback
-            src="https://images.unsplash.com/photo-1652964287112-438ece0a6acc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZWNjYSUyMHBpbGdyaW1hZ2UlMjBzcGlyaXR1YWx8ZW58MXx8fHwxNzYyNTQwMTQ3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-            alt="Spiritual Umrah Background"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-blue-900/80 to-purple-900/85" />
-
-          {/* Subtle Animated Pattern */}
-          <motion.div
-            animate={{
-              opacity: [0.05, 0.1, 0.05],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                               radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)`,
-            }}
-          />
+          {heroCarouselImages.map((slide, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: currentSlide === index ? 1 : 0,
+                scale: currentSlide === index ? 1 : 1.05,
+              }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
+              className="absolute inset-0"
+              style={{ pointerEvents: currentSlide === index ? 'auto' : 'none' }}
+            >
+              <img
+                src={slide.image.src}
+                alt={slide.title}
+                className="w-full h-full object-cover"
+              />
+              {/* Minimal dark overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
+            </motion.div>
+          ))}
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center min-h-[calc(100vh-116px)]">
-          <div className="w-full text-center py-20">
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 mb-8"
-            >
-              <Building className="w-5 h-5 text-white/90" />
-              <span className="text-sm text-white/90">Begin Your Sacred Journey with Telus Umrah</span>
-            </motion.div>
+        {/* Top Content - Title */}
+        <div className="absolute top-0 left-0 right-0 z-20 pt-32 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
-            {/* Main Title */}
+            {/* Dynamic Title Based on Slide */}
             <motion.h1
+              key={currentSlide}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-white mb-6 max-w-5xl mx-auto leading-tight"
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.8 }}
+              className="text-white mb-4 max-w-5xl mx-auto leading-tight drop-shadow-2xl"
             >
-              Embark on a{' '}
-              <motion.span
-                className="inline-block bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-300 bg-clip-text text-transparent"
-                animate={{
-                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                style={{
-                  backgroundSize: '200% 200%',
-                }}
-              >
-                Blessed Umrah Journey
-              </motion.span>
-              <br />
-              Tailored Just for You
+              {heroCarouselImages[currentSlide].title}
             </motion.h1>
 
-            {/* Description */}
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed"
+              key={`subtitle-${currentSlide}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-white text-xl mb-6 max-w-3xl mx-auto drop-shadow-lg"
             >
-              Experience a spiritually enriching pilgrimage with our comprehensive Umrah packages.
-              From premium flights and hotels near Haram to guided tours and complete visa services,
-              we handle every detail so you can focus on your worship.
+              {heroCarouselImages[currentSlide].subtitle}
             </motion.p>
+          </div>
+        </div>
 
+        {/* Bottom Content - CTA Buttons and Trust Indicators */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* CTA Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8"
             >
               <Link href="/customize-umrah">
                 <motion.div
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 hover:from-blue-950 hover:via-blue-900 hover:to-blue-950 text-white px-8 py-7 text-lg shadow-2xl group min-w-[280px]">
+                  <Button className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:via-amber-600 hover:to-amber-700 text-white px-8 py-6 text-base shadow-2xl group min-w-[240px]">
                     <Settings className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-                    Customize Your Umrah Trip
+                    Customize Your Umrah
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </motion.div>
@@ -309,12 +372,12 @@ export function HomePage() {
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button
-                    variant="outline"
-                    className="bg-white/10 backdrop-blur-md border-2 border-white/40 text-white hover:bg-white/20 hover:border-white/60 px-8 py-7 text-lg shadow-xl min-w-[280px] group"
+                  <Button 
+                    variant="outline" 
+                    className="bg-white/95 backdrop-blur-sm border-2 border-white text-gray-900 hover:bg-white hover:border-white px-8 py-6 text-base shadow-xl min-w-[240px] group"
                   >
                     <Sparkles className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                    Explore Umrah Packages
+                    Explore Packages
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </motion.div>
@@ -325,15 +388,15 @@ export function HomePage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="flex flex-wrap justify-center items-center gap-8 text-white/80"
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="flex flex-wrap justify-center items-center gap-6 lg:gap-8 bg-black/30 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20"
             >
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 border-2 border-white flex items-center justify-center text-gray-900 text-xs shadow-lg"
+                      className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 border-2 border-white flex items-center justify-center text-gray-900 text-xs shadow-lg"
                     >
                       {String.fromCharCode(64 + i)}
                     </div>
@@ -341,194 +404,371 @@ export function HomePage() {
                 </div>
                 <div className="text-left">
                   <div className="text-white">2M+</div>
-                  <div className="text-xs text-white/70">Happy Pilgrims</div>
+                  <div className="text-xs text-white/80">Happy Pilgrims</div>
                 </div>
               </div>
 
-              <div className="h-12 w-px bg-white/20" />
+              <div className="h-10 w-px bg-white/30 hidden sm:block" />
 
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
                 <div className="text-left">
                   <div className="text-white">4.9/5</div>
-                  <div className="text-xs text-white/70">Customer Rating</div>
+                  <div className="text-xs text-white/80">Rating</div>
                 </div>
               </div>
 
-              <div className="h-12 w-px bg-white/20" />
+              <div className="h-10 w-px bg-white/30 hidden sm:block" />
 
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Shield className="w-6 h-6 text-white" />
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Shield className="w-5 h-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <div className="text-white">Secure</div>
-                  <div className="text-xs text-white/70">Best Price Guarantee</div>
+                  <div className="text-white text-sm">Secure Booking</div>
+                  <div className="text-xs text-white/80">Best Price Guarantee</div>
                 </div>
               </div>
 
-              <div className="h-12 w-px bg-white/20" />
+              <div className="h-10 w-px bg-white/30 hidden lg:block" />
 
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Clock className="w-6 h-6 text-white" />
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Clock className="w-5 h-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <div className="text-white">24/7</div>
-                  <div className="text-xs text-white/70">Customer Support</div>
+                  <div className="text-white text-sm">24/7 Support</div>
+                  <div className="text-xs text-white/80">Always Available</div>
                 </div>
               </div>
             </motion.div>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <motion.div
-          animate={{
-            y: [0, 10, 0],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs">Scroll to explore</span>
-            <ChevronDown className="w-5 h-5" />
-          </div>
-        </motion.div>
+        {/* Carousel Navigation Dots */}
+        <div className="absolute top-1/2 right-6 -translate-y-1/2 z-30 flex flex-col gap-3">
+          {heroCarouselImages.map((_, index) => (
+            <motion.button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`rounded-full transition-all ${
+                currentSlide === index 
+                  ? 'bg-white h-12 w-3' 
+                  : 'bg-white/50 h-3 w-3 hover:bg-white/80'
+              }`}
+              whileHover={{ scale: 1.3 }}
+              whileTap={{ scale: 0.9 }}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
       </section>
 
       {/* Latest Umrah Packages Section */}
-      <section id="premade-umrah-packages" className="py-20 bg-gradient-to-br from-green-50 via-white to-blue-50">
+      <section id="premade-umrah-packages" className="py-12 bg-gradient-to-br from-emerald-50/50 via-white to-blue-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="mb-10"
           >
-            <div className="inline-flex items-center gap-2 bg-green-100 px-4 py-2 rounded-full mb-4">
-              <Building className="w-6 h-6 text-green-800" />
-              <span className="text-sm text-green-800">Special Umrah Packages</span>
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-12 bg-gradient-to-r from-green-600 to-emerald-500 rounded-full"></div>
+                <span className="text-sm text-green-700 uppercase tracking-wider">Special Packages</span>
+              </div>
+              <h2 className="text-gray-900 text-2xl md:text-3xl">Featured Umrah Packages</h2>
             </div>
-            <h2 className="text-gray-900 mb-4 text-3xl md:text-4xl">Latest Umrah Packages</h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Experience the spiritual journey with our carefully curated Umrah packages
-            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[
               {
+                id: 1,
                 name: 'Economy Umrah Package',
-                duration: '7 Days / 6 Nights',
-                price: '$1,299',
-                image: 'https://images.unsplash.com/photo-1710695198971-3abdf7fcc82e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxrYWFiYSUyMG1lY2NhJTIwdW1yYWh8ZW58MXx8fHwxNzYyNDQyMDIwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-                hotel: '3 Star',
-                features: ['Round-trip Flights', 'Hotel Stay', 'Breakfast Included', 'Airport Transfer'],
+                price: 185000,
+                duration: 14,
+                badge: 'Budget Friendly',
+                badgeColor: 'bg-green-500',
+                airline: 'Pakistan International Airlines',
+                departureCity: 'Karachi',
+                image: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=800&q=80',
+                hotels: {
+                  makkah: { name: 'Al Safwah Royal Orchid', distance: '800m from Haram', stars: 3 },
+                  madinah: { name: 'Al Eiman Royal', distance: '500m from Masjid Nabawi', stars: 3 }
+                },
+                features: [
+                  'Return Air Ticket',
+                  '14 Days Accommodation',
+                  'Breakfast & Dinner',
+                  'Umrah Visa',
+                  'Airport Transfers',
+                  'Ziyarat Tours',
+                  '24/7 Support'
+                ],
+                travelers: '2-4 People per Room',
+                rating: 4.3,
+                reviews: 245,
                 popular: false,
               },
               {
-                name: 'Premium Umrah Package',
-                duration: '14 Days / 13 Nights',
-                price: '$2,499',
-                image: 'https://images.unsplash.com/photo-1676200928665-8b97df7ab979?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZWNjYSUyMG1vc3F1ZSUyMHBpbGdyaW1hZ2V8ZW58MXx8fHwxNzYyNTIyMTk1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-                hotel: '4 Star Near Haram',
-                features: ['Round-trip Flights', '4 Star Hotel', 'All Meals', 'Transport', 'Ziarat Tour', 'Visa Processing'],
+                id: 2,
+                name: 'Standard Umrah Package',
+                price: 285000,
+                duration: 15,
+                badge: 'Most Popular',
+                badgeColor: 'bg-blue-500',
+                airline: 'Saudi Airlines',
+                departureCity: 'Lahore',
                 popular: true,
+                image: 'https://images.unsplash.com/photo-1591604129853-212965412d4f?w=800&q=80',
+                hotels: {
+                  makkah: { name: 'Swissotel Makkah', distance: '300m from Haram', stars: 4 },
+                  madinah: { name: 'Crowne Plaza Madinah', distance: '200m from Masjid Nabawi', stars: 4 }
+                },
+                features: [
+                  'Return Air Ticket',
+                  '15 Days Accommodation',
+                  'All Meals Included',
+                  'Umrah Visa',
+                  'Airport & Hotel Transfers',
+                  'Guided Ziyarat Tours',
+                  'Travel Insurance',
+                  '24/7 Support'
+                ],
+                travelers: '2-3 People per Room',
+                rating: 4.7,
+                reviews: 412,
               },
               {
+                id: 3,
+                name: 'Premium Umrah Package',
+                price: 425000,
+                duration: 20,
+                badge: 'Best Value',
+                badgeColor: 'bg-purple-500',
+                airline: 'Emirates',
+                departureCity: 'Islamabad',
+                image: 'https://images.unsplash.com/photo-1580418827493-f2b22c0a76cb?w=800&q=80',
+                hotels: {
+                  makkah: { name: 'Hilton Suites Makkah', distance: 'Walking Distance to Haram', stars: 5 },
+                  madinah: { name: 'Oberoi Madinah', distance: 'Walking Distance to Masjid Nabawi', stars: 5 }
+                },
+                features: [
+                  'Business Class Available',
+                  '20 Days Accommodation',
+                  'Buffet - All Meals',
+                  'Umrah Visa (Fast Track)',
+                  'Private Transfers',
+                  'Premium Guided Ziyarat',
+                  'Laundry Service',
+                  'Travel Insurance',
+                  'SIM Card & WiFi',
+                  '24/7 Dedicated Support'
+                ],
+                travelers: '2 People per Room',
+                rating: 4.9,
+                reviews: 328,
+                popular: false,
+              },
+              {
+                id: 4,
                 name: 'Luxury Umrah Package',
-                duration: '21 Days / 20 Nights',
-                price: '$4,999',
-                image: 'https://images.unsplash.com/photo-1689333532270-7849d33de8aa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWRpbmFoJTIwbW9zcXVlJTIwc2F1ZGl8ZW58MXx8fHwxNzYyNDM5OTYwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-                hotel: '5 Star Premium',
-                features: ['Business Class Flights', '5 Star Hotel', 'All Meals', 'Private Transport', 'VIP Ziarat', 'Visa Processing', 'Personal Guide'],
+                price: 625000,
+                duration: 21,
+                badge: 'VIP Experience',
+                badgeColor: 'bg-gradient-to-r from-amber-500 to-orange-600',
+                airline: 'Qatar Airways',
+                departureCity: 'Karachi',
+                image: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=800&q=80',
+                hotels: {
+                  makkah: { name: 'Raffles Makkah Palace', distance: 'Connected to Haram', stars: 5 },
+                  madinah: { name: 'Anwar Al Madinah Mövenpick', distance: 'Premium Location', stars: 5 }
+                },
+                features: [
+                  'Business Class Tickets',
+                  '21 Days Luxury Stay',
+                  'Premium Dining - All Meals',
+                  'Express Umrah Visa',
+                  'VIP Airport Services',
+                  'Private Luxury Transfers',
+                  'Exclusive Guided Tours',
+                  'Personal Concierge',
+                  'Premium Laundry',
+                  'Full Travel Insurance',
+                  'International SIM & WiFi',
+                  'VIP 24/7 Support'
+                ],
+                travelers: '2 People per Room',
+                rating: 5.0,
+                reviews: 189,
                 popular: false,
               },
             ].map((pkg, index) => (
               <motion.div
-                key={pkg.name}
+                key={pkg.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className={`relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all overflow-hidden ${pkg.popular ? 'ring-2 ring-green-500' : ''
-                  }`}
               >
-                {/* Popular Badge */}
-                {pkg.popular && (
-                  <div className="absolute top-4 right-4 z-10">
-                    <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs shadow-lg flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-white" />
-                      <span>Most Popular</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Image */}
-                <div className="aspect-[4/3] relative overflow-hidden">
-                  <ImageWithFallback
-                    src={pkg.image}
-                    alt={pkg.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-                  {/* Price Tag on Image */}
-                  <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
-                    <div className="text-xs text-gray-600">Starting from</div>
-                    <div className="text-2xl text-green-600">{pkg.price}</div>
-                    <div className="text-xs text-gray-500">per person</div>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-xl text-gray-900 mb-2">{pkg.name}</h3>
-
-                  <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      <span>{pkg.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Award className="w-4 h-4 text-yellow-600" />
-                      <span>{pkg.hotel}</span>
-                    </div>
-                  </div>
-
-                  {/* Features */}
-                  <div className="space-y-2 mb-6">
-                    {pkg.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-sm text-gray-700">
-                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>{feature}</span>
+                <Card className={`overflow-hidden hover:shadow-xl transition-shadow ${
+                  pkg.popular ? 'ring-2 ring-blue-500' : ''
+                }`}>
+                  <CardContent className="p-0">
+                    {/* Header Section */}
+                    <div className={`${pkg.badgeColor} p-4 text-white`}>
+                      <div className="flex items-start justify-between flex-wrap gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
+                              {pkg.badge}
+                            </Badge>
+                            {pkg.popular && (
+                              <Badge className="bg-yellow-500 text-white flex items-center gap-1 text-xs">
+                                <Star className="w-3 h-3 fill-white" />
+                                <span>Popular</span>
+                              </Badge>
+                            )}
+                          </div>
+                          <h3 className="font-bold text-xl mb-2">{pkg.name}</h3>
+                          <div className="flex items-center gap-3 text-white/90 flex-wrap text-xs">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span>{pkg.duration} Days</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5" />
+                              <span>{pkg.departureCity}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <img 
+                                src={getAirlineLogo(pkg.airline).toString()} 
+                                alt={pkg.airline}
+                                className="w-4 h-4 object-contain bg-white rounded p-0.5"
+                              />
+                              <span className="truncate max-w-[120px]">{pkg.airline}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-white/80 text-xs mb-0.5">Starting from</p>
+                          <p className="text-2xl font-bold">
+                            PKR {pkg.price.toLocaleString()}
+                          </p>
+                          <p className="text-white/80 text-xs">per person</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
 
-                  {/* Book Button */}
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      className={`w-full py-6 rounded-xl text-base shadow-md ${pkg.popular
-                        ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                        : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
-                        }`}
-                    >
-                      Book Now
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </motion.div>
-                </div>
+                    {/* Content */}
+                    <div className="p-4">
+                      {/* Rating */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3.5 h-3.5 ${
+                                i < Math.floor(pkg.rating)
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-gray-600">
+                          {pkg.rating} ({pkg.reviews} reviews)
+                        </span>
+                      </div>
+
+                      {/* Hotels */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                        <Link 
+                          href={`/hotels/makkah/${pkg.hotels.makkah.name.toLowerCase().replace(/\s+/g, '-')}`}
+                          className="block"
+                        >
+                          <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                            <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
+                                <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
+                              </div>
+                              <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                            </div>
+                            <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.makkah.name}</p>
+                            <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.makkah.distance}</p>
+                            <div className="flex">
+                              {[...Array(pkg.hotels.makkah.stars)].map((_, i) => (
+                                <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                              ))}
+                            </div>
+                          </div>
+                        </Link>
+                        <Link 
+                          href={`/hotels/madinah/${pkg.hotels.madinah.name.toLowerCase().replace(/\s+/g, '-')}`}
+                          className="block"
+                        >
+                          <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                            <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
+                                <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
+                              </div>
+                              <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                            </div>
+                            <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.madinah.name}</p>
+                            <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.madinah.distance}</p>
+                            <div className="flex">
+                              {[...Array(pkg.hotels.madinah.stars)].map((_, i) => (
+                                <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                              ))}
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+
+                      {/* Features */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
+                        {pkg.features.slice(0, 8).map((feature, idx) => (
+                          <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
+                            <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
+                            <span className="truncate text-xs">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-3 border-t">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                          <Users className="w-3.5 h-3.5" />
+                          <span>{pkg.travelers}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Link href={`/umrah-packages/${pkg.id}`}>
+                            <Button variant="outline" size="sm" className="text-xs h-8">
+                              View Details
+                            </Button>
+                          </Link>
+                          <Link href="/customize-umrah">
+                            <Button 
+                              size="sm"
+                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-xs h-8"
+                            >
+                              Book Now
+                              <Plane className="w-3.5 h-3.5 ml-1.5" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>
@@ -538,17 +778,27 @@ export function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-12 text-center"
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <p className="text-gray-600 mb-4">Need a customized package?</p>
-            <Link href="/customize-umrah">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="outline"
-                  className="border-2 border-green-600 text-green-600 hover:bg-green-50 px-8 py-6 rounded-xl text-base"
+            <Link href="/umrah-packages">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-5 rounded-lg text-sm gap-2 shadow-md"
                 >
-                  Customize Your Umrah Package
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  View All Packages
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            </Link>
+            
+            <Link href="/customize-umrah">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  variant="outline" 
+                  className="border-2 border-green-600 text-green-600 hover:bg-green-50 px-8 py-5 rounded-lg text-sm gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  Customize Your Package
                 </Button>
               </motion.div>
             </Link>
@@ -560,18 +810,19 @@ export function HomePage() {
 
 
       {/* Services Section */}
-      <section className="py-20 bg-gray-50 overflow-hidden">
+      <section className="py-12 bg-gradient-to-br from-slate-50 to-gray-100/50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="mb-8"
           >
-            <h2 className="text-gray-900 mb-4 text-3xl md:text-4xl">Our Services</h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Comprehensive travel solutions tailored to your needs
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full"></div>
+              <span className="text-sm text-blue-700 uppercase tracking-wider">What We Offer</span>
+            </div>
+            <h2 className="text-gray-900 text-2xl md:text-3xl">Our Services</h2>
           </motion.div>
 
           {/* Horizontal Carousel with Navigation Arrows */}
@@ -605,7 +856,7 @@ export function HomePage() {
             </motion.button>
 
             {/* Scroll Container */}
-            <div
+            <div 
               ref={scrollContainerRef}
               className="overflow-x-auto scrollbar-hide overflow-y-visible px-12"
             >
@@ -618,55 +869,41 @@ export function HomePage() {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.05 }}
                     whileHover={{ y: -10, scale: 1.03 }}
-                    className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[380px]"
+                    className="flex-shrink-0 w-[240px] sm:w-[280px] md:w-[320px]"
                   >
-                    <div className="relative h-[320px] md:h-[380px] rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all cursor-pointer group">
+                    <div className="relative h-[280px] md:h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer group">
                       {/* Background Image */}
                       <ImageWithFallback
                         src={service.image}
                         alt={service.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
-
+                      
                       {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                      
                       {/* Content */}
-                      <div className="absolute inset-0 flex flex-col justify-end p-8">
+                      <div className="absolute inset-0 flex flex-col justify-end p-6">
                         <motion.div
                           initial={{ y: 20, opacity: 0 }}
                           whileInView={{ y: 0, opacity: 1 }}
                           viewport={{ once: true }}
                           transition={{ delay: index * 0.1 }}
                         >
-                          {/* Icon */}
-                          <div className="mb-4">
-                            <service.icon className="w-16 h-16 md:w-20 md:h-20 text-white" />
-                          </div>
-
                           {/* Service Name */}
-                          <h3 className="text-white text-2xl md:text-3xl mb-3">
+                          <h3 className="text-white text-xl md:text-2xl mb-2">
                             {service.name}
                           </h3>
-
+                          
                           {/* Description */}
-                          <p className="text-white/90 text-sm md:text-base mb-4">
+                          <p className="text-white/80 text-sm md:text-base">
                             {service.description}
                           </p>
-
-                          {/* Learn More Button */}
-                          <motion.button
-                            whileHover={{ x: 5 }}
-                            className="text-blue-400 text-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <span>Learn More</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </motion.button>
                         </motion.div>
                       </div>
 
                       {/* Hover Border Effect */}
-                      <div className="absolute inset-0 border-4 border-blue-500/0 group-hover:border-blue-500/50 transition-colors rounded-3xl pointer-events-none" />
+                      <div className="absolute inset-0 border-2 border-blue-500/0 group-hover:border-blue-500/50 transition-colors rounded-2xl pointer-events-none" />
                     </div>
                   </motion.div>
                 ))}
@@ -688,21 +925,19 @@ export function HomePage() {
       </section>
 
       {/* Airlines Carousel Section */}
-      (
-      <section className="py-16 bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
+      <section className="py-10 bg-white border-y border-gray-100 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="mb-8"
           >
-            <h2 className="text-gray-900 mb-3 text-3xl md:text-4xl">
-              Book with Leading Airlines
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Travel with the Best Flights Across the World!
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-indigo-600 to-purple-500 rounded-full"></div>
+              <span className="text-sm text-indigo-700 uppercase tracking-wider">Our Partners</span>
+            </div>
+            <h2 className="text-gray-900 text-2xl md:text-3xl">Leading Airlines</h2>
           </motion.div>
 
           {/* Infinite Scrolling Carousel */}
@@ -726,32 +961,28 @@ export function HomePage() {
                 {airlines.map((airline, index) => (
                   <motion.div
                     key={`airline-${index}`}
-                    className="flex-shrink-0 bg-transparent rounded-2xl p-6 w-40 h-40 flex items-center justify-center"
-                    whileHover={{ scale: 1.1, y: -8 }}
+                    className="flex-shrink-0 bg-gray-50 rounded-xl p-4 w-32 h-32 flex items-center justify-center border border-gray-200"
+                    whileHover={{ scale: 1.05, y: -4 }}
                   >
-                    <Image
-                      src={airline.logo}
+                    <img
+                      src={airline.logo.src}
                       alt={airline.name}
-                      width={500}
-                      height={500}
                       className="max-w-full max-h-full object-contain transition-all duration-300"
                     />
                   </motion.div>
                 ))}
-
+                
                 {/* Duplicate set for seamless loop */}
                 {airlines.map((airline, index) => (
                   <motion.div
                     key={`airline-duplicate-${index}`}
-                    className="flex-shrink-0 bg-transparent rounded-2xl p-6 w-40 h-40 flex items-center justify-center"
-                    whileHover={{ scale: 1.1, y: -8 }}
+                    className="flex-shrink-0 bg-gray-50 rounded-xl p-4 w-32 h-32 flex items-center justify-center border border-gray-200"
+                    whileHover={{ scale: 1.05, y: -4 }}
                   >
-                    <Image
-                      src={airline.logo}
+                    <img
+                      src={airline.logo.src}
                       alt={airline.name}
-                      width={500}
-                      height={500}
-                      className="object-contain transition-all duration-300"
+                      className="max-w-full max-h-full object-contain transition-all duration-300"
                     />
                   </motion.div>
                 ))}
@@ -762,165 +993,310 @@ export function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-12 bg-gradient-to-br from-blue-50/30 via-white to-indigo-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="mb-8"
           >
-            <h2 className="text-gray-900 mb-4 text-3xl md:text-4xl">Why Choose Us?</h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Experience the difference with Telus Umrah
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full"></div>
+              <span className="text-sm text-blue-700 uppercase tracking-wider">Why Us</span>
+            </div>
+            <h2 className="text-gray-900 text-2xl md:text-3xl">Why Choose Telus Umrah</h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-blue-100"
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ y: -4 }}
+                className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100"
               >
-                <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
-                  <feature.icon className="w-7 h-7 text-white" />
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mb-3">
+                  <feature.icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-gray-900 mb-2 text-lg">{feature.title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="text-gray-900 mb-1 text-sm">{feature.title}</h3>
+                <p className="text-gray-600 text-xs leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Popular Destinations */}
-      <section className="py-20 bg-gray-50">
+      {/* Popular Hotels */}
+      <section className="py-12 bg-gradient-to-br from-gray-50 to-slate-100/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="mb-8"
           >
-            <h2 className="text-gray-900 mb-4 text-3xl md:text-4xl">Popular Destinations</h2>
-            <p className="text-gray-600 text-lg">
-              Discover breathtaking destinations around the world
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-purple-600 to-pink-500 rounded-full"></div>
+              <span className="text-sm text-purple-700 uppercase tracking-wider">Accommodations</span>
+            </div>
+            <h2 className="text-gray-900 text-2xl md:text-3xl">Popular Hotels</h2>
+            <p className="text-gray-600 mt-2">Premium hotels near the Holy Mosques in Makkah and Madina</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {destinations.map((destination, index) => (
-              <motion.div
-                key={destination.name}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group bg-white"
-              >
-                <div className="aspect-[4/3] relative overflow-hidden">
-                  <ImageWithFallback
-                    src={destination.image}
-                    alt={destination.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-                  {/* Content Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <div className="text-xs text-blue-300 mb-2">{destination.description}</div>
-                    <h3 className="mb-2 text-xl">{destination.name}</h3>
-                    <div className="flex items-center justify-between">
-                      <p className="text-blue-300 text-lg">{destination.deals}</p>
-                      <motion.div
-                        className="flex items-center gap-1 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                        whileHover={{ x: 5 }}
-                      >
-                        <span>Explore</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {popularHotels.map((hotel, index) => (
+              <Link key={hotel.name} href={`/hotels/${hotel.city}/${hotel.slug}`}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -4 }}
+                  className="relative rounded-xl overflow-hidden shadow-md cursor-pointer group bg-white"
+                >
+                  <div className="aspect-square relative overflow-hidden">
+                    <ImageWithFallback
+                      src={hotel.image}
+                      alt={hotel.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    
+                    {/* Stars Badge */}
+                    <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-0.5">
+                      {Array.from({ length: hotel.stars }).map((_, i) => (
+                        <Star key={i} className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
+                      ))}
+                    </div>
+                    
+                    {/* Content Overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                      <div className="flex items-center gap-1 text-xs text-blue-300 mb-1">
+                        <MapPin className="w-3 h-3" />
+                        <span>{hotel.location}</span>
+                      </div>
+                      <h3 className="mb-1 text-sm line-clamp-1">{hotel.name}</h3>
+                      <p className="text-blue-300 text-xs mb-0.5">{hotel.distance}</p>
+                      <p className="text-white text-xs">{hotel.price}</p>
                     </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </Link>
             ))}
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-8 text-center"
+          >
+            <Link href="/makkah-hotels">
+              <Button className="bg-[rgb(30,58,109)] hover:bg-[rgb(40,70,130)] mr-3">
+                <Hotel className="w-4 h-4 mr-2" />
+                View All Makkah Hotels
+              </Button>
+            </Link>
+            <Link href="/madina-hotels">
+              <Button className="bg-[rgb(30,58,109)] hover:bg-[rgb(40,70,130)]">
+                <Hotel className="w-4 h-4 mr-2" />
+                View All Madina Hotels
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-white">
+      <section className="py-12 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="mb-8"
           >
-            <h2 className="text-gray-900 mb-4 text-3xl md:text-4xl">What Our Clients Say</h2>
-            <p className="text-gray-600 text-lg">
-              Hear from travelers who trusted us with their journeys
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-amber-600 to-orange-500 rounded-full"></div>
+              <span className="text-sm text-amber-700 uppercase tracking-wider">Reviews</span>
+            </div>
+            <h2 className="text-gray-900 text-2xl md:text-3xl">Client Testimonials</h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'Atif Ali',
-                role: 'Business Traveler',
-                comment: 'Exceptional service! The team handled everything from flights to hotels seamlessly. Highly recommended for business trips.',
-                rating: 5,
-              },
-              {
-                name: 'Hussnain Raza',
-                role: 'Family Vacation',
-                comment: 'Made our family vacation stress-free. Great deals and wonderful customer support throughout our journey.',
-                rating: 5,
-              },
-              {
-                name: 'Abdullah Afaq',
-                role: 'Solo Traveler',
-                comment: 'Best travel agency I\'ve used! Professional, reliable, and always there when I needed assistance.',
-                rating: 5,
-              },
-            ].map((testimonial, index) => (
+          {/* Infinite Scrolling Testimonials */}
+          <div className="relative">
+            <div className="overflow-hidden">
               <motion.div
-                key={testimonial.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-gray-50 p-6 rounded-2xl border border-gray-200"
+                className="flex gap-4"
+                animate={{
+                  x: [0, -2400],
+                }}
+                transition={{
+                  x: {
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    duration: 40,
+                    ease: "linear",
+                  },
+                }}
               >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-6 italic leading-relaxed">"{testimonial.comment}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white">
-                    {testimonial.name.split(' ').map(n => n[0]).join('')}
+                {/* First set of testimonials */}
+                {[
+                  {
+                    name: 'Atif Ali',
+                    role: 'Business Traveler',
+                    comment: 'Exceptional service! The team handled everything from flights to hotels seamlessly. Highly recommended!',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Hussnain Raza',
+                    role: 'Family Vacation',
+                    comment: 'Made our family vacation stress-free. Great deals and wonderful customer support throughout.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Abdullah Afaq',
+                    role: 'Solo Traveler',
+                    comment: 'Best travel agency! Professional, reliable, and always there when needed assistance.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Sarah Ahmed',
+                    role: 'Umrah Pilgrim',
+                    comment: 'The Umrah package was perfect. Hotels near Haram and excellent service made our journey memorable.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Muhammad Khan',
+                    role: 'Group Travel',
+                    comment: 'Organized our group tour flawlessly. Every detail was taken care of. Will definitely book again!',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Fatima Noor',
+                    role: 'Honeymoon Trip',
+                    comment: 'They made our honeymoon special with great hotel choices and seamless travel arrangements.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Ali Hassan',
+                    role: 'Corporate Travel',
+                    comment: 'Professional service for our business delegations. Always on time and well organized.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Ayesha Malik',
+                    role: 'Student Travel',
+                    comment: 'Affordable packages for students with great support. Made my study abroad journey smooth.',
+                    rating: 5,
+                  },
+                ].map((testimonial, index) => (
+                  <div
+                    key={`testimonial-${index}`}
+                    className="flex-shrink-0 w-[300px] bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200 shadow-sm"
+                  >
+                    <div className="flex gap-0.5 mb-3">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-gray-700 mb-4 text-sm leading-relaxed">"{testimonial.comment}"</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xs">
+                        {testimonial.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <div className="text-gray-900 text-sm">{testimonial.name}</div>
+                        <div className="text-xs text-gray-500">{testimonial.role}</div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-gray-900">{testimonial.name}</div>
-                    <div className="text-sm text-gray-500">{testimonial.role}</div>
+                ))}
+                
+                {/* Duplicate set for seamless loop */}
+                {[
+                  {
+                    name: 'Atif Ali',
+                    role: 'Business Traveler',
+                    comment: 'Exceptional service! The team handled everything from flights to hotels seamlessly. Highly recommended!',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Hussnain Raza',
+                    role: 'Family Vacation',
+                    comment: 'Made our family vacation stress-free. Great deals and wonderful customer support throughout.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Abdullah Afaq',
+                    role: 'Solo Traveler',
+                    comment: 'Best travel agency! Professional, reliable, and always there when needed assistance.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Sarah Ahmed',
+                    role: 'Umrah Pilgrim',
+                    comment: 'The Umrah package was perfect. Hotels near Haram and excellent service made our journey memorable.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Muhammad Khan',
+                    role: 'Group Travel',
+                    comment: 'Organized our group tour flawlessly. Every detail was taken care of. Will definitely book again!',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Fatima Noor',
+                    role: 'Honeymoon Trip',
+                    comment: 'They made our honeymoon special with great hotel choices and seamless travel arrangements.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Ali Hassan',
+                    role: 'Corporate Travel',
+                    comment: 'Professional service for our business delegations. Always on time and well organized.',
+                    rating: 5,
+                  },
+                  {
+                    name: 'Ayesha Malik',
+                    role: 'Student Travel',
+                    comment: 'Affordable packages for students with great support. Made my study abroad journey smooth.',
+                    rating: 5,
+                  },
+                ].map((testimonial, index) => (
+                  <div
+                    key={`testimonial-duplicate-${index}`}
+                    className="flex-shrink-0 w-[300px] bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200 shadow-sm"
+                  >
+                    <div className="flex gap-0.5 mb-3">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-gray-700 mb-4 text-sm leading-relaxed">"{testimonial.comment}"</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xs">
+                        {testimonial.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <div className="text-gray-900 text-sm">{testimonial.name}</div>
+                        <div className="text-xs text-gray-500">{testimonial.role}</div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </motion.div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 relative overflow-hidden">
+      <section className="py-16 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -934,38 +1310,38 @@ export function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-white mb-4 text-3xl md:text-4xl">Ready to Start Your Journey?</h2>
-            <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of satisfied travelers who trust Telus Umrah for unforgettable experiences
+            <h2 className="text-white mb-3 text-2xl md:text-3xl">Ready to Start Your Journey?</h2>
+            <p className="text-white/80 text-sm md:text-base mb-6 max-w-xl mx-auto">
+              Join thousands of satisfied travelers with Telus Umrah
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-6 rounded-xl shadow-lg text-lg h-auto">
-                  <span>Book Your Trip Now</span>
-                  <ArrowRight className="w-5 h-5 ml-2" />
+            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-5 rounded-lg shadow-lg text-sm h-auto">
+                  <span>Book Your Trip</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </motion.div>
-
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-8 py-6 rounded-xl text-lg h-auto">
-                  Contact Our Agents
+              
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-5 rounded-lg text-sm h-auto">
+                  Contact Us
                 </Button>
               </motion.div>
             </div>
 
-            <div className="flex flex-wrap gap-6 justify-center items-center text-white/80 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-300" />
-                <span>Best Price Guarantee</span>
+            <div className="flex flex-wrap gap-4 justify-center items-center text-white/70 text-xs">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5 text-green-300" />
+                <span>Best Price</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-300" />
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5 text-green-300" />
                 <span>Instant Confirmation</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-300" />
-                <span>24/7 Customer Support</span>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5 text-green-300" />
+                <span>24/7 Support</span>
               </div>
             </div>
           </motion.div>

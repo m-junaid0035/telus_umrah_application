@@ -20,11 +20,47 @@ import {
   Search,
   X,
   ArrowUpDown,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
+
+// Import Makkah and Madina icons
+import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
+import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
+
+// Import airline logos
+import sereneAirLogo from '@/assets/d0c55b978a086a73b2fb50854cf04ff81b6aac0b.png';
+import gulfAirLogo from '@/assets/e28e0a2d39614f5bf7ea2c55d6fc579d46d4c9fc.png';
+import turkishAirlinesLogo from '@/assets/ac3c2c97ff797a518e5f4d4cb47dcefc00bcb019.png';
+import qatarAirwaysLogo from '@/assets/e8f7e43e4182484eee13d1fd750ab600da4a61b1.png';
+import thaiAirwaysLogo from '@/assets/cdb220143886cc62c69f62df943f6d4696ae28fd.png';
+import saudiaLogo from '@/assets/b9f20e713c92c82b6e94ffa74d871a980c8049ba.png';
+import piaLogo from '@/assets/35293a117c78f2e22505cf3ae7ef2f152cf09f0b.png';
+import etihadLogo from '@/assets/713718ae1d0268b59f79364ed8d891884e2f5326.png';
+import shaheenAirLogo from '@/assets/dc2814087104402377fd7a3913ebe47172426e2f.png';
+import emiratesLogo from '@/assets/bbf68fd4ecd3e7277285a22042637fbaafc25a7c.png';
+import airblueLogo from '@/assets/46162b64c705ab0c6c4e53a96bd897744d3a77d9.png';
+
+// Helper function to get airline logo
+const getAirlineLogo = (airlineName: string) => {
+  const airlineMap: { [key: string]: string } = {
+    'Pakistan International Airlines': piaLogo.src,
+    'Saudi Airlines': saudiaLogo.src,
+    'Emirates': emiratesLogo.src,
+    'Qatar Airways': qatarAirwaysLogo.src,
+    'Turkish Airlines': turkishAirlinesLogo.src,
+    'Etihad Airways': etihadLogo.src,
+    'Gulf Air': gulfAirLogo.src,
+    'Thai Airways': thaiAirwaysLogo.src,
+    'Serene Air': sereneAirLogo.src,
+    'Airblue': airblueLogo.src,
+    'Shaheen Air': shaheenAirLogo.src,
+  };
+  return airlineMap[airlineName] || piaLogo;
+};
 
 const allPackages = [
   {
@@ -434,7 +470,7 @@ export function UmrahPackagesPage() {
             </div>
 
             {/* Packages List */}
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredPackages.map((pkg, index) => (
                 <motion.div
                   key={pkg.id}
@@ -446,134 +482,148 @@ export function UmrahPackagesPage() {
                     pkg.popular ? 'ring-2 ring-blue-500' : ''
                   }`}>
                     <CardContent className="p-0">
-                      <div className="flex flex-col md:flex-row">
-                        {/* Image */}
-                        <div className="relative md:w-80 h-64 md:h-auto">
-                          <img 
-                            src={pkg.image} 
-                            alt={pkg.name}
-                            className="w-full h-full object-cover"
-                          />
-                          <Badge className={`absolute top-4 left-4 ${pkg.badgeColor} text-white`}>
-                            {pkg.badge}
-                          </Badge>
-                          {pkg.popular && (
-                            <Badge className="absolute top-4 right-4 bg-yellow-500 text-white flex items-center gap-1">
-                              <Star className="w-3 h-3 fill-white" />
-                              <span>Popular</span>
-                            </Badge>
-                          )}
+                      {/* Header Section */}
+                      <div className={`${pkg.badgeColor} p-4 text-white`}>
+                        <div className="flex items-start justify-between flex-wrap gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
+                                {pkg.badge}
+                              </Badge>
+                              {pkg.popular && (
+                                <Badge className="bg-yellow-500 text-white flex items-center gap-1 text-xs">
+                                  <Star className="w-3 h-3 fill-white" />
+                                  <span>Popular</span>
+                                </Badge>
+                              )}
+                            </div>
+                            <h3 className="font-bold text-xl mb-2">{pkg.name}</h3>
+                            <div className="flex items-center gap-3 text-white/90 flex-wrap text-xs">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5" />
+                                <span>{pkg.duration} Days</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3.5 h-3.5" />
+                                <span>{pkg.departureCity}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <img 
+                                  src={getAirlineLogo(pkg.airline).toString()} 
+                                  alt={pkg.airline}
+                                  className="w-4 h-4 object-contain bg-white rounded p-0.5"
+                                />
+                                <span className="truncate max-w-[120px]">{pkg.airline}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-white/80 text-xs mb-0.5">Starting from</p>
+                            <p className="text-2xl font-bold">
+                              PKR {pkg.price.toLocaleString()}
+                            </p>
+                            <p className="text-white/80 text-xs">per person</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-4">
+                        {/* Rating */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3.5 h-3.5 ${
+                                  i < Math.floor(pkg.rating)
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-xs text-gray-600">
+                            {pkg.rating} ({pkg.reviews} reviews)
+                          </span>
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1 p-6">
-                          <div className="flex flex-col h-full">
-                            {/* Header */}
-                            <div className="flex justify-between items-start mb-4">
-                              <div>
-                                <h3 className="text-gray-900 mb-2">{pkg.name}</h3>
-                                <div className="flex items-center gap-4 text-sm text-gray-600">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>{pkg.duration} Days</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="w-4 h-4" />
-                                    <span>{pkg.departureCity}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Plane className="w-4 h-4" />
-                                    <span>{pkg.airline}</span>
-                                  </div>
+                        {/* Hotels */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                          <Link 
+                            href={`/hotels/makkah/${pkg.hotels.makkah.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            className="block"
+                          >
+                            <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                              <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                                <div className="flex items-center gap-1.5">
+                                  <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
+                                  <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
                                 </div>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <div className="flex items-center">
-                                    {[...Array(5)].map((_, i) => (
-                                      <Star
-                                        key={i}
-                                        className={`w-4 h-4 ${
-                                          i < Math.floor(pkg.rating)
-                                            ? 'fill-yellow-400 text-yellow-400'
-                                            : 'text-gray-300'
-                                        }`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-sm text-gray-600">
-                                    {pkg.rating} ({pkg.reviews} reviews)
-                                  </span>
-                                </div>
+                                <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
                               </div>
-                              <div className="text-right">
-                                <p className="text-sm text-gray-600">Starting from</p>
-                                <p className="text-blue-600 text-2xl">
-                                  PKR {pkg.price.toLocaleString()}
-                                </p>
-                                <p className="text-xs text-gray-500">per person</p>
+                              <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.makkah.name}</p>
+                              <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.makkah.distance}</p>
+                              <div className="flex">
+                                {[...Array(pkg.hotels.makkah.stars)].map((_, i) => (
+                                  <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                                ))}
                               </div>
                             </div>
+                          </Link>
+                          <Link 
+                           href={`/hotels/madinah/${pkg.hotels.madinah.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            className="block"
+                          >
+                            <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                              <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                                <div className="flex items-center gap-1.5">
+                                  <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
+                                  <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
+                                </div>
+                                <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                              </div>
+                              <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.madinah.name}</p>
+                              <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.madinah.distance}</p>
+                              <div className="flex">
+                                {[...Array(pkg.hotels.madinah.stars)].map((_, i) => (
+                                  <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                                ))}
+                              </div>
+                            </div>
+                          </Link>
+                        </div>
 
-                            {/* Hotels */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Hotel className="w-4 h-4 text-blue-600" />
-                                  <span className="text-sm text-gray-900">Makkah Hotel</span>
-                                </div>
-                                <p className="text-xs text-gray-600">{pkg.hotels.makkah.name}</p>
-                                <p className="text-xs text-gray-500">{pkg.hotels.makkah.distance}</p>
-                                <div className="flex mt-1">
-                                  {[...Array(pkg.hotels.makkah.stars)].map((_, i) => (
-                                    <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  ))}
-                                </div>
-                              </div>
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Hotel className="w-4 h-4 text-green-600" />
-                                  <span className="text-sm text-gray-900">Madinah Hotel</span>
-                                </div>
-                                <p className="text-xs text-gray-600">{pkg.hotels.madinah.name}</p>
-                                <p className="text-xs text-gray-500">{pkg.hotels.madinah.distance}</p>
-                                <div className="flex mt-1">
-                                  {[...Array(pkg.hotels.madinah.stars)].map((_, i) => (
-                                    <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  ))}
-                                </div>
-                              </div>
+                        {/* Features */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
+                          {pkg.features.slice(0, 8).map((feature, idx) => (
+                            <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
+                              <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
+                              <span className="truncate text-xs">{feature}</span>
                             </div>
+                          ))}
+                        </div>
 
-                            {/* Features */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                              {pkg.features.slice(0, 8).map((feature, idx) => (
-                                <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
-                                  <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
-                                  <span className="truncate">{feature}</span>
-                                </div>
-                              ))}
-                            </div>
-
-                            {/* Footer */}
-                            <div className="flex items-center justify-between pt-4 border-t mt-auto">
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Users className="w-4 h-4" />
-                                <span>{pkg.travelers}</span>
-                              </div>
-                              <div className="flex gap-3">
-                                <Link href={`/umrah-packages/${pkg.id}`}>
-                                  <Button variant="outline" size="sm">
-                                    View Details
-                                  </Button>
-                                </Link>
-                                <Button 
-                                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                                  onClick={() => handleBookNow(pkg)}
-                                >
-                                  Book Now
-                                  <Plane className="w-4 h-4 ml-2" />
-                                </Button>
-                              </div>
-                            </div>
+                        {/* Footer */}
+                        <div className="flex items-center justify-between pt-3 border-t">
+                          <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                            <Users className="w-3.5 h-3.5" />
+                            <span>{pkg.travelers}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Link href={`/umrah-packages/${pkg.id}`}>
+                              <Button variant="outline" size="sm" className="text-xs h-8">
+                                View Details
+                              </Button>
+                            </Link>
+                            <Button 
+                              size="sm"
+                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-xs h-8"
+                              onClick={() => handleBookNow(pkg)}
+                            >
+                              Book Now
+                              <Plane className="w-3.5 h-3.5 ml-1.5" />
+                            </Button>
                           </div>
                         </div>
                       </div>

@@ -1,4 +1,3 @@
-"use client";
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 import { Button } from './ui/button';
@@ -83,31 +82,6 @@ export function ContactPage() {
               Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
             </p>
           </motion.div>
-        </div>
-      </section>
-
-      {/* Contact Info Cards */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {contactInfo.map((info, index) => (
-              <motion.div
-                key={info.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white p-6 rounded-xl shadow-lg text-center hover:shadow-xl transition-all"
-              >
-                <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <info.icon className="w-6 h-6 text-blue-600" />
-                </div>
-                <h3 className="text-gray-900 mb-2">{info.title}</h3>
-                <p className="text-gray-600 text-sm mb-1">{info.details}</p>
-                <p className="text-gray-500 text-sm">{info.subdetails}</p>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 

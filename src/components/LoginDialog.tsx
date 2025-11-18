@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, X, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
@@ -10,12 +10,20 @@ import { useAuth } from './AuthContext';
 interface LoginDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultMode?: 'login' | 'signup';
 }
 
-export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: LoginDialogProps) {
+  const [mode, setMode] = useState<'login' | 'signup'>(defaultMode);
   const [loading, setLoading] = useState(false);
   const { login, signup } = useAuth();
+  
+  // Reset mode when dialog opens with new defaultMode
+  useEffect(() => {
+    if (open) {
+      setMode(defaultMode);
+    }
+  }, [open, defaultMode]);
   
   const [formData, setFormData] = useState({
     name: '',
