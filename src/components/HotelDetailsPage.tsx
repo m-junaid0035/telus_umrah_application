@@ -948,9 +948,7 @@ export function HotelDetailsPage() {
 
   // Get hotel data
   const cityData = city ? hotelsData[city as keyof typeof hotelsData] : null;
-  
   const hotel = cityData && hotelSlug ? cityData[hotelSlug] : null; 
-  console.log(hotel);
 
   if (!hotel) {
     return (

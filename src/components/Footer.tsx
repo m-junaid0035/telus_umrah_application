@@ -1,5 +1,5 @@
 import { Plane, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
-import telusUmrahLogo from '@/assets/38af052b7ba388561a7dda5e437b3035c02ec0c6.png';
+import telusUmrahLogo from '@/assets/telusUmrahLogo.png';
 import iataLogo from '@/assets/44ef5c6ec3045ea085ceaddcef7fbb8f2515c014.png';
 import bbbLogo from '@/assets/b711db395614cbcb996756ed291a7626740b6387.png';
 import travelAssociationLogo from '@/assets/ce778b366133b437fd922787fd579366f984e6a0.png';

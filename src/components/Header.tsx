@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
 import telusUmrahLogo from '@/assets/da561ea93488a57b45c1621c80c95e0815322c9e.png';
-import telusUmrahLogoWhite from '@/assets/38af052b7ba388561a7dda5e437b3035c02ec0c6.png';
+import telusUmrahLogoWhite from '@/assets/telusUmrahLogo.png';
 import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
 import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
 
