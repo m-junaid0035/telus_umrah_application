@@ -1,4 +1,10 @@
   import { UmrahPackage, IUmrahPackage } from "@/models/UmrahPackage";
+  import { Hotel } from "@/models/Hotel";
+  import { PackageFeature } from "@/models/PackageFeatures";
+  import { Itinerary } from "@/models/Itineraries";
+  import { PackageInclude } from "@/models/Includes";
+  import { PackageExclude } from "@/models/Excludes";
+  import { PackagePolicy } from "@/models/Policies";
 
   /**
    * ================= SANITIZER =================
@@ -73,10 +79,88 @@
     return packages.map(serializeUmrahPackage);
   };
 
-  /** Get a single Umrah package by ID */
+  /** Get a single Umrah package by ID with populated data */
   export const getUmrahPackageById = async (id: string) => {
     const pkg = await UmrahPackage.findById(id).lean();
-    return pkg ? serializeUmrahPackage(pkg) : null;
+    if (!pkg) return null;
+
+    // Populate hotels
+    const makkahHotel = pkg.hotels?.makkah ? await Hotel.findById(pkg.hotels.makkah).lean() : null;
+    const madinahHotel = pkg.hotels?.madinah ? await Hotel.findById(pkg.hotels.madinah).lean() : null;
+
+    // Populate features
+    const features = pkg.features && pkg.features.length > 0
+      ? await PackageFeature.find({ _id: { $in: pkg.features } }).lean()
+      : [];
+
+    // Populate itineraries
+    const itineraries = pkg.itinerary && pkg.itinerary.length > 0
+      ? await Itinerary.find({ _id: { $in: pkg.itinerary } }).lean()
+      : [];
+
+    // Populate includes
+    const includes = pkg.includes && pkg.includes.length > 0
+      ? await PackageInclude.find({ _id: { $in: pkg.includes } }).lean()
+      : [];
+
+    // Populate excludes
+    const excludes = pkg.excludes && pkg.excludes.length > 0
+      ? await PackageExclude.find({ _id: { $in: pkg.excludes } }).lean()
+      : [];
+
+    // Populate policies
+    const policies = pkg.policies && pkg.policies.length > 0
+      ? await PackagePolicy.find({ _id: { $in: pkg.policies } }).lean()
+      : [];
+
+    return {
+      _id: pkg._id.toString(),
+      name: pkg.name,
+      price: pkg.price,
+      duration: pkg.duration,
+      badge: pkg.badge,
+      airline: pkg.airline,
+      departureCity: pkg.departureCity,
+      image: pkg.image,
+      popular: pkg.popular,
+      hotels: {
+        makkah: makkahHotel ? {
+          _id: makkahHotel._id.toString(),
+          name: makkahHotel.name,
+          type: makkahHotel.type,
+        } : pkg.hotels?.makkah?.toString(),
+        madinah: madinahHotel ? {
+          _id: madinahHotel._id.toString(),
+          name: madinahHotel.name,
+          type: madinahHotel.type,
+        } : pkg.hotels?.madinah?.toString(),
+      },
+      features: features.map((f: any) => ({
+        _id: f._id.toString(),
+        feature_text: f.feature_text,
+      })),
+      itinerary: itineraries.map((i: any) => ({
+        _id: i._id.toString(),
+        title: i.title,
+      })),
+      includes: includes.map((i: any) => ({
+        _id: i._id.toString(),
+        include_text: i.include_text,
+      })),
+      excludes: excludes.map((e: any) => ({
+        _id: e._id.toString(),
+        exclude_text: e.exclude_text,
+      })),
+      policies: policies.map((p: any) => ({
+        _id: p._id.toString(),
+        heading: p.heading,
+      })),
+      travelers: pkg.travelers,
+      rating: pkg.rating,
+      reviews: pkg.reviews,
+      createdAt: pkg.createdAt?.toISOString(),
+      updatedAt: pkg.updatedAt?.toISOString(),
+    };
   };
 
   /** Update Umrah package by ID */

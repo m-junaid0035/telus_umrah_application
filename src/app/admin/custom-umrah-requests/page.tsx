@@ -9,9 +9,9 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import {
-  fetchAllApplicationsAction,
-  deleteApplicationAction,
-} from "@/actions/applicationActions";
+  fetchAllCustomUmrahRequestsAction,
+  deleteCustomUmrahRequestAction,
+} from "@/actions/customUmrahRequestActions";
 
 import {
   Card,
@@ -45,92 +45,102 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Eye, Pencil, Trash2, Loader2, HelpCircle, MessageSquare } from "lucide-react";
+import { Eye, Trash2, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-interface IApplication {
+interface ICustomUmrahRequest {
   _id: string;
-  userName: string;
-  applicationType: string;
-  applicationNumber: string;
-  applicantName: string;
-  dateOfSubmission: string;
+  name: string;
+  email: string;
+  phone: string;
   status: string;
-  uniqueClientIdentifier: string;
-  biometrics: {
-    number: string;
-    enrolmentDate: string;
-    expiryDate: string;
-    status: string;
-  };
-  messages: {
-    content: string;
-    sentAt: string;
-    isRead: boolean;
-  }[];
+  departDate: string;
+  returnDate: string;
+  adults: number;
+  children: number;
   createdAt: string;
-  updatedAt: string;
 }
 
-function ApplicationsTable({
-  applications,
+function CustomUmrahRequestsTable({
+  requests,
   onView,
-  onEdit,
   onDelete,
-  onQuestions,
-  onMessages,
   loading,
 }: {
-  applications: IApplication[];
+  requests: ICustomUmrahRequest[];
   onView: (id: string) => void;
-  onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  onQuestions: (id: string) => void; // new handler
-  onMessages: (id: string) => void; 
   loading: boolean;
 }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin mr-2" />
-        Loading applications...
+        Loading requests...
       </div>
     );
   }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100";
+      case "in-progress":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100";
+      case "completed":
+        return "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100";
+      case "cancelled":
+        return "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
+    }
+  };
 
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="border-b border-muted">
-            <TableHead>Applicant</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Application #</TableHead>
-            <TableHead>Date Submitted</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead>Travelers</TableHead>
+            <TableHead>Departure</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="w-[200px] text-right">Actions</TableHead>
+            <TableHead className="w-[150px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {applications.length > 0 ? (
-            applications.map((app) => (
+          {requests.length > 0 ? (
+            requests.map((request) => (
               <TableRow
-                key={app._id}
+                key={request._id}
                 className="hover:bg-muted/40 transition-colors"
               >
-                <TableCell className="font-medium">{app.applicantName}</TableCell>
-                <TableCell>{app.applicationType}</TableCell>
-                <TableCell>{app.applicationNumber}</TableCell>
+                <TableCell className="font-medium">{request.name}</TableCell>
+                <TableCell>{request.email}</TableCell>
+                <TableCell>{request.phone}</TableCell>
                 <TableCell>
-                  {new Date(app.dateOfSubmission).toLocaleDateString()}
+                  {request.adults} Adult{request.adults > 1 ? "s" : ""}
+                  {request.children > 0 && `, ${request.children} Child${request.children > 1 ? "ren" : ""}`}
                 </TableCell>
-                <TableCell>{app.status}</TableCell>
+                <TableCell>
+                  {request.departDate
+                    ? new Date(request.departDate).toLocaleDateString()
+                    : "N/A"}
+                </TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(request.status)}>
+                    {request.status}
+                  </Badge>
+                </TableCell>
                 <TableCell>
                   <div className="flex justify-end items-center gap-1.5">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => onView(app._id)}
+                      onClick={() => onView(request._id)}
                       title="View"
                     >
                       <Eye className="h-4 w-4" />
@@ -138,38 +148,11 @@ function ApplicationsTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onEdit(app._id)}
-                      title="Edit"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
                       className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                      onClick={() => onDelete(app._id)}
+                      onClick={() => onDelete(request._id)}
                       title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onQuestions(app._id)}
-                      title="Security Questions"
-                    >
-                      <HelpCircle className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onMessages(app._id)}
-                      title="Messages"
-                    >
-                      <MessageSquare className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -177,8 +160,8 @@ function ApplicationsTable({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
-                No applications found.
+              <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
+                No requests found.
               </TableCell>
             </TableRow>
           )}
@@ -188,29 +171,29 @@ function ApplicationsTable({
   );
 }
 
-export default function ApplicationsPage() {
+export default function CustomUmrahRequestsPage() {
   const router = useRouter();
-  const [applications, setApplications] = useState<IApplication[]>([]);
+  const [requests, setRequests] = useState<ICustomUmrahRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const pageSize = 8;
 
-  const [optimisticApplications, deleteOptimistic] = useOptimistic(
-    applications,
-    (state, id: string) => state.filter((a) => a._id !== id)
+  const [optimisticRequests, deleteOptimistic] = useOptimistic(
+    requests,
+    (state, id: string) => state.filter((r) => r._id !== id)
   );
 
-  const loadApplications = async () => {
+  const loadRequests = async () => {
     setLoading(true);
-    const result = await fetchAllApplicationsAction();
+    const result = await fetchAllCustomUmrahRequestsAction();
     if (result?.data && Array.isArray(result.data)) {
-      setApplications(result.data);
+      setRequests(result.data);
     } else {
       toast({
         title: "Error",
-        description: result?.error?.message || "Failed to fetch applications",
+        description: result?.error?.message || "Failed to fetch requests",
         variant: "destructive",
       });
     }
@@ -222,33 +205,34 @@ export default function ApplicationsPage() {
       deleteOptimistic(id);
     });
 
-    const result = await deleteApplicationAction(id);
+    const result = await deleteCustomUmrahRequestAction(id);
     if (result?.error) {
       toast({
         title: "Error",
-        description: result.error.message || "Failed to delete application",
+        description: result.error.message || "Failed to delete request",
         variant: "destructive",
       });
-      await loadApplications(); // rollback optimistic update
+      await loadRequests(); // rollback optimistic update
     } else {
-      setApplications((prev) => prev.filter((app) => app._id !== id));
+      setRequests((prev) => prev.filter((request) => request._id !== id));
       toast({
         title: "Deleted",
-        description: "Application deleted successfully.",
+        description: "Request deleted successfully.",
       });
     }
   };
 
   useEffect(() => {
-    loadApplications();
+    loadRequests();
   }, []);
 
-  // Filter and paginate applications
-  const filteredApplications = optimisticApplications.filter((app) =>
-    app.applicantName.toLowerCase().includes(search.toLowerCase())
+  const filteredRequests = optimisticRequests.filter((request) =>
+    request.name.toLowerCase().includes(search.toLowerCase()) ||
+    request.email.toLowerCase().includes(search.toLowerCase()) ||
+    request.phone.includes(search)
   );
-  const totalPages = Math.ceil(filteredApplications.length / pageSize);
-  const paginatedApplications = filteredApplications.slice(
+  const totalPages = Math.ceil(filteredRequests.length / pageSize);
+  const paginatedRequests = filteredRequests.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -256,10 +240,10 @@ export default function ApplicationsPage() {
   return (
     <Card className="w-full border-none shadow-none">
       <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <CardTitle className="text-lg font-semibold">Applications</CardTitle>
+        <CardTitle className="text-lg font-semibold">Custom Umrah Requests</CardTitle>
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           <Input
-            placeholder="Search applications..."
+            placeholder="Search requests..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -267,9 +251,6 @@ export default function ApplicationsPage() {
             }}
             className="sm:w-64"
           />
-          <Button onClick={() => router.push("/admin/applications/new")}>
-            Create Application
-          </Button>
         </div>
       </CardHeader>
 
@@ -278,17 +259,14 @@ export default function ApplicationsPage() {
           fallback={
             <div className="flex justify-center items-center py-8 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Loading applications...
+              Loading requests...
             </div>
           }
         >
-          <ApplicationsTable
-            applications={paginatedApplications}
-            onView={(id) => router.push(`/admin/applications/view/${id}`)}
-            onEdit={(id) => router.push(`/admin/applications/edit/${id}`)}
+          <CustomUmrahRequestsTable
+            requests={paginatedRequests}
+            onView={(id) => router.push(`/admin/custom-umrah-requests/view/${id}`)}
             onDelete={(id) => setConfirmDeleteId(id)}
-            onQuestions={(id) => router.push(`/admin/applications/${id}/questions`)}
-            onMessages={(id) => router.push(`/admin/applications/${id}/messages`)}
             loading={loading}
           />
         </Suspense>
@@ -331,9 +309,7 @@ export default function ApplicationsPage() {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
           </DialogHeader>
-          <p>
-            Are you sure you want to delete this application? This action cannot be undone.
-          </p>
+          <p>Are you sure you want to delete this request? This action cannot be undone.</p>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setConfirmDeleteId(null)}>
               Cancel
@@ -353,3 +329,4 @@ export default function ApplicationsPage() {
     </Card>
   );
 }
+

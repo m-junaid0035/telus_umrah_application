@@ -8,25 +8,60 @@ const sanitizeHotelData = (data: {
   name: string;
   location: string;
   star: number;
+  description?: string;
+  distance?: string;
+  amenities?: string[];
+  images?: string[];
+  availableBedTypes?: string[];
+  contact?: {
+    phone?: string;
+    email?: string;
+    address?: string;
+  };
 }) => ({
   type: data.type,
   name: data.name.trim(),
   location: data.location.trim(),
   star: data.star,
+  description: data.description?.trim(),
+  distance: data.distance?.trim(),
+  amenities: Array.isArray(data.amenities) ? data.amenities.filter(a => a.trim()).map(a => a.trim()) : [],
+  images: Array.isArray(data.images) ? data.images.filter(img => img.trim()).map(img => img.trim()) : [],
+  availableBedTypes: Array.isArray(data.availableBedTypes) ? data.availableBedTypes.filter(b => b.trim()).map(b => b.trim()) : [],
+  contact: data.contact ? {
+    phone: data.contact.phone?.trim(),
+    email: data.contact.email?.trim(),
+    address: data.contact.address?.trim(),
+  } : undefined,
 });
 
 /**
  * ================= SERIALIZER =================
  */
-const serializeHotel = (hotel: any) => ({
-  _id: hotel._id.toString(),
-  type: hotel.type,
-  name: hotel.name,
-  location: hotel.location,
-  star: hotel.star,
-  createdAt: hotel.createdAt?.toISOString?.(),
-  updatedAt: hotel.updatedAt?.toISOString?.(),
-});
+const serializeHotel = (hotel: any) => {
+  // Ensure contact is a plain object
+  const contact = hotel.contact ? {
+    phone: hotel.contact.phone || undefined,
+    email: hotel.contact.email || undefined,
+    address: hotel.contact.address || undefined,
+  } : {};
+
+  return {
+    _id: hotel._id?.toString() || hotel._id,
+    type: hotel.type,
+    name: hotel.name,
+    location: hotel.location,
+    star: hotel.star,
+    description: hotel.description || undefined,
+    distance: hotel.distance || undefined,
+    amenities: Array.isArray(hotel.amenities) ? hotel.amenities : [],
+    images: Array.isArray(hotel.images) ? hotel.images : [],
+    availableBedTypes: Array.isArray(hotel.availableBedTypes) ? hotel.availableBedTypes : [],
+    contact: Object.keys(contact).length > 0 ? contact : undefined,
+    createdAt: hotel.createdAt?.toISOString?.() || (hotel.createdAt instanceof Date ? hotel.createdAt.toISOString() : hotel.createdAt),
+    updatedAt: hotel.updatedAt?.toISOString?.() || (hotel.updatedAt instanceof Date ? hotel.updatedAt.toISOString() : hotel.updatedAt),
+  };
+};
 
 /**
  * ================= HOTEL CRUD =================

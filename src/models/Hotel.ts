@@ -13,6 +13,16 @@ export interface IHotel extends Document {
   name: string;
   location: string;
   star: number; // e.g., 3, 4, 5 stars
+  description?: string;
+  distance?: string; // e.g., "300m from Haram", "Walking Distance to Masjid Nabawi"
+  amenities?: string[]; // Array of amenity names
+  images?: string[]; // Array of image URLs
+  availableBedTypes?: string[]; // e.g., ["single", "double", "twin", "triple", "quad"]
+  contact?: {
+    phone?: string;
+    email?: string;
+    address?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +50,41 @@ const hotelSchema = new Schema<IHotel>(
       required: [true, "Hotel star rating is required"],
       min: [1, "Star rating must be at least 1"],
       max: [5, "Star rating cannot exceed 5"],
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
+    distance: {
+      type: String,
+      trim: true,
+    },
+    amenities: {
+      type: [String],
+      default: [],
+    },
+    images: {
+      type: [String],
+      default: [],
+    },
+    availableBedTypes: {
+      type: [String],
+      default: [],
+      enum: ["single", "double", "twin", "triple", "quad"],
+    },
+    contact: {
+      phone: {
+        type: String,
+        trim: true,
+      },
+      email: {
+        type: String,
+        trim: true,
+      },
+      address: {
+        type: String,
+        trim: true,
+      },
     },
   },
   {

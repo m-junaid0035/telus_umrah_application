@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar as CalendarIcon, MapPin, Plane, Hotel, Users, Bed, Star, CheckCircle, Send, Plus, Minus, X, Wifi, ChevronRight, ChevronLeft, Check, Award, Globe, Headphones } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Plane, Hotel, Users, Bed, Star, CheckCircle, Send, Plus, Minus, X, Wifi, ChevronRight, ChevronLeft, Check, Award, Globe, Headphones, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -9,6 +9,8 @@ import { Switch } from './ui/switch';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format } from 'date-fns';
+import { createCustomUmrahRequestAction } from '@/actions/customUmrahRequestActions';
+import { toast } from '@/hooks/use-toast';
 
 // Import airline logos
 import sereneAirLogo from '@/assets/d0c55b978a086a73b2fb50854cf04ff81b6aac0b.png';
@@ -101,11 +103,133 @@ export function CustomUmrahForm() {
   const [hotelSelections, setHotelSelections] = useState<HotelSelection[]>([
     { hotelClass: '', hotel: '', stayDuration: '', bedType: '' }
   ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', { ...formData, hotels: hotelSelections });
-    alert('Thank you for your inquiry! We will contact you soon with the best package options.');
+    setIsSubmitting(true);
+
+    // Validate required fields
+    if (!formData.name || !formData.email || !formData.phone || !formData.nationality) {
+      toast({
+        title: "Error",
+        description: "Please fill in all contact information fields",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.from || !formData.to || !formData.departDate || !formData.returnDate || !formData.airline || !formData.airlineClass) {
+      toast({
+        title: "Error",
+        description: "Please fill in all flight details",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (hotelSelections.some(h => !h.hotelClass || !h.hotel || !h.stayDuration || !h.bedType)) {
+      toast({
+        title: "Error",
+        description: "Please fill in all hotel details",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const formDataObj = new FormData();
+      
+      // Contact Information
+      formDataObj.append("name", formData.name);
+      formDataObj.append("email", formData.email);
+      formDataObj.append("phone", formData.phone);
+      formDataObj.append("nationality", formData.nationality);
+
+      // Flight Details
+      formDataObj.append("from", formData.from);
+      formDataObj.append("to", formData.to);
+      formDataObj.append("departDate", formData.departDate.toISOString());
+      formDataObj.append("returnDate", formData.returnDate.toISOString());
+      formDataObj.append("airline", formData.airline);
+      formDataObj.append("airlineClass", formData.airlineClass);
+
+      // Travelers
+      formDataObj.append("adults", formData.adults.toString());
+      formDataObj.append("children", formData.children.toString());
+      formData.childAges.forEach(age => {
+        formDataObj.append("childAges", age.toString());
+      });
+      formDataObj.append("rooms", formData.rooms.toString());
+
+      // Additional Services
+      formDataObj.append("umrahVisa", formData.umrahVisa.toString());
+      formDataObj.append("transport", formData.transport.toString());
+      formDataObj.append("zaiarat", formData.zaiarat.toString());
+      formDataObj.append("meals", formData.meals.toString());
+      formDataObj.append("esim", formData.esim.toString());
+
+      // Hotels - First hotel is Makkah, additional are Madina
+      formDataObj.append("hotelCount", hotelSelections.length.toString());
+      hotelSelections.forEach((hotel, index) => {
+        const city = index === 0 ? "Makkah" : "Madina";
+        formDataObj.append(`hotels[${index}][hotelClass]`, hotel.hotelClass);
+        formDataObj.append(`hotels[${index}][hotel]`, hotel.hotel);
+        formDataObj.append(`hotels[${index}][stayDuration]`, hotel.stayDuration);
+        formDataObj.append(`hotels[${index}][bedType]`, hotel.bedType);
+        formDataObj.append(`hotels[${index}][city]`, city);
+      });
+
+      const result = await createCustomUmrahRequestAction({}, formDataObj);
+
+      if (result?.data) {
+        toast({
+          title: "Success",
+          description: "Thank you for your inquiry! We will contact you soon with the best package options.",
+        });
+        // Reset form
+        setFormData({
+          from: '',
+          to: '',
+          departDate: undefined,
+          returnDate: undefined,
+          airline: '',
+          airlineClass: '',
+          adults: 1,
+          children: 0,
+          childAges: [],
+          rooms: 1,
+          umrahVisa: false,
+          transport: false,
+          zaiarat: false,
+          meals: false,
+          esim: false,
+          name: '',
+          email: '',
+          phone: '',
+          nationality: '',
+        });
+        setHotelSelections([{ hotelClass: '', hotel: '', stayDuration: '', bedType: '' }]);
+        setCurrentStep(1);
+      } else {
+        toast({
+          title: "Error",
+          description: result?.error?.message?.[0] || "Failed to submit request. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to submit request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSwitchChange = (field: string) => (checked: boolean) => {
@@ -955,10 +1079,20 @@ export function CustomUmrahForm() {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     type="submit"
+                    disabled={isSubmitting}
                     className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 px-8"
                   >
-                    <Send className="w-5 h-5 mr-2" />
-                    Submit Request
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5 mr-2" />
+                        Submit Request
+                      </>
+                    )}
                   </Button>
                 </motion.div>
               )}

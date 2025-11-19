@@ -25,6 +25,8 @@ import {
 
 import { fetchHotelByIdAction, updateHotelAction } from "@/actions/hotelActions";
 import { HotelType } from "@/types/hotel";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, X } from "lucide-react";
 
 interface FieldErrors {
   [key: string]: string[];
@@ -39,6 +41,14 @@ const initialState: FormState = {
   error: {},
 };
 
+const bedTypeOptions = [
+  { value: "single", label: "Single Bed" },
+  { value: "double", label: "Double Bed" },
+  { value: "twin", label: "Twin Beds" },
+  { value: "triple", label: "Triple Beds" },
+  { value: "quad", label: "Quad Room" },
+];
+
 export default function EditHotelForm() {
   const { id } = useParams();
   const router = useRouter();
@@ -47,6 +57,9 @@ export default function EditHotelForm() {
   const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [amenities, setAmenities] = useState<string[]>([""]);
+  const [images, setImages] = useState<string[]>([""]);
+  const [selectedBedTypes, setSelectedBedTypes] = useState<string[]>([]);
 
   const [formState, dispatch, isPending] = useActionState(
     async (prevState: FormState, formData: FormData) => {
@@ -68,6 +81,9 @@ export default function EditHotelForm() {
       const res = await fetchHotelByIdAction(hotelId);
       if (res.data) {
         setHotel(res.data);
+        setAmenities(res.data.amenities && res.data.amenities.length > 0 ? res.data.amenities : [""]);
+        setImages(res.data.images && res.data.images.length > 0 ? res.data.images : [""]);
+        setSelectedBedTypes(res.data.availableBedTypes || []);
       }
       setLoading(false);
     }
@@ -107,7 +123,23 @@ export default function EditHotelForm() {
         </CardHeader>
 
         <CardContent>
-          <form action={dispatch} className="space-y-6 max-w-2xl mx-auto">
+          <form
+            action={(formData) => {
+              // Filter out empty amenities and images before submission
+              amenities.forEach((amenity) => {
+                if (amenity.trim()) {
+                  formData.append("amenities", amenity.trim());
+                }
+              });
+              images.forEach((image) => {
+                if (image.trim()) {
+                  formData.append("images", image.trim());
+                }
+              });
+              dispatch(formData);
+            }}
+            className="space-y-6 max-w-2xl mx-auto"
+          >
             {/* Hotel Name */}
             <div className="space-y-2">
               <Label htmlFor="name">Hotel Name</Label>
@@ -175,6 +207,192 @@ export default function EditHotelForm() {
               {errorFor("star") && (
                 <p className="text-sm text-red-500">{errorFor("star")}</p>
               )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                rows={4}
+                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                placeholder="Enter hotel description..."
+                defaultValue={hotel.description || ""}
+              />
+              {errorFor("description") && (
+                <p className="text-sm text-red-500">{errorFor("description")}</p>
+              )}
+            </div>
+
+            {/* Distance */}
+            <div className="space-y-2">
+              <Label htmlFor="distance">Distance from Haram/Masjid</Label>
+              <Input
+                id="distance"
+                name="distance"
+                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                placeholder="e.g., 300m from Haram, Walking Distance to Masjid Nabawi"
+                defaultValue={hotel.distance || ""}
+              />
+              {errorFor("distance") && (
+                <p className="text-sm text-red-500">{errorFor("distance")}</p>
+              )}
+            </div>
+
+            {/* Amenities */}
+            <div className="space-y-2">
+              <Label>Amenities</Label>
+              {amenities.map((amenity, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={amenity}
+                    onChange={(e) => {
+                      const newAmenities = [...amenities];
+                      newAmenities[index] = e.target.value;
+                      setAmenities(newAmenities);
+                    }}
+                    className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                    placeholder="Enter amenity (e.g., Free WiFi, Air Conditioning)"
+                  />
+                  {amenities.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setAmenities(amenities.filter((_, i) => i !== index));
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setAmenities([...amenities, ""])}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Amenity
+              </Button>
+            </div>
+
+            {/* Images */}
+            <div className="space-y-2">
+              <Label>Image URLs</Label>
+              {images.map((image, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    type="url"
+                    value={image}
+                    onChange={(e) => {
+                      const newImages = [...images];
+                      newImages[index] = e.target.value;
+                      setImages(newImages);
+                    }}
+                    className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                    placeholder="Enter image URL"
+                  />
+                  {images.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setImages(images.filter((_, i) => i !== index));
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setImages([...images, ""])}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Image URL
+              </Button>
+            </div>
+
+            {/* Available Bed Types */}
+            <div className="space-y-2">
+              <Label>Available Bed Types</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {bedTypeOptions.map((option) => (
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`bedType-${option.value}`}
+                      checked={selectedBedTypes.includes(option.value)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedBedTypes([...selectedBedTypes, option.value]);
+                        } else {
+                          setSelectedBedTypes(selectedBedTypes.filter((t) => t !== option.value));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <Label htmlFor={`bedType-${option.value}`} className="cursor-pointer">
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              {selectedBedTypes.map((bedType) => (
+                <input
+                  key={bedType}
+                  type="hidden"
+                  name="availableBedTypes"
+                  value={bedType}
+                />
+              ))}
+            </div>
+
+            {/* Contact Information */}
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-lg font-semibold">Contact Information</Label>
+              <div className="space-y-2">
+                <Label htmlFor="contact[phone]">Phone</Label>
+                <Input
+                  id="contact[phone]"
+                  name="contact[phone]"
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  placeholder="+966 12 345 6789"
+                  defaultValue={hotel.contact?.phone || ""}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact[email]">Email</Label>
+                <Input
+                  id="contact[email]"
+                  name="contact[email]"
+                  type="email"
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  placeholder="hotel@example.com"
+                  defaultValue={hotel.contact?.email || ""}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact[address]">Address</Label>
+                <Textarea
+                  id="contact[address]"
+                  name="contact[address]"
+                  rows={2}
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  placeholder="Full address of the hotel"
+                  defaultValue={hotel.contact?.address || ""}
+                />
+              </div>
             </div>
 
             {/* General Error */}

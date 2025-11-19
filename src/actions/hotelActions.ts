@@ -20,6 +20,16 @@ const hotelSchema = z.object({
   name: z.string().trim().min(2, "Hotel name is required"),
   location: z.string().trim().min(2, "Hotel location is required"),
   star: z.number().int().min(1).max(5, "Star rating must be between 1 and 5"),
+  description: z.string().trim().optional(),
+  distance: z.string().trim().optional(),
+  amenities: z.array(z.string().trim()).optional(),
+  images: z.array(z.string().trim().url()).optional(),
+  availableBedTypes: z.array(z.enum(["single", "double", "twin", "triple", "quad"])).optional(),
+  contact: z.object({
+    phone: z.string().trim().optional(),
+    email: z.string().trim().email().optional().or(z.literal("")),
+    address: z.string().trim().optional(),
+  }).optional(),
 });
 
 // ================= UTILITY =================
@@ -35,11 +45,35 @@ function str(formData: FormData, key: string) {
 }
 
 function parseHotelFormData(formData: FormData) {
+  // Parse arrays from FormData
+  const amenities = formData.getAll("amenities").filter((v) => v && String(v).trim()) as string[];
+  const images = formData.getAll("images").filter((v) => v && String(v).trim()) as string[];
+  const availableBedTypes = formData.getAll("availableBedTypes").filter((v) => v && String(v).trim()) as string[];
+
+  // Parse contact object
+  const contactPhone = str(formData, "contact[phone]");
+  const contactEmail = str(formData, "contact[email]");
+  const contactAddress = str(formData, "contact[address]");
+
+  const contact = contactPhone || contactEmail || contactAddress
+    ? {
+        phone: contactPhone || undefined,
+        email: contactEmail || undefined,
+        address: contactAddress || undefined,
+      }
+    : undefined;
+
   return {
     type: str(formData, "type") as HotelType,
     name: str(formData, "name"),
     location: str(formData, "location"),
     star: Number(formData.get("star") || 0),
+    description: str(formData, "description") || undefined,
+    distance: str(formData, "distance") || undefined,
+    amenities: amenities.length > 0 ? amenities : undefined,
+    images: images.length > 0 ? images : undefined,
+    availableBedTypes: availableBedTypes.length > 0 ? availableBedTypes : undefined,
+    contact,
   };
 }
 

@@ -13,6 +13,16 @@ export interface IHotel extends Document {
   name: string;
   location: string;
   star: number;
+  description?: string;
+  distance?: string;
+  amenities?: string[];
+  images?: string[];
+  availableBedTypes?: string[];
+  contact?: {
+    phone?: string;
+    email?: string;
+    address?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
