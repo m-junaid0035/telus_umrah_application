@@ -551,7 +551,7 @@ export function UmrahPackagesPage() {
                         {/* Hotels */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                           <Link 
-                            href={`/hotels/makkah/${pkg.hotels.makkah.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            href={`/makkah-hotels/makkah/${pkg.hotels.makkah.name.toLowerCase().replace(/\s+/g, '-')}`}
                             className="block"
                           >
                             <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -572,7 +572,7 @@ export function UmrahPackagesPage() {
                             </div>
                           </Link>
                           <Link 
-                           href={`/hotels/madinah/${pkg.hotels.madinah.name.toLowerCase().replace(/\s+/g, '-')}`}
+                           href={`/madina-hotels/madinah/${pkg.hotels.madinah.name.toLowerCase().replace(/\s+/g, '-')}`}
                             className="block"
                           >
                             <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
