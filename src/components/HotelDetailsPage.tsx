@@ -32,7 +32,10 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { HotelBookingDialog } from './HotelBookingDialog';
+import { fetchAllHotelsAction } from '@/actions/hotelActions';
 
 // Import Makkah and Madina icons
 import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
@@ -939,20 +942,133 @@ const hotelsData: any = {
   }
 };
 
+interface BackendHotel {
+  _id: string;
+  name: string;
+  star: number;
+  type: 'Makkah' | 'Madina';
+  location: string;
+  distance?: string;
+  images?: string[];
+  amenities?: string[];
+  description?: string;
+  availableBedTypes?: string[];
+  contact?: {
+    phone?: string;
+    email?: string;
+    address?: string;
+  };
+}
+
 export function HotelDetailsPage() {
   const { city, hotelSlug } = useParams<{ city: string; hotelSlug: string }>();
-  console.log(city, hotelSlug);
-   const router = useRouter();
+  const router = useRouter();
+  const { user } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedRoomType, setSelectedRoomType] = useState(0);
+  const [hotel, setHotel] = useState<BackendHotel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hotelId, setHotelId] = useState<string>("");
 
-  // Get hotel data
-  const cityData = city ? hotelsData[city as keyof typeof hotelsData] : null;
-  const hotel = cityData && hotelSlug ? cityData[hotelSlug] : null; 
+  // Generate slug from hotel name
+  const generateSlug = (name: string): string => {
+    return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  };
 
+  // Fetch hotel from backend by matching slug
+  useEffect(() => {
+    const findHotel = async () => {
+      if (!hotelSlug || !city) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const result = await fetchAllHotelsAction();
+        if (result?.data && Array.isArray(result.data)) {
+          // Filter by city type
+          const cityType = city.toLowerCase() === 'makkah' ? 'Makkah' : 'Madina';
+          const cityHotels = result.data.filter((h: any) => h.type === cityType);
+          
+          // Find hotel by matching slug
+          let foundHotel = cityHotels.find((h: any) => {
+            const hotelSlugFromName = generateSlug(h.name);
+            return hotelSlugFromName === hotelSlug.toLowerCase();
+          });
+          
+          // If no exact slug match, try fuzzy matching
+          if (!foundHotel) {
+            foundHotel = cityHotels.find((h: any) => {
+              const hotelSlugFromName = generateSlug(h.name);
+              // Check if slug contains hotel name parts or vice versa
+              return hotelSlugFromName.includes(hotelSlug.toLowerCase()) || 
+                     hotelSlug.toLowerCase().includes(hotelSlugFromName);
+            });
+          }
+          
+          // Last resort: match by name similarity
+          if (!foundHotel) {
+            const slugWords = hotelSlug.toLowerCase().split('-');
+            foundHotel = cityHotels.find((h: any) => {
+              const nameWords = h.name.toLowerCase().split(/\s+/);
+              // Check if at least 2 words match
+              const matchingWords = slugWords.filter(sw => 
+                nameWords.some((nw: string) => nw.includes(sw) || sw.includes(nw))
+              );
+              return matchingWords.length >= 2;
+            });
+          }
+          
+          if (foundHotel) {
+            setHotel(foundHotel as BackendHotel);
+            setHotelId(foundHotel._id);
+          } else {
+            console.warn(`Hotel not found for slug: ${hotelSlug}. Available hotels:`, cityHotels.map((h: any) => generateSlug(h.name)));
+            setHotel(null);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch hotels:", error);
+        setHotel(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    findHotel();
+  }, [hotelSlug, city]); 
+
+  const cityIcon = city === 'makkah' ? makkahIcon : madinaIcon;
+  const cityName = city === 'makkah' ? 'Makkah' : 'Madinah';
+
+  const nextImage = () => {
+    if (hotel?.images && hotel.images.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % hotel.images!.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (hotel?.images && hotel.images.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + hotel.images!.length) % hotel.images!.length);
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
+        <div className="text-center">
+          <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4 animate-pulse" />
+          <h2 className="text-2xl text-gray-900 mb-2">Loading hotel...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
   if (!hotel) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
         <div className="text-center">
           <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl text-gray-900 mb-2">Hotel Not Found</h2>
@@ -965,16 +1081,18 @@ export function HotelDetailsPage() {
     );
   }
 
-  const cityIcon = city === 'makkah' ? makkahIcon : madinaIcon;
-  const cityName = city === 'makkah' ? 'Makkah' : 'Madinah';
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % hotel.images.length);
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + hotel.images.length) % hotel.images.length);
-  };
+  // Default values for missing data
+  const hotelImages = hotel.images && hotel.images.length > 0 ? hotel.images : ['https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80'];
+  const hotelAmenities = hotel.amenities || [];
+  const hotelDescription = hotel.description || 'Comfortable accommodation with excellent amenities.';
+  const hotelAddress = hotel.contact?.address || hotel.location || 'Address not available';
+  
+  // Mock room types for now (can be added to backend later)
+  const roomTypes = [
+    { type: 'Standard Room', capacity: '2-3 People', size: '25 sqm', price: 50000 },
+    { type: 'Deluxe Room', capacity: '2-4 People', size: '35 sqm', price: 75000 },
+    { type: 'Family Suite', capacity: '4-6 People', size: '50 sqm', price: 100000 }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -982,38 +1100,42 @@ export function HotelDetailsPage() {
       <div className="relative bg-gray-900">
         <div className="relative h-[500px] overflow-hidden">
           <ImageWithFallback
-            src={hotel.images[currentImageIndex]}
+            src={hotelImages[currentImageIndex]}
             alt={hotel.name}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           
-          {/* Navigation Arrows */}
-          <button
-            onClick={prevImage}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all z-10"
-          >
-            <ChevronLeft className="w-6 h-6 text-gray-900" />
-          </button>
-          <button
-            onClick={nextImage}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all z-10"
-          >
-            <ChevronRight className="w-6 h-6 text-gray-900" />
-          </button>
-
-          {/* Image Indicators */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-            {hotel.images.map((_: any, index: number) => (
+          {/* Navigation Arrows - Only show if multiple images */}
+          {hotelImages.length > 1 && (
+            <>
               <button
-                key={index}
-                onClick={() => setCurrentImageIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentImageIndex ? 'bg-white w-8' : 'bg-white/50'
-                }`}
-              />
-            ))}
-          </div>
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all z-10"
+              >
+                <ChevronLeft className="w-6 h-6 text-gray-900" />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all z-10"
+              >
+                <ChevronRight className="w-6 h-6 text-gray-900" />
+              </button>
+
+              {/* Image Indicators */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {hotelImages.map((_: any, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === currentImageIndex ? 'bg-white w-8' : 'bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
 
           {/* Content Overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-8 z-10">
@@ -1035,7 +1157,7 @@ export function HotelDetailsPage() {
                       {cityName}
                     </Badge>
                     <div className="flex">
-                      {[...Array(hotel.stars)].map((_, i) => (
+                      {[...Array(hotel.star || 0)].map((_, i) => (
                         <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
@@ -1044,18 +1166,14 @@ export function HotelDetailsPage() {
                   <div className="flex items-center gap-4 text-white/90 flex-wrap">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-5 h-5" />
-                      <span>{hotel.distance}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      <span>{hotel.rating} ({hotel.reviews} reviews)</span>
+                      <span>{hotel.distance || hotel.location}</span>
                     </div>
                   </div>
                 </div>
                 
                 <div className="text-right bg-white/10 backdrop-blur-md p-6 rounded-lg">
                   <p className="text-white/80 text-sm mb-1">Starting from</p>
-                  <p className="text-3xl font-bold text-white">PKR {hotel.price.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-white">PKR {roomTypes[0].price.toLocaleString()}</p>
                   <p className="text-white/70 text-sm">per night</p>
                 </div>
               </div>
@@ -1073,39 +1191,40 @@ export function HotelDetailsPage() {
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Hotel</h2>
-                <p className="text-gray-600 leading-relaxed mb-6">{hotel.description}</p>
+                <p className="text-gray-600 leading-relaxed mb-6">{hotelDescription}</p>
                 
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <MapPin className="w-4 h-4 text-blue-600" />
-                  <span>{hotel.address}</span>
+                  <span>{hotelAddress}</span>
                 </div>
               </CardContent>
             </Card>
 
             {/* Amenities */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Hotel Amenities</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {hotel.amenities.map((amenity: any, index: number) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <amenity.icon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">{amenity.name}</p>
-                        <p className="text-xs text-gray-600">{amenity.description}</p>
+            {hotelAmenities.length > 0 && (
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Hotel Amenities</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {hotelAmenities.map((amenity: string, index: number) => (
+                      <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-gray-900 text-sm">{amenity}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Room Types */}
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Room Types & Pricing</h2>
                 <div className="space-y-4">
-                  {hotel.roomTypes.map((room: any, index: number) => (
+                  {roomTypes.map((room: any, index: number) => (
                     <motion.div
                       key={index}
                       whileHover={{ scale: 1.01 }}
@@ -1143,41 +1262,21 @@ export function HotelDetailsPage() {
               </CardContent>
             </Card>
 
-            {/* Features & Services */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Features & Services</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {hotel.features.map((feature: string, index: number) => (
-                    <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Nearby Places */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Nearby Places</h2>
-                <div className="space-y-3">
-                  {hotel.nearbyPlaces.map((place: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <MapPin className="w-5 h-5 text-blue-600" />
-                        <span className="font-semibold text-gray-900">{place.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">{place.distance}</p>
-                        <p className="text-xs text-gray-600">{place.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Available Bed Types */}
+            {hotel.availableBedTypes && hotel.availableBedTypes.length > 0 && (
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Bed Types</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {hotel.availableBedTypes.map((bedType: string, index: number) => (
+                      <Badge key={index} variant="outline" className="text-sm p-2">
+                        {bedType}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Column - Booking Card */}
@@ -1187,12 +1286,12 @@ export function HotelDetailsPage() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-3xl font-bold text-blue-600">
-                      PKR {hotel.roomTypes[selectedRoomType].price.toLocaleString()}
+                      PKR {roomTypes[selectedRoomType].price.toLocaleString()}
                     </span>
                     <span className="text-gray-600">/night</span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    {hotel.roomTypes[selectedRoomType].type}
+                    {roomTypes[selectedRoomType].type}
                   </p>
                 </div>
 
@@ -1208,14 +1307,50 @@ export function HotelDetailsPage() {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Distance</span>
-                    <span className="font-semibold text-gray-900">{hotel.distance}</span>
+                    <span className="font-semibold text-gray-900">{hotel.distance || hotel.location}</span>
                   </div>
                 </div>
 
                 {/* Booking Actions */}
                 <div className="space-y-3">
+                  {user ? (
+                    hotelId ? (
+                      <HotelBookingDialog
+                        hotelId={hotelId}
+                        hotelName={hotel.name}
+                        user={user}
+                        trigger={
+                          <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-6">
+                            <Calendar className="w-5 h-5 mr-2" />
+                            Book Hotel
+                          </Button>
+                        }
+                      />
+                    ) : (
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-6"
+                        disabled
+                        title="Hotel ID not found. Please contact support."
+                      >
+                        <Calendar className="w-5 h-5 mr-2" />
+                        Book Hotel (Unavailable)
+                      </Button>
+                    )
+                  ) : (
+                    <Button 
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-6"
+                      onClick={() => {
+                        // Show login dialog or redirect to login
+                        alert("Please login to book a hotel");
+                      }}
+                    >
+                      <Calendar className="w-5 h-5 mr-2" />
+                      Book Hotel
+                    </Button>
+                  )}
+                  
                   <Link href="/customize-umrah" className="block">
-                    <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-6">
+                    <Button variant="outline" className="w-full py-6">
                       <Calendar className="w-5 h-5 mr-2" />
                       Book with Package
                     </Button>
@@ -1262,91 +1397,34 @@ export function HotelDetailsPage() {
           </div>
         </div>
 
-        {/* Customer Reviews Section */}
-        <Card className="mt-8">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Guest Reviews</h2>
-            
-            <div className="flex items-center gap-6 mb-8 pb-6 border-b">
-              <div className="text-center">
-                <div className="text-5xl font-bold text-blue-600 mb-2">{hotel.rating}</div>
-                <div className="flex justify-center mb-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.floor(hotel.rating)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-sm text-gray-600">{hotel.reviews} reviews</p>
-              </div>
-              
-              <div className="flex-1">
-                <div className="space-y-2">
-                  {[5, 4, 3, 2, 1].map((rating) => (
-                    <div key={rating} className="flex items-center gap-3">
-                      <span className="text-sm text-gray-600 w-8">{rating}★</span>
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-yellow-400 h-2 rounded-full"
-                          style={{
-                            width: `${rating === 5 ? 75 : rating === 4 ? 20 : rating === 3 ? 3 : rating === 2 ? 1 : 1}%`
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm text-gray-600 w-12">
-                        {rating === 5 ? '75%' : rating === 4 ? '20%' : rating === 3 ? '3%' : '2%'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Sample Reviews */}
-            <div className="space-y-6">
-              {[
-                {
-                  name: 'Ahmed Khan',
-                  rating: 5,
-                  date: 'November 2024',
-                  comment: 'Excellent location and service. Very close to the mosque. Staff was helpful and rooms were clean.'
-                },
-                {
-                  name: 'Fatima Ali',
-                  rating: 5,
-                  date: 'October 2024',
-                  comment: 'Perfect stay for Umrah. The proximity to the holy sites made it very convenient. Highly recommended!'
-                },
-                {
-                  name: 'Mohammed Hassan',
-                  rating: 4,
-                  date: 'September 2024',
-                  comment: 'Good hotel with decent amenities. Room service was prompt. Would stay here again.'
-                }
-              ].map((review, index) => (
-                <div key={index} className="border-b last:border-b-0 pb-6 last:pb-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="font-semibold text-gray-900">{review.name}</p>
-                      <p className="text-sm text-gray-600">{review.date}</p>
-                    </div>
-                    <div className="flex">
-                      {[...Array(review.rating)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
+        {/* Contact Information */}
+        {hotel.contact && (hotel.contact.phone || hotel.contact.email) && (
+          <Card className="mt-8">
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h2>
+              <div className="space-y-4">
+                {hotel.contact.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-5 h-5 text-blue-600" />
+                    <span className="text-gray-900">{hotel.contact.phone}</span>
                   </div>
-                  <p className="text-gray-700">{review.comment}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                )}
+                {hotel.contact.email && (
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-5 h-5 text-blue-600" />
+                    <span className="text-gray-900">{hotel.contact.email}</span>
+                  </div>
+                )}
+                {hotel.contact.address && (
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                    <span className="text-gray-900">{hotel.contact.address}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

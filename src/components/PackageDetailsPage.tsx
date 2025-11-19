@@ -36,15 +36,19 @@ import {
   Building2,
   ArrowRight
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
+import { PackageBookingDialog } from './PackageBookingDialog';
+import { fetchUmrahPackageByIdAction } from '@/actions/packageActions';
+import { toast } from '@/hooks/use-toast';
 
 // Import Makkah and Madina icons
 import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
 import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
 
-// Package data (same as UmrahPackagesPage)
+// Mock data removed - now fetching from backend
+/*
 const allPackages = [
   {
     id: 1,
@@ -421,6 +425,7 @@ const allPackages = [
     }
   }
 ];
+*/
 
 interface PackageDetailsPageProps {
   id: string;
@@ -432,7 +437,46 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const pkg = allPackages.find(p => p.id === Number(id));
+  const [pkg, setPkg] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadPackage = async () => {
+      try {
+        const result = await fetchUmrahPackageByIdAction(id);
+        if (result?.data) {
+          setPkg(result.data);
+        } else {
+          toast({
+            title: "Error",
+            description: result?.error?.message?.[0] || "Package not found",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load package",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (id) {
+      loadPackage();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-gray-900 mb-4">Loading package...</h2>
+        </div>
+      </div>
+    );
+  }
 
   if (!pkg) {
     return (
@@ -451,9 +495,8 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
   const handleBookNow = () => {
     if (!user) {
       setShowLoginDialog(true);
-    } else {
-      alert(`Booking ${pkg.name}. This will redirect to booking form.`);
     }
+    // Booking dialog will handle the rest
   };
 
   const handleShare = () => {
@@ -542,12 +585,27 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                 </p>
                 <p className="text-sm text-gray-500 mb-4">per person</p>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={handleBookNow}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                  >
-                    Book Now
-                  </Button>
+                  {user ? (
+                    <PackageBookingDialog
+                      packageId={pkg._id}
+                      packageName={pkg.name}
+                      user={user}
+                      trigger={
+                        <Button
+                          className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                        >
+                          Book Now
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <Button
+                      onClick={handleBookNow}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                    >
+                      Book Now
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="icon"
@@ -587,52 +645,63 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Makkah Hotel */}
-                    <Link 
-                      href={`/hotels/makkah/${pkg.hotels.makkah.name.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="block"
-                    >
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 hover:shadow-lg transition-shadow cursor-pointer">
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2">
-                            <img src={makkahIcon.src} alt="Makkah" className="w-5 h-5" />
-                            <h3 className="text-gray-900">Makkah Hotel</h3>
+                    {pkg.hotels?.makkah && (
+                      <Link 
+                        href={`/makkah-hotels/makkah/${pkg.hotels.makkah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                        className="block"
+                      >
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 hover:shadow-lg transition-shadow cursor-pointer">
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2">
+                              <img src={makkahIcon.src} alt="Makkah" className="w-5 h-5" />
+                              <h3 className="text-gray-900">Makkah Hotel</h3>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-gray-400" />
                           </div>
-                          <ArrowRight className="w-4 h-4 text-gray-400" />
+                          <p className="text-gray-800 mb-2">{pkg.hotels.makkah.name || 'N/A'}</p>
+                          {pkg.hotels.makkah.distance && (
+                            <p className="text-sm text-gray-600 mb-3">{pkg.hotels.makkah.distance}</p>
+                          )}
+                          {pkg.hotels.makkah.star && (
+                            <div className="flex items-center gap-1">
+                              {[...Array(pkg.hotels.makkah.star)].map((_, i) => (
+                                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              ))}
+                              <span className="text-sm text-gray-600 ml-2">{pkg.hotels.makkah.star} Star</span>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-gray-800 mb-2">{pkg.hotels.makkah.name}</p>
-                        <p className="text-sm text-gray-600 mb-3">{pkg.hotels.makkah.distance}</p>
-                        <div className="flex items-center gap-1">
-                          {[...Array(pkg.hotels.makkah.stars)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                          <span className="text-sm text-gray-600 ml-2">{pkg.hotels.makkah.stars} Star</span>
-                        </div>
-                      </div>
-                    </Link>
-
+                      </Link>
+                    )}
                     {/* Madinah Hotel */}
-                    <Link 
-                      href={`/hotels/madinah/${pkg.hotels.madinah.name.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="block"
-                    >
-                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 hover:shadow-lg transition-shadow cursor-pointer">
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2">
-                            <img src={madinaIcon.src} alt="Madina" className="w-5 h-5" />
-                            <h3 className="text-gray-900">Madinah Hotel</h3>
+                    {pkg.hotels?.madinah && (
+                      <Link 
+                        href={`/madina-hotels/madinah/${pkg.hotels.madinah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                        className="block"
+                      >
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 hover:shadow-lg transition-shadow cursor-pointer">
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2">
+                              <img src={madinaIcon.src} alt="Madina" className="w-5 h-5" />
+                              <h3 className="text-gray-900">Madinah Hotel</h3>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-gray-400" />
                           </div>
-                          <ArrowRight className="w-4 h-4 text-gray-400" />
+                          <p className="text-gray-800 mb-2">{pkg.hotels.madinah.name || 'N/A'}</p>
+                          {pkg.hotels.madinah.distance && (
+                            <p className="text-sm text-gray-600 mb-3">{pkg.hotels.madinah.distance}</p>
+                          )}
+                          {pkg.hotels.madinah.star && (
+                            <div className="flex items-center gap-1">
+                              {[...Array(pkg.hotels.madinah.star)].map((_, i) => (
+                                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              ))}
+                              <span className="text-sm text-gray-600 ml-2">{pkg.hotels.madinah.star} Star</span>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-gray-800 mb-2">{pkg.hotels.madinah.name}</p>
-                        <p className="text-sm text-gray-600 mb-3">{pkg.hotels.madinah.distance}</p>
-                        <div className="flex items-center gap-1">
-                          {[...Array(pkg.hotels.madinah.stars)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                          <span className="text-sm text-gray-600 ml-2">{pkg.hotels.madinah.stars} Star</span>
-                        </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -660,19 +729,21 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                         <Map className="w-5 h-5 text-blue-600" />
                         <h3 className="text-gray-900">Day by Day Itinerary</h3>
                       </div>
-                      {pkg.itinerary && pkg.itinerary.map((item, index) => (
-                        <div key={index} className="flex gap-4">
+                      {pkg.itinerary && pkg.itinerary.map((item: any, index: number) => (
+                        <div key={item._id || index} className="flex gap-4">
                           <div className="flex flex-col items-center">
                             <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
-                              {item.day}
+                              {item.day || index + 1}
                             </div>
                             {index < pkg.itinerary.length - 1 && (
                               <div className="w-0.5 h-full bg-blue-200 my-2" />
                             )}
                           </div>
                           <div className="flex-1 pb-6">
-                            <h4 className="text-gray-900 mb-1">{item.title}</h4>
-                            <p className="text-sm text-gray-600">{item.description}</p>
+                            <h4 className="text-gray-900 mb-1">{item.title || `Day ${index + 1}`}</h4>
+                            {item.description && (
+                              <p className="text-sm text-gray-600">{item.description}</p>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -685,10 +756,10 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                         <h3 className="text-gray-900">What's Included</h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {pkg.includes && pkg.includes.map((item, index) => (
-                          <div key={index} className="flex items-start gap-2">
+                        {pkg.includes && pkg.includes.map((item: any, index: number) => (
+                          <div key={item._id || index} className="flex items-start gap-2">
                             <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                            <span className="text-sm text-gray-700">{item}</span>
+                            <span className="text-sm text-gray-700">{typeof item === 'string' ? item : item.include_text || item}</span>
                           </div>
                         ))}
                       </div>
@@ -701,10 +772,10 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                         <h3 className="text-gray-900">What's Not Included</h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {pkg.excludes && pkg.excludes.map((item, index) => (
-                          <div key={index} className="flex items-start gap-2">
+                        {pkg.excludes && pkg.excludes.map((item: any, index: number) => (
+                          <div key={item._id || index} className="flex items-start gap-2">
                             <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                            <span className="text-sm text-gray-700">{item}</span>
+                            <span className="text-sm text-gray-700">{typeof item === 'string' ? item : item.exclude_text || item}</span>
                           </div>
                         ))}
                       </div>
@@ -763,13 +834,13 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                     Package Features
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {pkg.features.map((feature, index) => (
+                    {pkg.features && pkg.features.map((feature: any, index: number) => (
                       <div
-                        key={index}
+                        key={feature._id || index}
                         className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                       >
                         <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{feature}</span>
+                        <span className="text-sm text-gray-700">{typeof feature === 'string' ? feature : feature.feature_text || feature}</span>
                       </div>
                     ))}
                   </div>
@@ -821,13 +892,27 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                     </div>
                   </div>
 
-                  <Button
-                    onClick={handleBookNow}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 mb-3"
-                  >
-                    Book This Package
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  {user ? (
+                    <PackageBookingDialog
+                      packageId={pkg._id}
+                      packageName={pkg.name}
+                      user={user}
+                      trigger={
+                        <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 mb-3">
+                          Book This Package
+                          <ChevronRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <Button
+                      onClick={handleBookNow}
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 mb-3"
+                    >
+                      Book This Package
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
 
                   <Link href="/customize-umrah">
                     <Button variant="outline" className="w-full">

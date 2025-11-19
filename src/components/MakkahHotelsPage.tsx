@@ -1,23 +1,26 @@
 import { motion } from 'framer-motion';
-import { Hotel, Star, MapPin, Navigation, Wifi, Coffee, UtensilsCrossed, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { Hotel, Star, MapPin, Navigation, Wifi, Coffee, UtensilsCrossed, ChevronRight, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import Link from 'next/link';
 import { Button } from './ui/button';
+import { fetchAllHotelsAction } from '@/actions/hotelActions';
+import { toast } from '@/hooks/use-toast';
 
-interface Hotel {
-  id: number;
+interface BackendHotel {
+  _id: string;
   name: string;
-  stars: number;
-  distanceFromHaram: string;
-  price: number;
-  image: string;
-  amenities: string[];
-  description: string;
-  featured?: boolean;
-  slug: string;
+  star: number;
+  type: 'Makkah' | 'Madina';
+  location: string;
+  distance?: string;
+  images?: string[];
+  amenities?: string[];
+  description?: string;
 }
 
+// Mock data removed - now fetching from backend
+/*
 const makkahHotels: Hotel[] = [
   {
     id: 1,
@@ -122,13 +125,51 @@ const makkahHotels: Hotel[] = [
     slug: 'makkah-hotel'
   },
 ];
+*/
 
 export function MakkahHotelsPage() {
+  const [hotels, setHotels] = useState<BackendHotel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStars, setSelectedStars] = useState<number | null>(null);
+
+  useEffect(() => {
+    const loadHotels = async () => {
+      setLoading(true);
+      try {
+        const result = await fetchAllHotelsAction();
+        if (result?.data && Array.isArray(result.data)) {
+          // Filter only Makkah hotels
+          const makkahHotels = result.data.filter((h: any) => h.type === 'Makkah') as BackendHotel[];
+          setHotels(makkahHotels);
+        } else {
+          toast({
+            title: "Error",
+            description: result?.error?.message?.[0] || "Failed to load hotels",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load hotels",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadHotels();
+  }, []);
+
   const [selectedCategory, setSelectedCategory] = useState<'all' | 5 | 4 | 3>('all');
 
-  const filteredHotels = selectedCategory === 'all' 
-    ? makkahHotels 
-    : makkahHotels.filter(hotel => hotel.stars === selectedCategory);
+  const filteredHotels = hotels.filter(hotel => {
+    const matchesSearch = hotel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         hotel.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStars = selectedCategory === 'all' || hotel.star === selectedCategory;
+    return matchesSearch && matchesStars;
+  });
 
   return (
     <div className="min-h-screen bg-white pt-24">
@@ -179,87 +220,98 @@ export function MakkahHotelsPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredHotels.map((hotel, index) => (
-            <motion.div
-              key={hotel.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * index, duration: 0.5 }}
-              className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100"
-            >
-              {hotel.featured && (
-                <div className="absolute top-4 left-4 z-10 bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-3 py-1 rounded-full text-sm shadow-lg">
-                  Featured
-                </div>
-              )}
-              
-              <div className="relative h-56 overflow-hidden">
-                <ImageWithFallback
-                  src={hotel.image}
-                  alt={hotel.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                
-                {/* Stars */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-1">
-                  {Array.from({ length: hotel.stars }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                  ))}
-                </div>
-              </div>
+          {loading ? (
+            <div className="col-span-full text-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+              <p className="text-gray-600">Loading hotels...</p>
+            </div>
+          ) : filteredHotels.length === 0 ? (
+            <div className="col-span-full text-center py-16">
+              <Hotel className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">No hotels found</p>
+            </div>
+          ) : (
+            filteredHotels.map((hotel, index) => {
+              const slug = hotel.name.toLowerCase().replace(/\s+/g, '-');
+              return (
+                <motion.div
+                  key={hotel._id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index, duration: 0.5 }}
+                  className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100"
+                >
+                  <Link href={`/makkah-hotels/makkah/${slug}`}>
+                    <div className="relative h-56 overflow-hidden bg-gray-200">
+                      {hotel.images && hotel.images.length > 0 ? (
+                        <ImageWithFallback
+                          src={hotel.images[0]}
+                          alt={hotel.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <Hotel className="w-16 h-16 text-gray-400" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      
+                      {/* Stars */}
+                      <div className="absolute bottom-4 left-4 flex items-center gap-1">
+                        {Array.from({ length: hotel.star || 0 }).map((_, i) => (
+                          <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        ))}
+                      </div>
+                    </div>
+                  </Link>
 
-              <div className="p-6">
-                <h3 className="text-xl text-gray-900 mb-2 group-hover:text-[rgb(30,58,109)] transition-colors">
-                  {hotel.name}
-                </h3>
-                
-                <div className="flex items-center gap-2 text-gray-600 mb-3">
-                  <MapPin className="w-4 h-4 text-green-600" />
-                  <span className="text-sm">{hotel.distanceFromHaram}</span>
-                </div>
+                  <div className="p-6">
+                    <Link href={`/makkah-hotels/makkah/${slug}`}>
+                      <h3 className="text-xl text-gray-900 mb-2 group-hover:text-[rgb(30,58,109)] transition-colors">
+                        {hotel.name}
+                      </h3>
+                    </Link>
+                    
+                    <div className="flex items-center gap-2 text-gray-600 mb-3">
+                      <MapPin className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">{hotel.distance || hotel.location}</span>
+                    </div>
 
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {hotel.description}
-                </p>
+                    {hotel.description && (
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {hotel.description}
+                      </p>
+                    )}
 
-                {/* Amenities */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {hotel.amenities.slice(0, 3).map((amenity, i) => (
-                    <span
-                      key={i}
-                      className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded"
-                    >
-                      {amenity}
-                    </span>
-                  ))}
-                </div>
+                    {/* Amenities */}
+                    {hotel.amenities && hotel.amenities.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {hotel.amenities.slice(0, 3).map((amenity, i) => (
+                          <span
+                            key={i}
+                            className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded"
+                          >
+                            {amenity}
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div>
-                    <div className="text-sm text-gray-500">Starting from</div>
-                    <div className="text-2xl text-[rgb(30,58,109)]">
-                      ${hotel.price}<span className="text-sm text-gray-500">/night</span>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <Link href={`/makkah-hotels/makkah/${slug}`}>
+                        <Button className="bg-[rgb(30,58,109)] hover:bg-[rgb(40,70,130)]">
+                          Book Now
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-                  <Link href={`/makkah-hotels/makkah/${hotel.slug}`}>
-                    <Button className="bg-[rgb(30,58,109)] hover:bg-[rgb(40,70,130)]">
-                      Book Now
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                </motion.div>
+              );
+            })
+          )}
         </div>
 
-        {filteredHotels.length === 0 && (
-          <div className="text-center py-16">
-            <Hotel className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No hotels found in this category</p>
-          </div>
-        )}
       </div>
 
       {/* CTA Section */}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar as CalendarIcon, MapPin, Plane, Hotel, Users, Bed, Star, CheckCircle, Send, Plus, Minus, X, Wifi, ChevronRight, ChevronLeft, Check, Award, Globe, Headphones, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -10,6 +10,7 @@ import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format } from 'date-fns';
 import { createCustomUmrahRequestAction } from '@/actions/customUmrahRequestActions';
+import { fetchAllHotelsAction } from '@/actions/hotelActions';
 import { toast } from '@/hooks/use-toast';
 
 // Import airline logos
@@ -31,21 +32,7 @@ const airlines = [
   { name: 'Serene Air', logo: sereneAirLogo },
 ];
 
-const hotels = [
-  { name: 'Swissôtel Makkah', stars: '5-star' },
-  { name: 'Hilton Suites Makkah', stars: '5-star' },
-  { name: 'Pullman ZamZam', stars: '5-star' },
-  { name: 'Fairmont Makkah', stars: '5-star' },
-  { name: 'Movenpick Hotel', stars: '5-star' },
-  { name: 'Anjum Hotel Makkah', stars: '4-star' },
-  { name: 'Dar Al Eiman Royal', stars: '4-star' },
-  { name: 'Millennium Makkah', stars: '4-star' },
-  { name: 'Al Safwah Royale Orchid', stars: '4-star' },
-  { name: 'Elaf Kinda Hotel', stars: '3-star' },
-  { name: 'Al Kiswah Towers', stars: '3-star' },
-  { name: 'Makkah Hotel', stars: '3-star' },
-  { name: 'Azka Al Safa', stars: '3-star' },
-];
+// Hotels now fetched from backend
 
 const fromCities = [
   'Karachi, Pakistan',
@@ -76,6 +63,13 @@ interface HotelSelection {
   bedType: string;
 }
 
+interface BackendHotel {
+  _id: string;
+  name: string;
+  star: number;
+  type: 'Makkah' | 'Madina';
+}
+
 export function CustomUmrahForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -104,6 +98,35 @@ export function CustomUmrahForm() {
     { hotelClass: '', hotel: '', stayDuration: '', bedType: '' }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [backendHotels, setBackendHotels] = useState<BackendHotel[]>([]);
+  const [loadingHotels, setLoadingHotels] = useState(true);
+
+  useEffect(() => {
+    const loadHotels = async () => {
+      setLoadingHotels(true);
+      try {
+        const result = await fetchAllHotelsAction();
+        if (result?.data && Array.isArray(result.data)) {
+          setBackendHotels(result.data as BackendHotel[]);
+        } else {
+          toast({
+            title: "Error",
+            description: result?.error?.message?.[0] || "Failed to load hotels",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load hotels",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingHotels(false);
+      }
+    };
+    loadHotels();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,10 +153,61 @@ export function CustomUmrahForm() {
       return;
     }
 
+    // Validate dates
+    const departDate = new Date(formData.departDate);
+    const returnDate = new Date(formData.returnDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (departDate < today) {
+      toast({
+        title: "Error",
+        description: "Departure date cannot be in the past",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (returnDate <= departDate) {
+      toast({
+        title: "Error",
+        description: "Return date must be after departure date",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     if (hotelSelections.some(h => !h.hotelClass || !h.hotel || !h.stayDuration || !h.bedType)) {
       toast({
         title: "Error",
         description: "Please fill in all hotel details",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate stay duration
+    if (hotelSelections.some(h => {
+      const duration = parseInt(h.stayDuration);
+      return isNaN(duration) || duration < 1 || duration > 90;
+    })) {
+      toast({
+        title: "Error",
+        description: "Stay duration must be between 1 and 90 nights",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate child ages
+    if (formData.childAges.some(age => age < 0 || age > 16)) {
+      toast({
+        title: "Error",
+        description: "Child ages must be between 0 and 16 years",
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -256,8 +330,23 @@ export function CustomUmrahForm() {
     setHotelSelections(updated);
   };
 
-  const getFilteredHotels = (starRating: string) => {
-    return hotels.filter(hotel => hotel.stars === starRating);
+  const getFilteredHotels = (starRating: string, index: number) => {
+    if (!starRating) return [];
+    const starNum = parseInt(starRating.replace('-star', ''));
+    if (isNaN(starNum) || starNum < 1 || starNum > 5) return [];
+    
+    // First hotel is Makkah, rest are Madina
+    const cityType = index === 0 ? 'Makkah' : 'Madina';
+    
+    let filtered = backendHotels.filter(hotel => 
+      hotel.star === starNum && hotel.type === cityType
+    );
+    
+    return filtered.map(hotel => ({
+      name: hotel.name,
+      stars: `${hotel.star}-star`,
+      _id: hotel._id,
+    }));
   };
 
   const incrementAdults = () => {
@@ -294,13 +383,13 @@ export function CustomUmrahForm() {
 
   const incrementRooms = () => {
     if (formData.rooms < 10) {
-      setFormData({ ...formData, rooms: formData.rooms + 1 });
+      setFormData({ ...formData, rooms: Math.min(10, formData.rooms + 1) });
     }
   };
 
   const decrementRooms = () => {
     if (formData.rooms > 1) {
-      setFormData({ ...formData, rooms: formData.rooms - 1 });
+      setFormData({ ...formData, rooms: Math.max(1, formData.rooms - 1) });
     }
   };
 
@@ -895,9 +984,15 @@ export function CustomUmrahForm() {
                                 <SelectValue placeholder={selection.hotelClass ? "Select hotel" : "Select class first"} />
                               </SelectTrigger>
                               <SelectContent>
-                                {getFilteredHotels(selection.hotelClass).map((hotel) => (
-                                  <SelectItem key={hotel.name} value={hotel.name}>{hotel.name}</SelectItem>
-                                ))}
+                                {loadingHotels ? (
+                                  <SelectItem value="loading" disabled>Loading hotels...</SelectItem>
+                                ) : getFilteredHotels(selection.hotelClass, index).length === 0 ? (
+                                  <SelectItem value="no-hotels" disabled>No hotels available for this class in {index === 0 ? 'Makkah' : 'Madina'}</SelectItem>
+                                ) : (
+                                  getFilteredHotels(selection.hotelClass, index).map((hotel) => (
+                                    <SelectItem key={hotel._id || hotel.name} value={hotel.name}>{hotel.name}</SelectItem>
+                                  ))
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
@@ -934,8 +1029,10 @@ export function CustomUmrahForm() {
                                 className="h-8 w-8 rounded-full"
                                 onClick={() => {
                                   const currentValue = parseInt(selection.stayDuration) || 0;
-                                  if (currentValue < 90) {
+                                  if (currentValue >= 1 && currentValue < 90) {
                                     updateHotelSelection(index, 'stayDuration', String(currentValue + 1));
+                                  } else if (currentValue === 0) {
+                                    updateHotelSelection(index, 'stayDuration', '1');
                                   }
                                 }}
                                 disabled={!!selection.stayDuration && parseInt(selection.stayDuration) >= 90}

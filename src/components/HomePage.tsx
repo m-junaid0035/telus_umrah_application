@@ -2,6 +2,9 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {  useRouter } from 'next/navigation';
+import { fetchAllUmrahPackagesAction } from '@/actions/packageActions';
+import { toast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 import { 
   Sparkles, 
   Shield, 
@@ -238,6 +241,37 @@ export function HomePage() {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(true);
+
+  // Fetch packages from backend
+  useEffect(() => {
+    const loadPackages = async () => {
+      setLoadingPackages(true);
+      try {
+        const result = await fetchAllUmrahPackagesAction();
+        if (result?.data && Array.isArray(result.data)) {
+          // Get first 4 packages (or all if less than 4)
+          setPackages(result.data.slice(0, 4));
+        } else {
+          toast({
+            title: "Error",
+            description: result?.error?.message?.[0] || "Failed to load packages",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load packages",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingPackages(false);
+      }
+    };
+    loadPackages();
+  }, []);
 
   // Check scroll position to show/hide arrows
   const checkScroll = () => {
@@ -487,148 +521,50 @@ export function HomePage() {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[
-              {
-                id: 1,
-                name: 'Economy Umrah Package',
-                price: 185000,
-                duration: 14,
-                badge: 'Budget Friendly',
-                badgeColor: 'bg-green-500',
-                airline: 'Pakistan International Airlines',
-                departureCity: 'Karachi',
-                image: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=800&q=80',
-                hotels: {
-                  makkah: { name: 'Al Safwah Royal Orchid', distance: '800m from Haram', stars: 3 },
-                  madinah: { name: 'Al Eiman Royal', distance: '500m from Masjid Nabawi', stars: 3 }
-                },
-                features: [
-                  'Return Air Ticket',
-                  '14 Days Accommodation',
-                  'Breakfast & Dinner',
-                  'Umrah Visa',
-                  'Airport Transfers',
-                  'Ziyarat Tours',
-                  '24/7 Support'
-                ],
-                travelers: '2-4 People per Room',
-                rating: 4.3,
-                reviews: 245,
-                popular: false,
-              },
-              {
-                id: 2,
-                name: 'Standard Umrah Package',
-                price: 285000,
-                duration: 15,
-                badge: 'Most Popular',
-                badgeColor: 'bg-blue-500',
-                airline: 'Saudi Airlines',
-                departureCity: 'Lahore',
-                popular: true,
-                image: 'https://images.unsplash.com/photo-1591604129853-212965412d4f?w=800&q=80',
-                hotels: {
-                  makkah: { name: 'Swissotel Makkah', distance: '300m from Haram', stars: 4 },
-                  madinah: { name: 'Crowne Plaza Madinah', distance: '200m from Masjid Nabawi', stars: 4 }
-                },
-                features: [
-                  'Return Air Ticket',
-                  '15 Days Accommodation',
-                  'All Meals Included',
-                  'Umrah Visa',
-                  'Airport & Hotel Transfers',
-                  'Guided Ziyarat Tours',
-                  'Travel Insurance',
-                  '24/7 Support'
-                ],
-                travelers: '2-3 People per Room',
-                rating: 4.7,
-                reviews: 412,
-              },
-              {
-                id: 3,
-                name: 'Premium Umrah Package',
-                price: 425000,
-                duration: 20,
-                badge: 'Best Value',
-                badgeColor: 'bg-purple-500',
-                airline: 'Emirates',
-                departureCity: 'Islamabad',
-                image: 'https://images.unsplash.com/photo-1580418827493-f2b22c0a76cb?w=800&q=80',
-                hotels: {
-                  makkah: { name: 'Hilton Suites Makkah', distance: 'Walking Distance to Haram', stars: 5 },
-                  madinah: { name: 'Oberoi Madinah', distance: 'Walking Distance to Masjid Nabawi', stars: 5 }
-                },
-                features: [
-                  'Business Class Available',
-                  '20 Days Accommodation',
-                  'Buffet - All Meals',
-                  'Umrah Visa (Fast Track)',
-                  'Private Transfers',
-                  'Premium Guided Ziyarat',
-                  'Laundry Service',
-                  'Travel Insurance',
-                  'SIM Card & WiFi',
-                  '24/7 Dedicated Support'
-                ],
-                travelers: '2 People per Room',
-                rating: 4.9,
-                reviews: 328,
-                popular: false,
-              },
-              {
-                id: 4,
-                name: 'Luxury Umrah Package',
-                price: 625000,
-                duration: 21,
-                badge: 'VIP Experience',
-                badgeColor: 'bg-gradient-to-r from-amber-500 to-orange-600',
-                airline: 'Qatar Airways',
-                departureCity: 'Karachi',
-                image: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=800&q=80',
-                hotels: {
-                  makkah: { name: 'Raffles Makkah Palace', distance: 'Connected to Haram', stars: 5 },
-                  madinah: { name: 'Anwar Al Madinah Mövenpick', distance: 'Premium Location', stars: 5 }
-                },
-                features: [
-                  'Business Class Tickets',
-                  '21 Days Luxury Stay',
-                  'Premium Dining - All Meals',
-                  'Express Umrah Visa',
-                  'VIP Airport Services',
-                  'Private Luxury Transfers',
-                  'Exclusive Guided Tours',
-                  'Personal Concierge',
-                  'Premium Laundry',
-                  'Full Travel Insurance',
-                  'International SIM & WiFi',
-                  'VIP 24/7 Support'
-                ],
-                travelers: '2 People per Room',
-                rating: 5.0,
-                reviews: 189,
-                popular: false,
-              },
-            ].map((pkg, index) => (
-              <motion.div
-                key={pkg.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className={`overflow-hidden hover:shadow-xl transition-shadow ${
-                  pkg.popular ? 'ring-2 ring-blue-500' : ''
-                }`}>
-                  <CardContent className="p-0">
-                    {/* Header Section */}
-                    <div className={`${pkg.badgeColor} p-4 text-white`}>
+            {loadingPackages ? (
+              <div className="col-span-full text-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                <p className="text-gray-600">Loading packages...</p>
+              </div>
+            ) : packages.length === 0 ? (
+              <div className="col-span-full text-center py-16">
+                <p className="text-gray-500 text-lg">No packages available</p>
+              </div>
+            ) : (
+              packages.map((pkg, index) => {
+                const badgeColors: Record<string, string> = {
+                  'Budget Friendly': 'bg-green-500',
+                  'Most Popular': 'bg-blue-500',
+                  'Best Value': 'bg-purple-500',
+                  'VIP Experience': 'bg-gradient-to-r from-amber-500 to-orange-600',
+                };
+                const badgeColor = badgeColors[pkg.badge || ''] || 'bg-blue-500';
+                const makkahHotel = pkg.hotels?.makkah;
+                const madinahHotel = pkg.hotels?.madinah;
+                const features = pkg.features || [];
+                
+                return (
+                  <motion.div
+                    key={pkg._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className={`overflow-hidden hover:shadow-xl transition-shadow ${
+                      pkg.popular ? 'ring-2 ring-blue-500' : ''
+                    }`}>
+                      <CardContent className="p-0">
+                        {/* Header Section */}
+                        <div className={`${badgeColor} p-4 text-white`}>
                       <div className="flex items-start justify-between flex-wrap gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
-                              {pkg.badge}
-                            </Badge>
+                            {pkg.badge && (
+                              <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
+                                {pkg.badge}
+                              </Badge>
+                            )}
                             {pkg.popular && (
                               <Badge className="bg-yellow-500 text-white flex items-center gap-1 text-xs">
                                 <Star className="w-3 h-3 fill-white" />
@@ -638,28 +574,34 @@ export function HomePage() {
                           </div>
                           <h3 className="font-bold text-xl mb-2">{pkg.name}</h3>
                           <div className="flex items-center gap-3 text-white/90 flex-wrap text-xs">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5" />
-                              <span>{pkg.duration} Days</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-3.5 h-3.5" />
-                              <span>{pkg.departureCity}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <img 
-                                src={getAirlineLogo(pkg.airline).toString()} 
-                                alt={pkg.airline}
-                                className="w-4 h-4 object-contain bg-white rounded p-0.5"
-                              />
-                              <span className="truncate max-w-[120px]">{pkg.airline}</span>
-                            </div>
+                            {pkg.duration && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5" />
+                                <span>{pkg.duration} Days</span>
+                              </div>
+                            )}
+                            {pkg.departureCity && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3.5 h-3.5" />
+                                <span>{pkg.departureCity}</span>
+                              </div>
+                            )}
+                            {pkg.airline && (
+                              <div className="flex items-center gap-1.5">
+                                <img 
+                                  src={getAirlineLogo(pkg.airline).toString()} 
+                                  alt={pkg.airline}
+                                  className="w-4 h-4 object-contain bg-white rounded p-0.5"
+                                />
+                                <span className="truncate max-w-[120px]">{pkg.airline}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-white/80 text-xs mb-0.5">Starting from</p>
                           <p className="text-2xl font-bold">
-                            PKR {pkg.price.toLocaleString()}
+                            PKR {pkg.price?.toLocaleString() || 'N/A'}
                           </p>
                           <p className="text-white/80 text-xs">per person</p>
                         </div>
@@ -669,93 +611,113 @@ export function HomePage() {
                     {/* Content */}
                     <div className="p-4">
                       {/* Rating */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3.5 h-3.5 ${
-                                i < Math.floor(pkg.rating)
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
+                      {(pkg.rating || pkg.reviews) && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3.5 h-3.5 ${
+                                  i < Math.floor(pkg.rating || 0)
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-xs text-gray-600">
+                            {pkg.rating || 0} ({pkg.reviews || 0} reviews)
+                          </span>
                         </div>
-                        <span className="text-xs text-gray-600">
-                          {pkg.rating} ({pkg.reviews} reviews)
-                        </span>
-                      </div>
+                      )}
 
                       {/* Hotels */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                        <Link 
-                          href={`/makkah-hotels/makkah/${pkg.hotels.makkah.name.toLowerCase().replace(/\s+/g, '-')}`}
-                          className="block"
-                        >
-                          <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
-                            <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                              <div className="flex items-center gap-1.5">
-                                <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
-                                <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
+                      {(makkahHotel || madinahHotel) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                          {makkahHotel && (
+                            <Link 
+                              href={`/makkah-hotels/makkah/${makkahHotel.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                              className="block"
+                            >
+                              <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                                <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
+                                    <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
+                                  </div>
+                                  <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                                </div>
+                                <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{makkahHotel.name || 'N/A'}</p>
+                                {makkahHotel.distance && (
+                                  <p className="text-xs text-gray-500 mb-0.5">{makkahHotel.distance}</p>
+                                )}
+                                {makkahHotel.star && (
+                                  <div className="flex">
+                                    {[...Array(makkahHotel.star)].map((_, i) => (
+                                      <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                              <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                            </div>
-                            <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.makkah.name}</p>
-                            <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.makkah.distance}</p>
-                            <div className="flex">
-                              {[...Array(pkg.hotels.makkah.stars)].map((_, i) => (
-                                <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                              ))}
-                            </div>
-                          </div>
-                        </Link>
-                        <Link 
-                          href={`/madina-hotels/madinah/${pkg.hotels.madinah.name.toLowerCase().replace(/\s+/g, '-')}`}
-                          className="block"
-                        >
-                          <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
-                            <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                              <div className="flex items-center gap-1.5">
-                                <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
-                                <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
+                            </Link>
+                          )}
+                          {madinahHotel && (
+                            <Link 
+                              href={`/madina-hotels/madinah/${madinahHotel.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                              className="block"
+                            >
+                              <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                                <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
+                                    <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
+                                  </div>
+                                  <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                                </div>
+                                <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{madinahHotel.name || 'N/A'}</p>
+                                {madinahHotel.distance && (
+                                  <p className="text-xs text-gray-500 mb-0.5">{madinahHotel.distance}</p>
+                                )}
+                                {madinahHotel.star && (
+                                  <div className="flex">
+                                    {[...Array(madinahHotel.star)].map((_, i) => (
+                                      <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                              <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                            </div>
-                            <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.madinah.name}</p>
-                            <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.madinah.distance}</p>
-                            <div className="flex">
-                              {[...Array(pkg.hotels.madinah.stars)].map((_, i) => (
-                                <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                              ))}
-                            </div>
-                          </div>
-                        </Link>
-                      </div>
+                            </Link>
+                          )}
+                        </div>
+                      )}
 
                       {/* Features */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
-                        {pkg.features.slice(0, 8).map((feature, idx) => (
-                          <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
-                            <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
-                            <span className="truncate text-xs">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {features.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
+                          {features.slice(0, 8).map((feature: any, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
+                              <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
+                              <span className="truncate text-xs">{feature.feature_text || feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Footer */}
                       <div className="flex items-center justify-between pt-3 border-t">
-                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                          <Users className="w-3.5 h-3.5" />
-                          <span>{pkg.travelers}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Link href={`/umrah-packages/${pkg.id}`}>
+                        {pkg.travelers && (
+                          <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                            <Users className="w-3.5 h-3.5" />
+                            <span>{pkg.travelers}</span>
+                          </div>
+                        )}
+                        <div className="flex gap-2 ml-auto">
+                          <Link href={`/umrah-packages/${pkg._id}`}>
                             <Button variant="outline" size="sm" className="text-xs h-8">
                               View Details
                             </Button>
                           </Link>
-                          <Link href="/customize-umrah">
+                          <Link href="/umrah-packages">
                             <Button 
                               size="sm"
                               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-xs h-8"
@@ -770,7 +732,9 @@ export function HomePage() {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+                );
+              })
+            )}
           </div>
 
           {/* Additional Info */}

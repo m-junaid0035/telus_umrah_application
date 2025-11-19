@@ -73,11 +73,64 @@
     return serializeUmrahPackage(pkg);
   };
 
-  /** Get all Umrah packages (sorted by creation date) */
-  export const getAllUmrahPackages = async () => {
-    const packages = await UmrahPackage.find().sort({ createdAt: -1 }).lean();
-    return packages.map(serializeUmrahPackage);
-  };
+/** Get all Umrah packages (sorted by creation date) with populated data */
+export const getAllUmrahPackages = async () => {
+  const packages = await UmrahPackage.find().sort({ createdAt: -1 }).lean();
+  
+  // Populate hotels and features for all packages
+  const packagesWithData = await Promise.all(
+    packages.map(async (pkg) => {
+      const makkahHotel = pkg.hotels?.makkah ? await Hotel.findById(pkg.hotels.makkah).lean() : null;
+      const madinahHotel = pkg.hotels?.madinah ? await Hotel.findById(pkg.hotels.madinah).lean() : null;
+      const features = pkg.features && pkg.features.length > 0
+        ? await PackageFeature.find({ _id: { $in: pkg.features } }).lean()
+        : [];
+
+      return {
+        ...pkg,
+        hotels: {
+          makkah: makkahHotel ? {
+            _id: makkahHotel._id.toString(),
+            name: makkahHotel.name,
+            type: makkahHotel.type,
+            star: makkahHotel.star,
+            distance: makkahHotel.distance,
+          } : null,
+          madinah: madinahHotel ? {
+            _id: madinahHotel._id.toString(),
+            name: madinahHotel.name,
+            type: madinahHotel.type,
+            star: madinahHotel.star,
+            distance: madinahHotel.distance,
+          } : null,
+        },
+        features: features.map((f: any) => ({
+          _id: f._id.toString(),
+          feature_text: f.feature_text,
+        })),
+      };
+    })
+  );
+
+  return packagesWithData.map((pkg) => ({
+    _id: pkg._id.toString(),
+    name: pkg.name,
+    price: pkg.price,
+    duration: pkg.duration,
+    badge: pkg.badge,
+    airline: pkg.airline,
+    departureCity: pkg.departureCity,
+    image: pkg.image,
+    popular: pkg.popular,
+    hotels: pkg.hotels,
+    features: pkg.features,
+    travelers: pkg.travelers,
+    rating: pkg.rating,
+    reviews: pkg.reviews,
+    createdAt: pkg.createdAt?.toISOString(),
+    updatedAt: pkg.updatedAt?.toISOString(),
+  }));
+};
 
   /** Get a single Umrah package by ID with populated data */
   export const getUmrahPackageById = async (id: string) => {

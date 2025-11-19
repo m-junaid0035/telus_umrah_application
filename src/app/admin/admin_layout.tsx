@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Users, Home, LogOut, Hotel, ListChecks, Scroll, Route, CheckSquare, XSquare, FileText, Package} from "lucide-react";
+import { Menu, X, LayoutDashboard, Users, Home, LogOut, Hotel, ListChecks, Scroll, Route, CheckSquare, XSquare, FileText, Package, BookOpen, Calendar} from "lucide-react";
 import { logoutAdminAction } from "@/actions/authActions";
 
 type NavItem = {
@@ -35,6 +35,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { path: "/admin/packages", label: "Packages", icon: Package },
     { path: "/admin/hotels", label: "Hotels", icon: Hotel },
+    { path: "/admin/package-bookings", label: "Package Bookings", icon: BookOpen },
+    { path: "/admin/hotel-bookings", label: "Hotel Bookings", icon: Calendar },
     { path: "/admin/custom-umrah-requests", label: "Custom Requests", icon: FileText },
     { path: "/admin/features", label: "Features", icon: ListChecks },
     { path: "/admin/itineraries", label: "Itineraries", icon: Route },
@@ -94,9 +96,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         <div className="mb-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
+            Bookings
+          </p>
+          {navItems.slice(3, 6).map(({ path, label, icon: Icon }) => (
+            <Link
+              key={path}
+              href={path}
+              className={linkClasses(path)}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="mb-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
             Content
           </p>
-          {navItems.slice(3).map(({ path, label, icon: Icon }) => (
+          {navItems.slice(6).map(({ path, label, icon: Icon }) => (
             <Link
               key={path}
               href={path}
