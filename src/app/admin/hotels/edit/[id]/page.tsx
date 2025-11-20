@@ -366,10 +366,25 @@ export default function EditHotelForm() {
                 <Input
                   id="contact[phone]"
                   name="contact[phone]"
+                  type="tel"
                   className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-                  placeholder="+966 12 345 6789"
+                  placeholder="966123456789 (digits only)"
                   defaultValue={hotel.contact?.phone || ""}
+                  onKeyDown={(e) => {
+                    // Prevent non-numeric characters (except backspace, delete, tab, arrow keys)
+                    if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onChange={(e) => {
+                    // Remove non-digit characters
+                    e.target.value = e.target.value.replace(/\D/g, "");
+                  }}
+                  maxLength={15}
                 />
+                {errorFor("contact.phone") && (
+                  <p className="text-sm text-red-500">{errorFor("contact.phone")}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact[email]">Email</Label>

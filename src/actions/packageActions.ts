@@ -41,6 +41,7 @@ const umrahPackageSchema = z.object({
 export type UmrahPackageFormState = {
   error?: Record<string, string[]> | { message?: string[] };
   data?: any;
+  formData?: any; // Preserve form data when validation fails
 };
 
 function str(formData: FormData, key: string) {
@@ -84,13 +85,23 @@ export async function createUmrahPackageAction(
   const parsed = parseUmrahPackageFormData(formData);
   const result = umrahPackageSchema.safeParse(parsed);
 
-  if (!result.success) return { error: result.error.flatten().fieldErrors };
+  if (!result.success) {
+    // Return errors along with parsed form data to preserve user input
+    return { 
+      error: result.error.flatten().fieldErrors,
+      formData: parsed 
+    };
+  }
 
   try {
     const pkg = await createUmrahPackage(result.data);
     return { data: pkg };
   } catch (error: any) {
-    return { error: { message: [error?.message || "Failed to create package"] } };
+    // On database error, also preserve form data
+    return { 
+      error: { message: [error?.message || "Failed to create package"] },
+      formData: parsed 
+    };
   }
 }
 
@@ -103,13 +114,23 @@ export async function updateUmrahPackageAction(
   const parsed = parseUmrahPackageFormData(formData);
   const result = umrahPackageSchema.safeParse(parsed);
 
-  if (!result.success) return { error: result.error.flatten().fieldErrors };
+  if (!result.success) {
+    // Return errors along with parsed form data to preserve user input
+    return { 
+      error: result.error.flatten().fieldErrors,
+      formData: parsed 
+    };
+  }
 
   try {
     const pkg = await updateUmrahPackage(id, result.data);
     return { data: pkg };
   } catch (error: any) {
-    return { error: { message: [error?.message || "Failed to update package"] } };
+    // On database error, also preserve form data
+    return { 
+      error: { message: [error?.message || "Failed to update package"] },
+      formData: parsed 
+    };
   }
 }
 

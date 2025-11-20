@@ -41,9 +41,9 @@ const sanitizeHotelData = (data: {
 const serializeHotel = (hotel: any) => {
   // Ensure contact is a plain object
   const contact = hotel.contact ? {
-    phone: hotel.contact.phone || undefined,
-    email: hotel.contact.email || undefined,
-    address: hotel.contact.address || undefined,
+    phone: hotel.contact.phone && String(hotel.contact.phone).trim() ? String(hotel.contact.phone).trim() : undefined,
+    email: hotel.contact.email && String(hotel.contact.email).trim() ? String(hotel.contact.email).trim() : undefined,
+    address: hotel.contact.address && String(hotel.contact.address).trim() ? String(hotel.contact.address).trim() : undefined,
   } : {};
 
   return {

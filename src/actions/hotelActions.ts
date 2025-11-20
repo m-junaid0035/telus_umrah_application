@@ -19,14 +19,24 @@ const hotelSchema = z.object({
   type: z.nativeEnum(HotelType),
   name: z.string().trim().min(2, "Hotel name is required"),
   location: z.string().trim().min(2, "Hotel location is required"),
-  star: z.number().int().min(1).max(5, "Star rating must be between 1 and 5"),
+  star: z.number().int().min(3).max(5, "Star rating must be between 3 and 5"),
   description: z.string().trim().optional(),
   distance: z.string().trim().optional(),
   amenities: z.array(z.string().trim()).optional(),
   images: z.array(z.string().trim().url()).optional(),
   availableBedTypes: z.array(z.enum(["single", "double", "twin", "triple", "quad"])).optional(),
   contact: z.object({
-    phone: z.string().trim().optional(),
+    phone: z.string()
+      .refine((val) => {
+        // Allow undefined, empty string, or valid phone (already cleaned in parsing)
+        if (!val || val === "") return true;
+        // Phone is already cleaned (digits only) from parsing, just check length
+        return val.length >= 10 && val.length <= 15;
+      }, {
+        message: "Phone number must be 10-15 digits"
+      })
+      .optional()
+      .or(z.literal("")),
     email: z.string().trim().email().optional().or(z.literal("")),
     address: z.string().trim().optional(),
   }).optional(),
@@ -37,6 +47,7 @@ const hotelSchema = z.object({
 export type HotelFormState = {
   error?: Record<string, string[]> | { message?: string[] };
   data?: any;
+  formData?: any; // Preserve form data when validation fails
 };
 
 function str(formData: FormData, key: string) {
@@ -50,14 +61,18 @@ function parseHotelFormData(formData: FormData) {
   const images = formData.getAll("images").filter((v) => v && String(v).trim()) as string[];
   const availableBedTypes = formData.getAll("availableBedTypes").filter((v) => v && String(v).trim()) as string[];
 
-  // Parse contact object
-  const contactPhone = str(formData, "contact[phone]");
+  // Parse contact object - keep phone as string, remove non-digits for validation
+  const contactPhoneStr = str(formData, "contact[phone]");
+  // Remove all non-digit characters for clean phone number storage
+  // Only set phone if it has digits after cleaning (length > 0)
+  const cleanedPhone = contactPhoneStr ? contactPhoneStr.replace(/\D/g, "") : "";
+  const contactPhone = cleanedPhone.length > 0 ? cleanedPhone : undefined;
   const contactEmail = str(formData, "contact[email]");
   const contactAddress = str(formData, "contact[address]");
 
   const contact = contactPhone || contactEmail || contactAddress
     ? {
-        phone: contactPhone || undefined,
+        phone: contactPhone,
         email: contactEmail || undefined,
         address: contactAddress || undefined,
       }
@@ -84,16 +99,27 @@ export async function createHotelAction(
   formData: FormData
 ): Promise<HotelFormState> {
   await connectToDatabase();
+  // Parse form data (phone is already cleaned as string)
   const parsed = parseHotelFormData(formData);
   const result = hotelSchema.safeParse(parsed);
 
-  if (!result.success) return { error: result.error.flatten().fieldErrors };
+  if (!result.success) {
+    // Return errors along with parsed form data to preserve user input
+    return { 
+      error: result.error.flatten().fieldErrors,
+      formData: parsed 
+    };
+  }
 
   try {
     const hotel = await createHotel(result.data);
     return { data: hotel };
   } catch (error: any) {
-    return { error: { message: [error?.message || "Failed to create hotel"] } };
+    // On database error, also preserve form data
+    return { 
+      error: { message: [error?.message || "Failed to create hotel"] },
+      formData: parsed 
+    };
   }
 }
 
@@ -103,16 +129,27 @@ export async function updateHotelAction(
   formData: FormData
 ): Promise<HotelFormState> {
   await connectToDatabase();
+  // Parse form data (phone is already cleaned as string)
   const parsed = parseHotelFormData(formData);
   const result = hotelSchema.safeParse(parsed);
 
-  if (!result.success) return { error: result.error.flatten().fieldErrors };
+  if (!result.success) {
+    // Return errors along with parsed form data to preserve user input
+    return { 
+      error: result.error.flatten().fieldErrors,
+      formData: parsed 
+    };
+  }
 
   try {
     const hotel = await updateHotel(id, result.data);
     return { data: hotel };
   } catch (error: any) {
-    return { error: { message: [error?.message || "Failed to update hotel"] } };
+    // On database error, also preserve form data
+    return { 
+      error: { message: [error?.message || "Failed to update hotel"] },
+      formData: parsed 
+    };
   }
 }
 

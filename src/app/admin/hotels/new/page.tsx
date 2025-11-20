@@ -55,6 +55,19 @@ export default function CreateHotelForm() {
   const [amenities, setAmenities] = useState<string[]>([""]);
   const [images, setImages] = useState<string[]>([""]);
   const [selectedBedTypes, setSelectedBedTypes] = useState<string[]>([]);
+  
+  // Form field values for data preservation
+  const [formValues, setFormValues] = useState({
+    name: "",
+    type: "" as HotelType | "",
+    location: "",
+    star: "",
+    description: "",
+    distance: "",
+    contactPhone: "",
+    contactEmail: "",
+    contactAddress: "",
+  });
 
   const [formState, dispatch, isPending] = useActionState(
     async (prevState: FormState, formData: FormData) => {
@@ -64,16 +77,57 @@ export default function CreateHotelForm() {
   );
 
   const errorFor = (field: string) => {
-    return formState.error &&
-      typeof formState.error === "object" &&
-      field in formState.error
-      ? (formState.error as FieldErrors)[field]?.[0]
-      : null;
+    if (!formState.error || typeof formState.error !== "object") return null;
+    const errors = formState.error as FieldErrors;
+    // Handle nested field errors (e.g., "contact.phone" or "contact[phone]")
+    return errors[field]?.[0] || errors[field.replace(/\[|\]/g, (m, i) => i === 0 ? "." : "")]?.[0] || null;
   };
+
+  // Restore form data when validation fails
+  useEffect(() => {
+    if (formState.formData) {
+      setFormValues({
+        name: formState.formData.name || "",
+        type: formState.formData.type || "",
+        location: formState.formData.location || "",
+        star: formState.formData.star?.toString() || "",
+        description: formState.formData.description || "",
+        distance: formState.formData.distance || "",
+        contactPhone: formState.formData.contact?.phone || "",
+        contactEmail: formState.formData.contact?.email || "",
+        contactAddress: formState.formData.contact?.address || "",
+      });
+      
+      if (formState.formData.amenities && formState.formData.amenities.length > 0) {
+        setAmenities(formState.formData.amenities);
+      }
+      if (formState.formData.images && formState.formData.images.length > 0) {
+        setImages(formState.formData.images);
+      }
+      if (formState.formData.availableBedTypes && formState.formData.availableBedTypes.length > 0) {
+        setSelectedBedTypes(formState.formData.availableBedTypes);
+      }
+    }
+  }, [formState.formData]);
 
   useEffect(() => {
     if (formState.data && !formState.error) {
       setSuccessDialogOpen(true);
+      // Reset form on success
+      setFormValues({
+        name: "",
+        type: "" as HotelType | "",
+        location: "",
+        star: "",
+        description: "",
+        distance: "",
+        contactPhone: "",
+        contactEmail: "",
+        contactAddress: "",
+      });
+      setAmenities([""]);
+      setImages([""]);
+      setSelectedBedTypes([]);
     }
 
     if (formState.error && "message" in formState.error) {
@@ -118,6 +172,9 @@ export default function CreateHotelForm() {
                 id="name"
                 name="name"
                 required
+                value={formValues.name}
+                onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
+                aria-invalid={errorFor("name") ? "true" : "false"}
                 className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
               />
               {errorFor("name") && (
@@ -131,9 +188,15 @@ export default function CreateHotelForm() {
               <select
                 id="type"
                 name="type"
-                className="w-full rounded-md border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2"
+                value={formValues.type}
+                onChange={(e) => setFormValues({ ...formValues, type: e.target.value as HotelType })}
+                aria-invalid={errorFor("type") ? "true" : "false"}
+                className={`w-full rounded-md border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2 ${
+                  errorFor("type") ? "border-red-500 border-2" : ""
+                }`}
                 required
               >
+                <option value="">Select Hotel Type</option>
                 {Object.values(HotelType).map((type) => (
                   <option key={type} value={type}>
                     {type}
@@ -152,6 +215,9 @@ export default function CreateHotelForm() {
                 id="location"
                 name="location"
                 required
+                value={formValues.location}
+                onChange={(e) => setFormValues({ ...formValues, location: e.target.value })}
+                aria-invalid={errorFor("location") ? "true" : "false"}
                 className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
               />
               {errorFor("location") && (
@@ -169,6 +235,9 @@ export default function CreateHotelForm() {
                 min={1}
                 max={5}
                 required
+                value={formValues.star}
+                onChange={(e) => setFormValues({ ...formValues, star: e.target.value })}
+                aria-invalid={errorFor("star") ? "true" : "false"}
                 className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
               />
               {errorFor("star") && (
@@ -183,6 +252,9 @@ export default function CreateHotelForm() {
                 id="description"
                 name="description"
                 rows={4}
+                value={formValues.description}
+                onChange={(e) => setFormValues({ ...formValues, description: e.target.value })}
+                aria-invalid={errorFor("description") ? "true" : "false"}
                 className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
                 placeholder="Enter hotel description..."
               />
@@ -197,6 +269,9 @@ export default function CreateHotelForm() {
               <Input
                 id="distance"
                 name="distance"
+                value={formValues.distance}
+                onChange={(e) => setFormValues({ ...formValues, distance: e.target.value })}
+                aria-invalid={errorFor("distance") ? "true" : "false"}
                 className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
                 placeholder="e.g., 300m from Haram, Walking Distance to Masjid Nabawi"
               />
@@ -331,9 +406,27 @@ export default function CreateHotelForm() {
                 <Input
                   id="contact[phone]"
                   name="contact[phone]"
+                  type="tel"
+                  value={formValues.contactPhone}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const value = e.target.value.replace(/\D/g, "");
+                    setFormValues({ ...formValues, contactPhone: value });
+                  }}
+                  onKeyDown={(e) => {
+                    // Prevent non-numeric characters (except backspace, delete, tab, arrow keys)
+                    if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                      e.preventDefault();
+                    }
+                  }}
+                  maxLength={15}
+                  aria-invalid={errorFor("contact.phone") ? "true" : "false"}
                   className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-                  placeholder="+966 12 345 6789"
+                  placeholder="966123456789 (digits only)"
                 />
+                {errorFor("contact.phone") && (
+                  <p className="text-sm text-red-500">{errorFor("contact.phone")}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact[email]">Email</Label>
@@ -341,9 +434,15 @@ export default function CreateHotelForm() {
                   id="contact[email]"
                   name="contact[email]"
                   type="email"
+                  value={formValues.contactEmail}
+                  onChange={(e) => setFormValues({ ...formValues, contactEmail: e.target.value })}
+                  aria-invalid={errorFor("contact.email") ? "true" : "false"}
                   className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
                   placeholder="hotel@example.com"
                 />
+                {errorFor("contact.email") && (
+                  <p className="text-sm text-red-500">{errorFor("contact.email")}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact[address]">Address</Label>
@@ -351,9 +450,15 @@ export default function CreateHotelForm() {
                   id="contact[address]"
                   name="contact[address]"
                   rows={2}
+                  value={formValues.contactAddress}
+                  onChange={(e) => setFormValues({ ...formValues, contactAddress: e.target.value })}
+                  aria-invalid={errorFor("contact.address") ? "true" : "false"}
                   className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
                   placeholder="Full address of the hotel"
                 />
+                {errorFor("contact.address") && (
+                  <p className="text-sm text-red-500">{errorFor("contact.address")}</p>
+                )}
               </div>
             </div>
 
