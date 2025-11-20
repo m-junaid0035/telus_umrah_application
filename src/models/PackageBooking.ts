@@ -46,6 +46,7 @@ export interface IPackageBooking extends Document {
   totalAmount?: number;
   paidAmount?: number;
   paymentStatus?: "pending" | "partial" | "paid";
+  paymentMethod?: "cash" | "online";
   
   createdAt: Date;
   updatedAt: Date;
@@ -148,6 +149,10 @@ const packageBookingSchema = new Schema<IPackageBooking>(
       type: String,
       enum: ["pending", "partial", "paid"],
       default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "online"],
     },
   },
   {

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {  useRouter } from 'next/navigation';
 import { fetchAllUmrahPackagesAction } from '@/actions/packageActions';
+import { fetchAllHotelsAction } from '@/actions/hotelActions';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { 
@@ -119,74 +120,18 @@ const getAirlineLogo = (airlineName: string) => {
   return airlineMap[airlineName] || piaLogo;
 };
 
-const popularHotels = [
-  {
-    name: 'Swissotel Makkah',
-    location: 'Makkah',
-    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80',
-    price: 'From PKR 85,000/night',
-    description: '4-Star Hotel',
-    stars: 4,
-    distance: '300m from Haram',
-    city: 'makkah',
-    slug: 'swissotel-makkah'
-  },
-  {
-    name: 'Oberoi Madinah',
-    location: 'Madina',
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
-    price: 'From PKR 115,000/night',
-    description: '5-Star Hotel',
-    stars: 5,
-    distance: 'Walking Distance to Masjid Nabawi',
-    city: 'madinah',
-    slug: 'oberoi-madinah'
-  },
-  {
-    name: 'Hilton Suites Makkah',
-    location: 'Makkah',
-    image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80',
-    price: 'From PKR 125,000/night',
-    description: '5-Star Hotel',
-    stars: 5,
-    distance: 'Walking Distance to Haram',
-    city: 'makkah',
-    slug: 'hilton-suites-makkah'
-  },
-  {
-    name: 'Crowne Plaza Madinah',
-    location: 'Madina',
-    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80',
-    price: 'From PKR 78,000/night',
-    description: '4-Star Hotel',
-    stars: 4,
-    distance: '200m from Masjid Nabawi',
-    city: 'madinah',
-    slug: 'crowne-plaza-madinah'
-  },
-  {
-    name: 'Al Safwah Royal Orchid',
-    location: 'Makkah',
-    image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80',
-    price: 'From PKR 45,000/night',
-    description: '3-Star Hotel',
-    stars: 3,
-    distance: '800m from Haram',
-    city: 'makkah',
-    slug: 'al-safwah-royal-orchid'
-  },
-  {
-    name: 'Al Eiman Royal',
-    location: 'Madina',
-    image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&q=80',
-    price: 'From PKR 42,000/night',
-    description: '3-Star Hotel',
-    stars: 3,
-    distance: '500m from Masjid Nabawi',
-    city: 'madinah',
-    slug: 'al-eiman-royal'
-  },
-];
+// Interface for backend hotel data
+interface BackendHotel {
+  _id: string;
+  name: string;
+  star: number;
+  type: 'Makkah' | 'Madina';
+  location: string;
+  distance?: string;
+  images?: string[];
+  amenities?: string[];
+  description?: string;
+}
 
 // Our Services Data
 // To customize service images, simply replace the image URL below
@@ -243,6 +188,8 @@ export function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [packages, setPackages] = useState<any[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
+  const [hotels, setHotels] = useState<BackendHotel[]>([]);
+  const [loadingHotels, setLoadingHotels] = useState(true);
 
   // Fetch packages from backend
   useEffect(() => {
@@ -271,6 +218,39 @@ export function HomePage() {
       }
     };
     loadPackages();
+  }, []);
+
+  // Fetch hotels from backend
+  useEffect(() => {
+    const loadHotels = async () => {
+      setLoadingHotels(true);
+      try {
+        const result = await fetchAllHotelsAction();
+        if (result?.data && Array.isArray(result.data)) {
+          // Get first 6 hotels (mix of Makkah and Madina)
+          // Prioritize hotels with images
+          const hotelsWithImages = result.data.filter((h: BackendHotel) => h.images && h.images.length > 0);
+          const hotelsWithoutImages = result.data.filter((h: BackendHotel) => !h.images || h.images.length === 0);
+          const sortedHotels = [...hotelsWithImages, ...hotelsWithoutImages].slice(0, 6);
+          setHotels(sortedHotels);
+        } else {
+          toast({
+            title: "Error",
+            description: result?.error?.message?.[0] || "Failed to load hotels",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load hotels",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingHotels(false);
+      }
+    };
+    loadHotels();
   }, []);
 
   // Check scroll position to show/hide arrows
@@ -1012,45 +992,70 @@ export function HomePage() {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {popularHotels.map((hotel, index) => (
-              <Link key={hotel.name} href={`/hotels/${hotel.city}/${hotel.slug}`}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -4 }}
-                  className="relative rounded-xl overflow-hidden shadow-md cursor-pointer group bg-white"
-                >
-                  <div className="aspect-square relative overflow-hidden">
-                    <ImageWithFallback
-                      src={hotel.image}
-                      alt={hotel.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    
-                    {/* Stars Badge */}
-                    <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-0.5">
-                      {Array.from({ length: hotel.stars }).map((_, i) => (
-                        <Star key={i} className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
-                      ))}
-                    </div>
-                    
-                    {/* Content Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                      <div className="flex items-center gap-1 text-xs text-blue-300 mb-1">
-                        <MapPin className="w-3 h-3" />
-                        <span>{hotel.location}</span>
+            {loadingHotels ? (
+              <div className="col-span-full flex justify-center items-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : hotels.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                No hotels available
+              </div>
+            ) : (
+              hotels.map((hotel, index) => {
+                const slug = hotel.name.toLowerCase().replace(/\s+/g, '-');
+                const cityPath = hotel.type === 'Makkah' ? 'makkah' : 'madinah';
+                const basePath = hotel.type === 'Makkah' ? '/makkah-hotels' : '/madina-hotels';
+                const hotelImage = hotel.images && hotel.images.length > 0 
+                  ? hotel.images[0] 
+                  : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80';
+                
+                return (
+                  <Link key={hotel._id} href={`${basePath}/${cityPath}/${slug}`}>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05 }}
+                      whileHover={{ y: -4 }}
+                      className="relative rounded-xl overflow-hidden shadow-md cursor-pointer group bg-white"
+                    >
+                      <div className="aspect-square relative overflow-hidden">
+                        <ImageWithFallback
+                          src={hotelImage}
+                          alt={hotel.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        
+                        {/* Stars Badge */}
+                        {hotel.star > 0 && (
+                          <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-0.5">
+                            {Array.from({ length: hotel.star }).map((_, i) => (
+                              <Star key={i} className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Content Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                          <div className="flex items-center gap-1 text-xs text-blue-300 mb-1">
+                            <MapPin className="w-3 h-3" />
+                            <span>{hotel.type}</span>
+                          </div>
+                          <h3 className="mb-1 text-sm line-clamp-1">{hotel.name}</h3>
+                          {hotel.distance && (
+                            <p className="text-blue-300 text-xs mb-0.5">{hotel.distance}</p>
+                          )}
+                          {hotel.location && (
+                            <p className="text-white text-xs">{hotel.location}</p>
+                          )}
+                        </div>
                       </div>
-                      <h3 className="mb-1 text-sm line-clamp-1">{hotel.name}</h3>
-                      <p className="text-blue-300 text-xs mb-0.5">{hotel.distance}</p>
-                      <p className="text-white text-xs">{hotel.price}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
+                    </motion.div>
+                  </Link>
+                );
+              })
+            )}
           </div>
 
           <motion.div

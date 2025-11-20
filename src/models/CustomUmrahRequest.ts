@@ -43,6 +43,7 @@ export interface ICustomUmrahRequest extends Document {
   // Status
   status?: "pending" | "in-progress" | "completed" | "cancelled";
   notes?: string;
+  paymentMethod?: "cash" | "online";
 
   createdAt: Date;
   updatedAt: Date;
@@ -156,6 +157,10 @@ const customUmrahRequestSchema = new Schema<ICustomUmrahRequest>(
     notes: {
       type: String,
       trim: true,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "online"],
     },
   },
   {

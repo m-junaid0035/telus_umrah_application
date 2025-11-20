@@ -47,6 +47,14 @@ import {
 } from "@/components/ui/pagination";
 import { Eye, Trash2, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { updateCustomUmrahRequestStatusAction } from "@/actions/updateBookingStatusActions";
 
 interface ICustomUmrahRequest {
   _id: string;
@@ -65,11 +73,13 @@ function CustomUmrahRequestsTable({
   requests,
   onView,
   onDelete,
+  onStatusUpdate,
   loading,
 }: {
   requests: ICustomUmrahRequest[];
   onView: (id: string) => void;
   onDelete: (id: string) => void;
+  onStatusUpdate: (id: string, status: string) => void;
   loading: boolean;
 }) {
   if (loading) {
@@ -130,9 +140,32 @@ function CustomUmrahRequestsTable({
                     : "N/A"}
                 </TableCell>
                 <TableCell>
-                  <Badge className={getStatusColor(request.status)}>
-                    {request.status}
-                  </Badge>
+                  <Select
+                    value={request.status || "pending"}
+                    onValueChange={(value) => onStatusUpdate(request._id, value)}
+                  >
+                    <SelectTrigger className="w-[140px] h-8">
+                      <SelectValue>
+                        <Badge className={getStatusColor(request.status || "pending")}>
+                          {request.status || "pending"}
+                        </Badge>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">
+                        <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+                      </SelectItem>
+                      <SelectItem value="in-progress">
+                        <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>
+                      </SelectItem>
+                      <SelectItem value="completed">
+                        <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                      </SelectItem>
+                      <SelectItem value="cancelled">
+                        <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end items-center gap-1.5">
@@ -222,6 +255,28 @@ export default function CustomUmrahRequestsPage() {
     }
   };
 
+  const handleStatusUpdate = async (id: string, status: string) => {
+    const result = await updateCustomUmrahRequestStatusAction(id, status);
+    if (result?.error) {
+      toast({
+        title: "Error",
+        description: result.error.message?.[0] || "Failed to update status",
+        variant: "destructive",
+      });
+      await loadRequests();
+    } else {
+      setRequests((prev) =>
+        prev.map((request) =>
+          request._id === id ? { ...request, status } : request
+        )
+      );
+      toast({
+        title: "Success",
+        description: "Request status updated successfully.",
+      });
+    }
+  };
+
   useEffect(() => {
     loadRequests();
   }, []);
@@ -267,6 +322,7 @@ export default function CustomUmrahRequestsPage() {
             requests={paginatedRequests}
             onView={(id) => router.push(`/admin/custom-umrah-requests/view/${id}`)}
             onDelete={(id) => setConfirmDeleteId(id)}
+            onStatusUpdate={handleStatusUpdate}
             loading={loading}
           />
         </Suspense>

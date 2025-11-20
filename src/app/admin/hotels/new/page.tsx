@@ -150,6 +150,11 @@ export default function CreateHotelForm() {
         <CardContent>
           <form
             action={(formData) => {
+              // Always ensure type is included from formValues (controlled component)
+              // This ensures the value is properly submitted even if the select doesn't submit it
+              if (formValues.type && formValues.type !== "") {
+                formData.set("type", formValues.type);
+              }
               // Filter out empty amenities and images before submission
               amenities.forEach((amenity) => {
                 if (amenity.trim()) {

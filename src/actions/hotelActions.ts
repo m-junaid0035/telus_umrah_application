@@ -78,8 +78,12 @@ function parseHotelFormData(formData: FormData) {
       }
     : undefined;
 
+  // Parse type - will be validated by schema
+  const typeStr = str(formData, "type");
+  const type = typeStr as HotelType;
+
   return {
-    type: str(formData, "type") as HotelType,
+    type: type,
     name: str(formData, "name"),
     location: str(formData, "location"),
     star: Number(formData.get("star") || 0),

@@ -260,7 +260,13 @@ export default function EditUmrahPackageForm() {
                 <select
                   id="makkahHotel"
                   name="hotels[makkah]"
-                  defaultValue={pkgData.hotels?.makkah || ""}
+                  defaultValue={
+                    pkgData.hotels?.makkah 
+                      ? (typeof pkgData.hotels.makkah === 'object' && pkgData.hotels.makkah._id 
+                          ? pkgData.hotels.makkah._id 
+                          : String(pkgData.hotels.makkah))
+                      : ""
+                  }
                   className="border p-2 rounded-md w-full"
                 >
                   <option value="">Select</option>
@@ -277,7 +283,13 @@ export default function EditUmrahPackageForm() {
                 <select
                   id="madinahHotel"
                   name="hotels[madinah]"
-                  defaultValue={pkgData.hotels?.madinah || ""}
+                  defaultValue={
+                    pkgData.hotels?.madinah 
+                      ? (typeof pkgData.hotels.madinah === 'object' && pkgData.hotels.madinah._id 
+                          ? pkgData.hotels.madinah._id 
+                          : String(pkgData.hotels.madinah))
+                      : ""
+                  }
                   className="border p-2 rounded-md w-full"
                 >
                   <option value="">Select</option>

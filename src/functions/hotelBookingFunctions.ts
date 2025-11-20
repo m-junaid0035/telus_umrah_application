@@ -32,7 +32,7 @@ const sanitizeHotelBookingData = (data: any) => ({
 /**
  * ================= SERIALIZER =================
  */
-const serializeHotelBooking = (booking: any) => {
+export const serializeHotelBooking = (booking: any) => {
   if (!booking || !booking._id) {
     console.warn("serializeHotelBooking - Invalid booking data:", booking);
     return null;
@@ -42,28 +42,44 @@ const serializeHotelBooking = (booking: any) => {
     // Populate hotel name if available
     const hotelName = booking.hotelName || undefined;
 
+    // Ensure _id is always a string
+    let bookingId = booking._id;
+    if (bookingId && typeof bookingId === 'object') {
+      // Handle MongoDB ObjectId
+      if ('toString' in bookingId) {
+        bookingId = bookingId.toString();
+      } else if ('buffer' in bookingId) {
+        // Handle ObjectId buffer
+        bookingId = String(bookingId);
+      }
+    }
+    if (!bookingId) {
+      bookingId = String(booking._id || '');
+    }
+
     const serialized = {
-      _id: booking._id?.toString() || booking._id,
-      hotelId: booking.hotelId || "",
-      hotelName,
-      customerName: booking.customerName || "",
-      customerEmail: booking.customerEmail || "",
-      customerPhone: booking.customerPhone || "",
-      customerNationality: booking.customerNationality || undefined,
+      _id: String(bookingId),
+      hotelId: String(booking.hotelId || ""),
+      hotelName: hotelName ? String(hotelName) : undefined,
+      customerName: String(booking.customerName || ""),
+      customerEmail: String(booking.customerEmail || ""),
+      customerPhone: String(booking.customerPhone || ""),
+      customerNationality: booking.customerNationality ? String(booking.customerNationality) : undefined,
       checkInDate: booking.checkInDate?.toISOString?.() || (booking.checkInDate instanceof Date ? booking.checkInDate.toISOString() : booking.checkInDate) || "",
       checkOutDate: booking.checkOutDate?.toISOString?.() || (booking.checkOutDate instanceof Date ? booking.checkOutDate.toISOString() : booking.checkOutDate) || "",
       rooms: Number(booking.rooms) || 1,
       adults: Number(booking.adults) || 1,
       children: Number(booking.children) || 0,
       childAges: Array.isArray(booking.childAges) ? booking.childAges.map(Number) : [],
-      bedType: booking.bedType || undefined,
+      bedType: booking.bedType ? String(booking.bedType) : undefined,
       meals: Boolean(booking.meals),
       transport: Boolean(booking.transport),
-      status: booking.status || HotelBookingStatus.Pending,
-      notes: booking.notes || undefined,
+      status: String(booking.status || HotelBookingStatus.Pending),
+      notes: booking.notes ? String(booking.notes) : undefined,
       totalAmount: booking.totalAmount ? Number(booking.totalAmount) : undefined,
-      paidAmount: booking.paidAmount ? Number(booking.paidAmount) : 0,
-      paymentStatus: booking.paymentStatus || "pending",
+      paidAmount: Number(booking.paidAmount || 0),
+      paymentStatus: String(booking.paymentStatus || "pending"),
+      paymentMethod: booking.paymentMethod ? String(booking.paymentMethod) : undefined,
       createdAt: booking.createdAt?.toISOString?.() || (booking.createdAt instanceof Date ? booking.createdAt.toISOString() : booking.createdAt) || "",
       updatedAt: booking.updatedAt?.toISOString?.() || (booking.updatedAt instanceof Date ? booking.updatedAt.toISOString() : booking.updatedAt) || "",
     };

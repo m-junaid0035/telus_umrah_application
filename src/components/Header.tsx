@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Plane, Menu, X, Phone, Mail, MapPin, ChevronDown, Globe, DollarSign, LogOut, Settings, User as UserIcon, BookmarkPlus, Package, Sparkles, Hotel, Info, HelpCircle } from 'lucide-react';
+import { Plane, Menu, X, Phone, Mail, MapPin, ChevronDown, Globe, DollarSign, LogOut, BookmarkPlus, Package, Sparkles, Hotel, Info, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -463,18 +463,12 @@ export function Header() {
                         <p className="text-sm">{user?.name}</p>
                         <p className="text-xs text-gray-500">{user?.email}</p>
                       </div>
-                      <DropdownMenuItem className="cursor-pointer">
-                        <UserIcon className="w-4 h-4 mr-2" />
-                        My Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
-                        <BookmarkPlus className="w-4 h-4 mr-2" />
-                        My Bookings
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Settings
-                      </DropdownMenuItem>
+                      <Link href="/my-bookings">
+                        <DropdownMenuItem className="cursor-pointer">
+                          <BookmarkPlus className="w-4 h-4 mr-2" />
+                          My Bookings
+                        </DropdownMenuItem>
+                      </Link>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 focus:text-red-600">
                         <LogOut className="w-4 h-4 mr-2" />
@@ -663,18 +657,12 @@ export function Header() {
                           <p className="text-xs text-gray-500">{user?.email}</p>
                         </div>
                       </div>
-                      <Button variant="outline" className="w-full justify-start">
-                        <UserIcon className="w-4 h-4 mr-2" />
-                        My Profile
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <BookmarkPlus className="w-4 h-4 mr-2" />
-                        My Bookings
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Settings
-                      </Button>
+                      <Link href="/my-bookings" className="w-full">
+                        <Button variant="outline" className="w-full justify-start">
+                          <BookmarkPlus className="w-4 h-4 mr-2" />
+                          My Bookings
+                        </Button>
+                      </Link>
                       <Button 
                         onClick={() => {
                           logout();

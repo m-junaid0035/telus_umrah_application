@@ -35,40 +35,56 @@ const sanitizePackageBookingData = (data: any) => ({
 /**
  * ================= SERIALIZER =================
  */
-const serializePackageBooking = (booking: any) => {
+export const serializePackageBooking = (booking: any) => {
   // Populate package name if available
   const packageName = booking.packageName || undefined;
 
+  // Ensure _id is always a string
+  let bookingId = booking._id;
+  if (bookingId && typeof bookingId === 'object') {
+    // Handle MongoDB ObjectId
+    if ('toString' in bookingId) {
+      bookingId = bookingId.toString();
+    } else if ('buffer' in bookingId) {
+      // Handle ObjectId buffer
+      bookingId = String(bookingId);
+    }
+  }
+  if (!bookingId) {
+    bookingId = String(booking._id || '');
+  }
+
   return {
-    _id: booking._id?.toString() || booking._id,
-    packageId: booking.packageId,
-    packageName,
-    customerName: booking.customerName,
-    customerEmail: booking.customerEmail,
-    customerPhone: booking.customerPhone,
-    customerNationality: booking.customerNationality || undefined,
+    _id: String(bookingId),
+    packageId: String(booking.packageId || ""),
+    packageName: packageName ? String(packageName) : undefined,
+    customerName: String(booking.customerName || ""),
+    customerEmail: String(booking.customerEmail || ""),
+    customerPhone: String(booking.customerPhone || ""),
+    customerNationality: booking.customerNationality ? String(booking.customerNationality) : undefined,
     travelers: {
-      adults: booking.travelers?.adults || booking.adults || 0,
-      children: booking.travelers?.children || booking.children || 0,
+      adults: Number(booking.travelers?.adults || booking.adults || 0),
+      children: Number(booking.travelers?.children || booking.children || 0),
       childAges: Array.isArray(booking.travelers?.childAges || booking.childAges)
         ? (booking.travelers?.childAges || booking.childAges).map(Number)
         : [],
     },
-    rooms: booking.rooms,
-    checkInDate: booking.checkInDate?.toISOString?.() || (booking.checkInDate instanceof Date ? booking.checkInDate.toISOString() : booking.checkInDate),
-    checkOutDate: booking.checkOutDate?.toISOString?.() || (booking.checkOutDate instanceof Date ? booking.checkOutDate.toISOString() : booking.checkOutDate),
-    umrahVisa: booking.umrahVisa || false,
-    transport: booking.transport || false,
-    zaiarat: booking.zaiarat || false,
-    meals: booking.meals || false,
-    esim: booking.esim || false,
-    status: booking.status || BookingStatus.Pending,
-    notes: booking.notes || undefined,
-    totalAmount: booking.totalAmount || undefined,
-    paidAmount: booking.paidAmount || 0,
-    paymentStatus: booking.paymentStatus || "pending",
-    createdAt: booking.createdAt?.toISOString?.() || (booking.createdAt instanceof Date ? booking.createdAt.toISOString() : booking.createdAt),
-    updatedAt: booking.updatedAt?.toISOString?.() || (booking.updatedAt instanceof Date ? booking.updatedAt.toISOString() : booking.updatedAt),
+    rooms: Number(booking.rooms || 1),
+    checkInDate: booking.checkInDate?.toISOString?.() || (booking.checkInDate instanceof Date ? booking.checkInDate.toISOString() : booking.checkInDate) || undefined,
+    checkOutDate: booking.checkOutDate?.toISOString?.() || (booking.checkOutDate instanceof Date ? booking.checkOutDate.toISOString() : booking.checkOutDate) || undefined,
+    umrahVisa: Boolean(booking.umrahVisa),
+    transport: Boolean(booking.transport),
+    zaiarat: Boolean(booking.zaiarat),
+    meals: Boolean(booking.meals),
+    esim: Boolean(booking.esim),
+    status: String(booking.status || BookingStatus.Pending),
+    notes: booking.notes ? String(booking.notes) : undefined,
+    totalAmount: booking.totalAmount ? Number(booking.totalAmount) : undefined,
+    paidAmount: Number(booking.paidAmount || 0),
+    paymentStatus: String(booking.paymentStatus || "pending"),
+    paymentMethod: booking.paymentMethod ? String(booking.paymentMethod) : undefined,
+    createdAt: booking.createdAt?.toISOString?.() || (booking.createdAt instanceof Date ? booking.createdAt.toISOString() : booking.createdAt) || "",
+    updatedAt: booking.updatedAt?.toISOString?.() || (booking.updatedAt instanceof Date ? booking.updatedAt.toISOString() : booking.updatedAt) || "",
   };
 };
 

@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createPackageBookingAction } from "@/actions/packageBookingActions";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, CreditCard, DollarSign } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PackageBookingDialogProps {
   packageId: string;
@@ -23,6 +24,7 @@ interface PackageBookingDialogProps {
 
 export function PackageBookingDialog({ packageId, packageName, trigger, user }: PackageBookingDialogProps) {
   const [open, setOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "online" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     customerName: user?.name || "",
@@ -76,6 +78,9 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
       if (formData.notes) {
         formDataObj.append("notes", formData.notes);
       }
+      if (paymentMethod) {
+        formDataObj.append("paymentMethod", paymentMethod);
+      }
 
       const result = await createPackageBookingAction({}, formDataObj);
 
@@ -86,6 +91,7 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
         });
         setOpen(false);
         // Reset form
+        setPaymentMethod(null);
         setFormData({
           customerName: user?.name || "",
           customerEmail: user?.email || "",
@@ -140,7 +146,80 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
         <DialogHeader>
           <DialogTitle>Book Package: {packageName}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        
+        {!paymentMethod ? (
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-600">Please select your preferred payment method:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  paymentMethod === "cash" ? "ring-2 ring-blue-500" : ""
+                }`}
+                onClick={() => setPaymentMethod("cash")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                    Pay in Cash
+                  </CardTitle>
+                  <CardDescription>
+                    Visit our office to complete payment
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    Fill out the booking form and visit our office to make the payment in person.
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  paymentMethod === "online" ? "ring-2 ring-blue-500" : ""
+                }`}
+                onClick={() => setPaymentMethod("online")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-blue-600" />
+                    Pay Online
+                  </CardTitle>
+                  <CardDescription>
+                    Secure online payment
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    Complete your booking and payment securely online.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : paymentMethod === "online" ? (
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Online Payment:</strong> Payment gateway integration will be added here. 
+                For now, please use the "Pay in Cash" option to complete your booking.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => setPaymentMethod(null)}>
+                Back
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="customerName">Full Name *</Label>
@@ -187,7 +266,8 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
                 max="20"
                 value={formData.adults}
                 onChange={(e) => {
-                  const value = Math.max(1, Math.min(20, Number(e.target.value) || 1));
+                  const inputValue = e.target.value === '' ? 1 : Number(e.target.value);
+                  const value = Math.max(1, Math.min(20, inputValue || 1));
                   setFormData({ ...formData, adults: value });
                 }}
                 required
@@ -202,9 +282,20 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
                 max="10"
                 value={formData.children}
                 onChange={(e) => {
-                  const children = Math.max(0, Math.min(10, Number(e.target.value) || 0));
+                  const value = e.target.value === '' ? 0 : Number(e.target.value);
+                  const children = Math.max(0, Math.min(10, value || 0));
                   setFormData({ ...formData, children });
-                  setTimeout(updateChildAges, 0);
+                  // Update child ages after state update
+                  setTimeout(() => {
+                    const ages: number[] = [];
+                    for (let i = 0; i < children; i++) {
+                      const ageInput = document.getElementById(`childAge-${i}`) as HTMLInputElement;
+                      if (ageInput && ageInput.value) {
+                        ages.push(Number(ageInput.value));
+                      }
+                    }
+                    setFormData(prev => ({ ...prev, childAges: ages }));
+                  }, 0);
                 }}
               />
             </div>
@@ -220,7 +311,13 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
                       min="0"
                       max="16"
                       placeholder={`Child ${i + 1} age`}
-                      onChange={updateChildAges}
+                      value={formData.childAges[i] || ''}
+                      onChange={(e) => {
+                        const age = e.target.value === '' ? 0 : Number(e.target.value);
+                        const newAges = [...formData.childAges];
+                        newAges[i] = age;
+                        setFormData({ ...formData, childAges: newAges });
+                      }}
                     />
                   ))}
                 </div>
@@ -235,7 +332,8 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
                 max="10"
                 value={formData.rooms}
                 onChange={(e) => {
-                  const value = Math.max(1, Math.min(10, Number(e.target.value) || 1));
+                  const inputValue = e.target.value === '' ? 1 : Number(e.target.value);
+                  const value = Math.max(1, Math.min(10, inputValue || 1));
                   setFormData({ ...formData, rooms: value });
                 }}
                 required
@@ -330,22 +428,26 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
             />
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Booking"
-              )}
-            </Button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => setPaymentMethod(null)}>
+                Back
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Booking Request"
+                )}
+              </Button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

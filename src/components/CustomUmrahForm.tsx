@@ -11,6 +11,8 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format } from 'date-fns';
 import { createCustomUmrahRequestAction } from '@/actions/customUmrahRequestActions';
 import { fetchAllHotelsAction } from '@/actions/hotelActions';
+import { fetchFormOptionsByTypeAction } from '@/actions/formOptionActions';
+import { FormOptionType } from '@/models/FormOption';
 import { toast } from '@/hooks/use-toast';
 
 // Import airline logos
@@ -22,33 +24,17 @@ import saudiaLogo from '@/assets/b9f20e713c92c82b6e94ffa74d871a980c8049ba.png';
 import piaLogo from '@/assets/35293a117c78f2e22505cf3ae7ef2f152cf09f0b.png';
 import emiratesLogo from '@/assets/bbf68fd4ecd3e7277285a22042637fbaafc25a7c.png';
 
-const airlines = [
-  { name: 'Emirates', logo: emiratesLogo },
-  { name: 'Qatar Airways', logo: qatarAirwaysLogo },
-  { name: 'Turkish Airlines', logo: turkishAirlinesLogo },
-  { name: 'Saudia', logo: saudiaLogo },
-  { name: 'PIA', logo: piaLogo },
-  { name: 'Gulf Air', logo: gulfAirLogo },
-  { name: 'Serene Air', logo: sereneAirLogo },
-];
-
-// Hotels now fetched from backend
-
-const fromCities = [
-  'Karachi, Pakistan',
-  'Lahore, Pakistan',
-  'Islamabad, Pakistan',
-  'Multan, Pakistan',
-  'Faisalabad, Pakistan',
-  'Peshawar, Pakistan',
-  'Quetta, Pakistan',
-  'Sialkot, Pakistan',
-];
-
-const toCities = [
-  'Jeddah, Saudi Arabia',
-  'Madinah, Saudi Arabia',
-];
+// Form options now fetched from backend
+// Airlines logos mapping for display
+const airlineLogoMap: Record<string, any> = {
+  'Emirates': emiratesLogo,
+  'Qatar Airways': qatarAirwaysLogo,
+  'Turkish Airlines': turkishAirlinesLogo,
+  'Saudia': saudiaLogo,
+  'PIA': piaLogo,
+  'Gulf Air': gulfAirLogo,
+  'Serene Air': sereneAirLogo,
+};
 
 const steps = [
   { number: 1, title: 'Services & Flight', description: 'Select services and flight details' },
@@ -95,37 +81,91 @@ export function CustomUmrahForm() {
   });
 
   const [hotelSelections, setHotelSelections] = useState<HotelSelection[]>([
-    { hotelClass: '', hotel: '', stayDuration: '', bedType: '' }
+    { hotelClass: '', hotel: '', stayDuration: '1', bedType: '' }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [backendHotels, setBackendHotels] = useState<BackendHotel[]>([]);
   const [loadingHotels, setLoadingHotels] = useState(true);
+  
+  // Form options from backend
+  const [fromCities, setFromCities] = useState<Array<{name: string, value: string, logo?: string}>>([]);
+  const [toCities, setToCities] = useState<Array<{name: string, value: string, logo?: string}>>([]);
+  const [airlines, setAirlines] = useState<Array<{name: string, value: string, logo?: string}>>([]);
+  const [airlineClasses, setAirlineClasses] = useState<Array<{name: string, value: string}>>([]);
+  const [nationalities, setNationalities] = useState<Array<{name: string, value: string}>>([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
 
   useEffect(() => {
-    const loadHotels = async () => {
+    const loadData = async () => {
       setLoadingHotels(true);
+      setLoadingOptions(true);
+      
       try {
-        const result = await fetchAllHotelsAction();
-        if (result?.data && Array.isArray(result.data)) {
-          setBackendHotels(result.data as BackendHotel[]);
-        } else {
-          toast({
-            title: "Error",
-            description: result?.error?.message?.[0] || "Failed to load hotels",
-            variant: "destructive",
-          });
+        // Load hotels
+        const hotelsResult = await fetchAllHotelsAction();
+        if (hotelsResult?.data && Array.isArray(hotelsResult.data)) {
+          setBackendHotels(hotelsResult.data as BackendHotel[]);
+        }
+        
+        // Load form options
+        const [fromCitiesRes, toCitiesRes, airlinesRes, airlineClassesRes, nationalitiesRes] = await Promise.all([
+          fetchFormOptionsByTypeAction(FormOptionType.FromCity),
+          fetchFormOptionsByTypeAction(FormOptionType.ToCity),
+          fetchFormOptionsByTypeAction(FormOptionType.Airline),
+          fetchFormOptionsByTypeAction(FormOptionType.AirlineClass),
+          fetchFormOptionsByTypeAction(FormOptionType.Nationality),
+        ]);
+        
+        if (fromCitiesRes?.data) {
+          setFromCities(fromCitiesRes.data.map(opt => ({
+            name: opt.name,
+            value: opt.value,
+            logo: opt.logo,
+          })));
+        }
+        
+        if (toCitiesRes?.data) {
+          setToCities(toCitiesRes.data.map(opt => ({
+            name: opt.name,
+            value: opt.value,
+            logo: opt.logo,
+          })));
+        }
+        
+        if (airlinesRes?.data) {
+          setAirlines(airlinesRes.data.map(opt => ({
+            name: opt.name,
+            value: opt.value,
+            logo: opt.logo || airlineLogoMap[opt.name],
+          })));
+        }
+        
+        if (airlineClassesRes?.data) {
+          setAirlineClasses(airlineClassesRes.data.map(opt => ({
+            name: opt.name,
+            value: opt.value,
+          })));
+        }
+        
+        if (nationalitiesRes?.data) {
+          setNationalities(nationalitiesRes.data.map(opt => ({
+            name: opt.name,
+            value: opt.value,
+          })));
         }
       } catch (error) {
+        console.error("Failed to load data:", error);
         toast({
           title: "Error",
-          description: "Failed to load hotels",
+          description: "Failed to load form data",
           variant: "destructive",
         });
       } finally {
         setLoadingHotels(false);
+        setLoadingOptions(false);
       }
     };
-    loadHotels();
+    loadData();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -179,10 +219,24 @@ export function CustomUmrahForm() {
       return;
     }
 
-    if (hotelSelections.some(h => !h.hotelClass || !h.hotel || !h.stayDuration || !h.bedType)) {
+    // Validate hotel selections
+    const invalidHotels = hotelSelections.filter((h, idx) => {
+      const missing = !h.hotelClass || !h.hotel || !h.stayDuration || !h.bedType;
+      if (missing) {
+        console.log(`Hotel ${idx + 1} missing fields:`, {
+          hotelClass: h.hotelClass,
+          hotel: h.hotel,
+          stayDuration: h.stayDuration,
+          bedType: h.bedType
+        });
+      }
+      return missing;
+    });
+    
+    if (invalidHotels.length > 0) {
       toast({
         title: "Error",
-        description: "Please fill in all hotel details",
+        description: `Please fill in all hotel details${invalidHotels.length > 1 ? ' for all hotels' : ''}`,
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -190,13 +244,19 @@ export function CustomUmrahForm() {
     }
 
     // Validate stay duration
-    if (hotelSelections.some(h => {
-      const duration = parseInt(h.stayDuration);
-      return isNaN(duration) || duration < 1 || duration > 90;
-    })) {
+    const invalidDurations = hotelSelections.filter((h, idx) => {
+      const duration = parseInt(h.stayDuration || '0');
+      const invalid = isNaN(duration) || duration < 1 || duration > 90;
+      if (invalid) {
+        console.log(`Hotel ${idx + 1} has invalid duration:`, h.stayDuration);
+      }
+      return invalid;
+    });
+    
+    if (invalidDurations.length > 0) {
       toast({
         title: "Error",
-        description: "Stay duration must be between 1 and 90 nights",
+        description: `Stay duration must be between 1 and 90 nights${invalidDurations.length > 1 ? ' for all hotels' : ''}`,
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -250,12 +310,15 @@ export function CustomUmrahForm() {
       formDataObj.append("hotelCount", hotelSelections.length.toString());
       hotelSelections.forEach((hotel, index) => {
         const city = index === 0 ? "Makkah" : "Madina";
-        formDataObj.append(`hotels[${index}][hotelClass]`, hotel.hotelClass);
-        formDataObj.append(`hotels[${index}][hotel]`, hotel.hotel);
-        formDataObj.append(`hotels[${index}][stayDuration]`, hotel.stayDuration);
-        formDataObj.append(`hotels[${index}][bedType]`, hotel.bedType);
+        console.log(`Adding hotel ${index + 1}:`, { ...hotel, city });
+        formDataObj.append(`hotels[${index}][hotelClass]`, hotel.hotelClass || '');
+        formDataObj.append(`hotels[${index}][hotel]`, hotel.hotel || '');
+        formDataObj.append(`hotels[${index}][stayDuration]`, hotel.stayDuration || '1');
+        formDataObj.append(`hotels[${index}][bedType]`, hotel.bedType || '');
         formDataObj.append(`hotels[${index}][city]`, city);
       });
+      
+      console.log("Submitting form with hotels:", hotelSelections.length);
 
       const result = await createCustomUmrahRequestAction({}, formDataObj);
 
@@ -286,14 +349,32 @@ export function CustomUmrahForm() {
           phone: '',
           nationality: '',
         });
-        setHotelSelections([{ hotelClass: '', hotel: '', stayDuration: '', bedType: '' }]);
+        setHotelSelections([{ hotelClass: '', hotel: '', stayDuration: '1', bedType: '' }]);
         setCurrentStep(1);
       } else {
+        console.error("Form submission error:", result?.error);
+        let errorMessage = "Failed to submit request. Please try again.";
+        
+        if (result?.error) {
+          if (Array.isArray(result.error.message)) {
+            errorMessage = result.error.message[0];
+          } else if (typeof result.error.message === 'string') {
+            errorMessage = result.error.message;
+          } else if (typeof result.error === 'object') {
+            // Handle fieldErrors format
+            const fieldErrors = Object.values(result.error).flat();
+            if (fieldErrors.length > 0) {
+              errorMessage = Array.isArray(fieldErrors[0]) ? fieldErrors[0][0] : String(fieldErrors[0]);
+            }
+          }
+        }
+        
         toast({
           title: "Error",
-          description: result?.error?.message?.[0] || "Failed to submit request. Please try again.",
+          description: errorMessage,
           variant: "destructive",
         });
+        setIsSubmitting(false);
       }
     } catch (error: any) {
       toast({
@@ -311,7 +392,7 @@ export function CustomUmrahForm() {
   };
 
   const addHotelSelection = () => {
-    setHotelSelections([...hotelSelections, { hotelClass: '', hotel: '', stayDuration: '', bedType: '' }]);
+    setHotelSelections([...hotelSelections, { hotelClass: '', hotel: '', stayDuration: '1', bedType: '' }]);
   };
 
   const removeHotelSelection = (index: number) => {
@@ -331,21 +412,23 @@ export function CustomUmrahForm() {
   };
 
   const getFilteredHotels = (starRating: string, index: number) => {
-    if (!starRating) return [];
+    if (!starRating || !backendHotels || backendHotels.length === 0) return [];
     const starNum = parseInt(starRating.replace('-star', ''));
     if (isNaN(starNum) || starNum < 1 || starNum > 5) return [];
     
     // First hotel is Makkah, rest are Madina
     const cityType = index === 0 ? 'Makkah' : 'Madina';
     
-    let filtered = backendHotels.filter(hotel => 
-      hotel.star === starNum && hotel.type === cityType
-    );
+    let filtered = backendHotels.filter(hotel => {
+      if (!hotel || !hotel.star || !hotel.type || !hotel.name) return false;
+      return hotel.star === starNum && hotel.type === cityType;
+    });
     
-    return filtered.map(hotel => ({
+    return filtered.map((hotel, idx) => ({
       name: hotel.name,
-      stars: `${hotel.star}-star`,
-      _id: hotel._id,
+      star: hotel.star,
+      _id: hotel._id || `${hotel.name}-${idx}-${Date.now()}`,
+      originalIndex: idx, // Add original index for uniqueness
     }));
   };
 
@@ -673,9 +756,15 @@ export function CustomUmrahForm() {
                           <SelectValue placeholder="Select departure city" />
                         </SelectTrigger>
                         <SelectContent>
-                          {fromCities.map((city) => (
-                            <SelectItem key={city} value={city}>{city}</SelectItem>
-                          ))}
+                          {loadingOptions ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : fromCities.length > 0 ? (
+                            fromCities.map((city) => (
+                              <SelectItem key={city.value} value={city.value}>{city.name}</SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-options" disabled>No cities available</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -689,9 +778,15 @@ export function CustomUmrahForm() {
                           <SelectValue placeholder="Select destination" />
                         </SelectTrigger>
                         <SelectContent>
-                          {toCities.map((city) => (
-                            <SelectItem key={city} value={city}>{city}</SelectItem>
-                          ))}
+                          {loadingOptions ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : toCities.length > 0 ? (
+                            toCities.map((city) => (
+                              <SelectItem key={city.value} value={city.value}>{city.name}</SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-options" disabled>No cities available</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -745,14 +840,26 @@ export function CustomUmrahForm() {
                           <SelectValue placeholder="Select airline" />
                         </SelectTrigger>
                         <SelectContent>
-                          {airlines.map((airline) => (
-                            <SelectItem key={airline.name} value={airline.name}>
-                              <div className="flex items-center gap-2">
-                                <img src={airline.logo.src} alt={airline.name} className="w-5 h-5 object-contain" />
-                                {airline.name}
-                              </div>
-                            </SelectItem>
-                          ))}
+                          {loadingOptions ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : airlines.length > 0 ? (
+                            airlines.map((airline) => (
+                              <SelectItem key={airline.value} value={airline.value}>
+                                <div className="flex items-center gap-2">
+                                  {airline.logo && (
+                                    <img 
+                                      src={typeof airline.logo === 'string' ? airline.logo : airline.logo.src} 
+                                      alt={airline.name} 
+                                      className="w-5 h-5 object-contain" 
+                                    />
+                                  )}
+                                  <span>{airline.name}</span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-options" disabled>No airlines available</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -764,10 +871,20 @@ export function CustomUmrahForm() {
                           <SelectValue placeholder="Select class" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="economy">Economy</SelectItem>
-                          <SelectItem value="premium-economy">Premium Economy</SelectItem>
-                          <SelectItem value="business">Business Class</SelectItem>
-                          <SelectItem value="first">First Class</SelectItem>
+                          {loadingOptions ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : airlineClasses.length > 0 ? (
+                            airlineClasses.map((cls) => (
+                              <SelectItem key={cls.value} value={cls.value}>{cls.name}</SelectItem>
+                            ))
+                          ) : (
+                            <>
+                              <SelectItem value="economy">Economy</SelectItem>
+                              <SelectItem value="premium-economy">Premium Economy</SelectItem>
+                              <SelectItem value="business">Business Class</SelectItem>
+                              <SelectItem value="first">First Class</SelectItem>
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -949,8 +1066,11 @@ export function CustomUmrahForm() {
                           </Button>
                         )}
                         
-                        {hotelSelections.length > 1 && (
-                          <h4 className="text-sm text-gray-700 mb-3">Madina Hotel {index + 1} details</h4>
+                        {index === 0 && (
+                          <h4 className="text-sm text-gray-700 mb-3 font-semibold">Makkah Hotel Details</h4>
+                        )}
+                        {index > 0 && (
+                          <h4 className="text-sm text-gray-700 mb-3 font-semibold">Madina Hotel {index} Details</h4>
                         )}
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -976,8 +1096,12 @@ export function CustomUmrahForm() {
                           <div>
                             <Label className="text-sm mb-2">Hotel Name</Label>
                             <Select 
-                              value={selection.hotel} 
-                              onValueChange={(value) => updateHotelSelection(index, 'hotel', value)}
+                              value={selection.hotel ? `${index}:${selection.hotel}` : undefined} 
+                              onValueChange={(value) => {
+                                // Extract hotel name from value format "selectionIndex:hotelName"
+                                const hotelName = value.includes(':') ? value.split(':')[1] : value;
+                                updateHotelSelection(index, 'hotel', hotelName);
+                              }}
                               disabled={!selection.hotelClass}
                             >
                               <SelectTrigger className="bg-white">
@@ -985,13 +1109,24 @@ export function CustomUmrahForm() {
                               </SelectTrigger>
                               <SelectContent>
                                 {loadingHotels ? (
-                                  <SelectItem value="loading" disabled>Loading hotels...</SelectItem>
+                                  <div className="px-2 py-1.5 text-sm text-gray-500">Loading hotels...</div>
                                 ) : getFilteredHotels(selection.hotelClass, index).length === 0 ? (
-                                  <SelectItem value="no-hotels" disabled>No hotels available for this class in {index === 0 ? 'Makkah' : 'Madina'}</SelectItem>
+                                  <div className="px-2 py-1.5 text-sm text-gray-500">No hotels available for this class in {index === 0 ? 'Makkah' : 'Madina'}</div>
                                 ) : (
-                                  getFilteredHotels(selection.hotelClass, index).map((hotel) => (
-                                    <SelectItem key={hotel._id || hotel.name} value={hotel.name}>{hotel.name}</SelectItem>
-                                  ))
+                                  getFilteredHotels(selection.hotelClass, index).map((hotel, hotelIndex) => {
+                                    // Create a truly unique key using selection index, hotel index, and hotel identifier
+                                    // This ensures uniqueness even if hotel names or IDs are duplicated
+                                    const hotelId = String(hotel._id || `hotel-${hotelIndex}`);
+                                    const uniqueKey = `sel-${index}-hotel-${hotelIndex}-${hotelId.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                                    // Make value unique by including selection index to avoid conflicts between selections
+                                    // Format: "selectionIndex:hotelName" - we'll extract hotel name in onValueChange
+                                    const uniqueValue = `${index}:${hotel.name || hotelId}`;
+                                    return (
+                                      <SelectItem key={uniqueKey} value={uniqueValue}>
+                                        {hotel.name}
+                                      </SelectItem>
+                                    );
+                                  })
                                 )}
                               </SelectContent>
                             </Select>
@@ -1006,19 +1141,19 @@ export function CustomUmrahForm() {
                                 size="icon"
                                 className="h-8 w-8 rounded-full"
                                 onClick={() => {
-                                  const currentValue = parseInt(selection.stayDuration) || 1;
+                                  const currentValue = parseInt(selection.stayDuration || '1') || 1;
                                   if (currentValue > 1) {
                                     updateHotelSelection(index, 'stayDuration', String(currentValue - 1));
                                   }
                                 }}
-                                disabled={!selection.stayDuration || parseInt(selection.stayDuration) <= 1}
+                                disabled={parseInt(selection.stayDuration || '1') <= 1}
                               >
                                 <Minus className="w-4 h-4" />
                               </Button>
                               
                               <div className="flex-1 text-center">
                                 <span className="text-gray-900">
-                                  {selection.stayDuration || '0'} Night{parseInt(selection.stayDuration) !== 1 ? 's' : ''}
+                                  {selection.stayDuration || '1'} Night{parseInt(selection.stayDuration || '1') !== 1 ? 's' : ''}
                                 </span>
                               </div>
                               
@@ -1028,14 +1163,12 @@ export function CustomUmrahForm() {
                                 size="icon"
                                 className="h-8 w-8 rounded-full"
                                 onClick={() => {
-                                  const currentValue = parseInt(selection.stayDuration) || 0;
+                                  const currentValue = parseInt(selection.stayDuration || '1') || 1;
                                   if (currentValue >= 1 && currentValue < 90) {
                                     updateHotelSelection(index, 'stayDuration', String(currentValue + 1));
-                                  } else if (currentValue === 0) {
-                                    updateHotelSelection(index, 'stayDuration', '1');
                                   }
                                 }}
-                                disabled={!!selection.stayDuration && parseInt(selection.stayDuration) >= 90}
+                                disabled={parseInt(selection.stayDuration || '1') >= 90}
                               >
                                 <Plus className="w-4 h-4" />
                               </Button>
@@ -1132,16 +1265,26 @@ export function CustomUmrahForm() {
                           <SelectValue placeholder="Select nationality" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pakistani">Pakistani</SelectItem>
-                          <SelectItem value="indian">Indian</SelectItem>
-                          <SelectItem value="bangladeshi">Bangladeshi</SelectItem>
-                          <SelectItem value="saudi">Saudi Arabian</SelectItem>
-                          <SelectItem value="emirati">Emirati</SelectItem>
-                          <SelectItem value="egyptian">Egyptian</SelectItem>
-                          <SelectItem value="indonesian">Indonesian</SelectItem>
-                          <SelectItem value="malaysian">Malaysian</SelectItem>
-                          <SelectItem value="turkish">Turkish</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          {loadingOptions ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : nationalities.length > 0 ? (
+                            nationalities.map((nat) => (
+                              <SelectItem key={nat.value} value={nat.value}>{nat.name}</SelectItem>
+                            ))
+                          ) : (
+                            <>
+                              <SelectItem value="pakistani">Pakistani</SelectItem>
+                              <SelectItem value="indian">Indian</SelectItem>
+                              <SelectItem value="bangladeshi">Bangladeshi</SelectItem>
+                              <SelectItem value="saudi">Saudi Arabian</SelectItem>
+                              <SelectItem value="emirati">Emirati</SelectItem>
+                              <SelectItem value="egyptian">Egyptian</SelectItem>
+                              <SelectItem value="indonesian">Indonesian</SelectItem>
+                              <SelectItem value="malaysian">Malaysian</SelectItem>
+                              <SelectItem value="turkish">Turkish</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

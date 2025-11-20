@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Users, UserCheck, Home, LogOut, Hotel, ListChecks, Scroll, Route, CheckSquare, XSquare, FileText, Package, BookOpen, Calendar } from "lucide-react";
+import { Menu, X, LayoutDashboard, Users, UserCheck, Home, LogOut, Hotel, ListChecks, Scroll, Route, CheckSquare, XSquare, FileText, Package, BookOpen, Calendar, Settings } from "lucide-react";
 import { logoutAdminAction } from "@/actions/authActions";
 
 type NavItem = {
@@ -36,6 +36,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: "/admin/users", label: "Users", icon: UserCheck },
     { path: "/admin/packages", label: "Packages", icon: Package },
     { path: "/admin/hotels", label: "Hotels", icon: Hotel },
+    { path: "/admin/form-options", label: "Form Options", icon: Settings },
     { path: "/admin/package-bookings", label: "Package Bookings", icon: BookOpen },
     { path: "/admin/hotel-bookings", label: "Hotel Bookings", icon: Calendar },
     { path: "/admin/custom-umrah-requests", label: "Custom Requests", icon: FileText },
@@ -56,115 +57,176 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       : "text-muted-foreground hover:bg-muted hover:text-foreground"
     }`;
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="mb-8 pb-6 border-b border-border">
-        <h2 className="text-2xl font-bold text-center text-foreground tracking-tight mb-2">
-          Admin Panel
-        </h2>
-        <p className="text-xs text-center text-muted-foreground">
-          Umrah Portal Management
-        </p>
+    const SidebarContent = () => (
+      <div className="flex flex-col h-full">
+        <div className="mb-8 pb-6 border-b border-border">
+          <h2 className="text-2xl font-bold text-center text-foreground tracking-tight mb-2">
+            Admin Panel
+          </h2>
+          <p className="text-xs text-center text-muted-foreground">
+            Umrah Portal Management
+          </p>
+        </div>
+    
+        <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
+    
+          {/* Home */}
+          <Link
+            href="/"
+            className="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <Home className="w-4 h-4" />
+            Home
+          </Link>
+    
+          {/* MAIN SECTION */}
+          <div className="mb-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
+              Main
+            </p>
+    
+            {/* Dashboard, Users, Packages */}
+            {navItems.slice(0, 3).map(({ path, label, icon: Icon }) => (
+              <Link
+                key={path}
+                href={path}
+                className={linkClasses(path)}
+                onClick={() => setDrawerOpen(false)}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </Link>
+            ))}
+    
+            {/* Hotels */}
+            <Link
+              href="/admin/hotels"
+              className={linkClasses("/admin/hotels")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <Hotel className="w-4 h-4" />
+              Hotels
+            </Link>
+          </div>
+    
+          {/* BOOKINGS SECTION */}
+          <div className="mb-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
+              Bookings
+            </p>
+    
+            {/* Package Bookings */}
+            <Link
+              href="/admin/package-bookings"
+              className={linkClasses("/admin/package-bookings")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <BookOpen className="w-4 h-4" />
+              Package Bookings
+            </Link>
+    
+            {/* Hotel Bookings */}
+            <Link
+              href="/admin/hotel-bookings"
+              className={linkClasses("/admin/hotel-bookings")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <Calendar className="w-4 h-4" />
+              Hotel Bookings
+            </Link>
+    
+            {/* Custom Requests */}
+            <Link
+              href="/admin/custom-umrah-requests"
+              className={linkClasses("/admin/custom-umrah-requests")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <FileText className="w-4 h-4" />
+              Custom Requests
+            </Link>
+          </div>
+    
+          {/* CONTENT SECTION */}
+          <div className="mb-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
+              Content
+            </p>
+            <Link
+              href="/admin/form-options"
+              className={linkClasses("/admin/form-options")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <Settings className="w-4 h-4" />
+              Form Options
+            </Link>
+
+            {/* Features */}
+          
+            <Link
+              href="/admin/features"
+              className={linkClasses("/admin/features")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <ListChecks className="w-4 h-4" />
+              Features
+            </Link>
+    
+            {/* Itineraries */}
+            <Link
+              href="/admin/itineraries"
+              className={linkClasses("/admin/itineraries")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <Route className="w-4 h-4" />
+              Itineraries
+            </Link>
+    
+            {/* Includes */}
+            <Link
+              href="/admin/includes"
+              className={linkClasses("/admin/includes")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <CheckSquare className="w-4 h-4" />
+              Includes
+            </Link>
+    
+            {/* Excludes */}
+            <Link
+              href="/admin/excludes"
+              className={linkClasses("/admin/excludes")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <XSquare className="w-4 h-4" />
+              Excludes
+            </Link>
+    
+            {/* Policies */}
+            <Link
+              href="/admin/policies"
+              className={linkClasses("/admin/policies")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <Scroll className="w-4 h-4" />
+              Policies
+            </Link>
+    
+            {/* Form Options (MOVED HERE) */}
+            
+          </div>
+    
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="mt-auto w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 shadow-sm transition-colors"
+          >
+            <LogOut className="w-4 h-4" /> Logout
+          </button>
+        </nav>
       </div>
-
-      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
-        <Link
-          href="/"
-          className="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
-          onClick={() => setDrawerOpen(false)}
-        >
-          <Home className="w-4 h-4" />
-          Home
-        </Link>
-
-        {/* MAIN SECTION */}
-        <div className="mb-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
-            Main
-          </p>
-
-          {/* Dashboard, Users, Packages */}
-          {navItems.slice(0, 3).map(({ path, label, icon: Icon }) => (
-            <Link
-              key={path}
-              href={path}
-              className={linkClasses(path)}
-              onClick={() => setDrawerOpen(false)}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </Link>
-          ))}
-
-          {/* Hotels moved here */}
-          <Link
-            href="/admin/hotels"
-            className={linkClasses("/admin/hotels")}
-            onClick={() => setDrawerOpen(false)}
-          >
-            <Hotel className="w-4 h-4" />
-            Hotels
-          </Link>
-        </div>
-
-        {/* BOOKINGS SECTION */}
-        <div className="mb-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
-            Bookings
-          </p>
-
-          {/* Package bookings, Hotel bookings */}
-          {navItems.slice(4, 6).map(({ path, label, icon: Icon }) => (
-            <Link
-              key={path}
-              href={path}
-              className={linkClasses(path)}
-              onClick={() => setDrawerOpen(false)}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </Link>
-          ))}
-
-          {/* Custom Requests moved here */}
-          <Link
-            href="/admin/custom-umrah-requests"
-            className={linkClasses("/admin/custom-umrah-requests")}
-            onClick={() => setDrawerOpen(false)}
-          >
-            <FileText className="w-4 h-4" />
-            Custom Requests
-          </Link>
-        </div>
-
-        {/* CONTENT SECTION – untouched */}
-        <div className="mb-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
-            Content
-          </p>
-
-          {navItems.slice(7).map(({ path, label, icon: Icon }) => (
-            <Link
-              key={path}
-              href={path}
-              className={linkClasses(path)}
-              onClick={() => setDrawerOpen(false)}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </Link>
-          ))}
-        </div>
-
-        <button
-          onClick={handleLogout}
-          className="mt-auto w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 shadow-sm transition-colors"
-        >
-          <LogOut className="w-4 h-4" /> Logout
-        </button>
-      </nav>
-    </div>
-  );
+    );
+    
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">

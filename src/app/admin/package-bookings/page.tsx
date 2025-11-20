@@ -45,8 +45,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Eye, Trash2, Loader2 } from "lucide-react";
+import { Eye, Trash2, Loader2, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { updatePackageBookingStatusAction } from "@/actions/updateBookingStatusActions";
 
 interface IPackageBooking {
   _id: string;
@@ -67,11 +75,13 @@ function PackageBookingsTable({
   bookings,
   onView,
   onDelete,
+  onStatusUpdate,
   loading,
 }: {
   bookings: IPackageBooking[];
   onView: (id: string) => void;
   onDelete: (id: string) => void;
+  onStatusUpdate: (id: string, status: string) => void;
   loading: boolean;
 }) {
   if (loading) {
@@ -130,9 +140,32 @@ function PackageBookingsTable({
                   {booking.travelers.children > 0 && `, ${booking.travelers.children} Child${booking.travelers.children > 1 ? "ren" : ""}`}
                 </TableCell>
                 <TableCell>
-                  <Badge className={getStatusColor(booking.status)}>
-                    {booking.status}
-                  </Badge>
+                  <Select
+                    value={booking.status}
+                    onValueChange={(value) => onStatusUpdate(booking._id, value)}
+                  >
+                    <SelectTrigger className="w-[140px] h-8">
+                      <SelectValue>
+                        <Badge className={getStatusColor(booking.status)}>
+                          {booking.status}
+                        </Badge>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">
+                        <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+                      </SelectItem>
+                      <SelectItem value="confirmed">
+                        <Badge className="bg-green-100 text-green-800">Confirmed</Badge>
+                      </SelectItem>
+                      <SelectItem value="cancelled">
+                        <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
+                      </SelectItem>
+                      <SelectItem value="completed">
+                        <Badge className="bg-blue-100 text-blue-800">Completed</Badge>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end items-center gap-1.5">
@@ -222,6 +255,28 @@ export default function PackageBookingsPage() {
     }
   };
 
+  const handleStatusUpdate = async (id: string, status: string) => {
+    const result = await updatePackageBookingStatusAction(id, status);
+    if (result?.error) {
+      toast({
+        title: "Error",
+        description: result.error.message?.[0] || "Failed to update status",
+        variant: "destructive",
+      });
+      await loadBookings();
+    } else {
+      setBookings((prev) =>
+        prev.map((booking) =>
+          booking._id === id ? { ...booking, status } : booking
+        )
+      );
+      toast({
+        title: "Success",
+        description: "Booking status updated successfully.",
+      });
+    }
+  };
+
   useEffect(() => {
     loadBookings();
   }, []);
@@ -269,6 +324,7 @@ export default function PackageBookingsPage() {
             bookings={paginatedBookings}
             onView={(id) => router.push(`/admin/package-bookings/view/${id}`)}
             onDelete={(id) => setConfirmDeleteId(id)}
+            onStatusUpdate={handleStatusUpdate}
             loading={loading}
           />
         </Suspense>

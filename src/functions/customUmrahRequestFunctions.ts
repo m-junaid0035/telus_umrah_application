@@ -39,41 +39,58 @@ const sanitizeCustomUmrahRequestData = (data: any) => ({
 /**
  * ================= SERIALIZER =================
  */
-const serializeCustomUmrahRequest = (request: any) => ({
-  _id: request._id?.toString() || request._id,
-  name: request.name,
-  email: request.email,
-  phone: request.phone,
-  nationality: request.nationality,
-  from: request.from,
-  to: request.to,
-  departDate: request.departDate?.toISOString?.() || (request.departDate instanceof Date ? request.departDate.toISOString() : request.departDate),
-  returnDate: request.returnDate?.toISOString?.() || (request.returnDate instanceof Date ? request.returnDate.toISOString() : request.returnDate),
-  airline: request.airline,
-  airlineClass: request.airlineClass,
-  adults: request.adults,
-  children: request.children,
-  childAges: Array.isArray(request.childAges) ? request.childAges : [],
-  rooms: request.rooms,
-  umrahVisa: request.umrahVisa,
-  transport: request.transport,
-  zaiarat: request.zaiarat,
-  meals: request.meals,
-  esim: request.esim,
-  hotels: Array.isArray(request.hotels)
-    ? request.hotels.map((h: any) => ({
-        hotelClass: String(h.hotelClass),
-        hotel: String(h.hotel),
-        stayDuration: String(h.stayDuration),
-        bedType: String(h.bedType),
-        city: String(h.city),
-      }))
-    : [],
-  status: request.status || "pending",
-  notes: request.notes || undefined,
-  createdAt: request.createdAt?.toISOString?.() || (request.createdAt instanceof Date ? request.createdAt.toISOString() : request.createdAt),
-  updatedAt: request.updatedAt?.toISOString?.() || (request.updatedAt instanceof Date ? request.updatedAt.toISOString() : request.updatedAt),
-});
+export const serializeCustomUmrahRequest = (request: any) => {
+  // Handle ObjectId conversion - check if it's an ObjectId object with buffer
+  let idString: string;
+  if (request._id) {
+    if (typeof request._id === 'object' && request._id.toString) {
+      idString = request._id.toString();
+    } else if (typeof request._id === 'string') {
+      idString = request._id;
+    } else {
+      idString = String(request._id);
+    }
+  } else {
+    idString = String(request._id || '');
+  }
+  
+  return {
+    _id: idString,
+    name: request.name,
+    email: request.email,
+    phone: request.phone,
+    nationality: request.nationality,
+    from: request.from,
+    to: request.to,
+    departDate: request.departDate instanceof Date ? request.departDate.toISOString() : (request.departDate?.toISOString?.() || request.departDate),
+    returnDate: request.returnDate instanceof Date ? request.returnDate.toISOString() : (request.returnDate?.toISOString?.() || request.returnDate),
+    airline: request.airline,
+    airlineClass: request.airlineClass,
+    adults: request.adults,
+    children: request.children,
+    childAges: Array.isArray(request.childAges) ? request.childAges : [],
+    rooms: request.rooms,
+    umrahVisa: request.umrahVisa,
+    transport: request.transport,
+    zaiarat: request.zaiarat,
+    meals: request.meals,
+    esim: request.esim,
+    hotels: Array.isArray(request.hotels)
+      ? request.hotels.map((h: any) => ({
+          hotelClass: String(h.hotelClass),
+          hotel: String(h.hotel),
+          stayDuration: String(h.stayDuration),
+          bedType: String(h.bedType),
+          city: String(h.city),
+        }))
+      : [],
+    status: request.status || "pending",
+    notes: request.notes || undefined,
+    paymentMethod: request.paymentMethod,
+    createdAt: request.createdAt instanceof Date ? request.createdAt.toISOString() : (request.createdAt?.toISOString?.() || request.createdAt),
+    updatedAt: request.updatedAt instanceof Date ? request.updatedAt.toISOString() : (request.updatedAt?.toISOString?.() || request.updatedAt),
+  };
+};
 
 /**
  * ================= CUSTOM UMRAH REQUEST CRUD =================

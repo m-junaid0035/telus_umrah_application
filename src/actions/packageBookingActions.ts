@@ -38,6 +38,7 @@ const packageBookingSchema = z.object({
   totalAmount: z.number().optional(),
   paidAmount: z.number().optional(),
   paymentStatus: z.enum(["pending", "partial", "paid"]).optional(),
+  paymentMethod: z.enum(["cash", "online"]).optional(),
 });
 
 // ================= UTILITY =================
@@ -85,6 +86,7 @@ function parsePackageBookingFormData(formData: FormData) {
     totalAmount: formData.get("totalAmount") ? Number(formData.get("totalAmount")) : undefined,
     paidAmount: formData.get("paidAmount") ? Number(formData.get("paidAmount") || 0) : undefined,
     paymentStatus: str(formData, "paymentStatus") || "pending",
+    paymentMethod: str(formData, "paymentMethod") || undefined,
   };
 }
 

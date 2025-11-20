@@ -282,7 +282,8 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
                 max="10"
                 value={formData.rooms}
                 onChange={(e) => {
-                  const value = Math.max(1, Math.min(10, Number(e.target.value) || 1));
+                  const inputValue = e.target.value === '' ? 1 : Number(e.target.value);
+                  const value = Math.max(1, Math.min(10, inputValue || 1));
                   setFormData({ ...formData, rooms: value });
                 }}
                 required
@@ -297,7 +298,8 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
                 max="20"
                 value={formData.adults}
                 onChange={(e) => {
-                  const value = Math.max(1, Math.min(20, Number(e.target.value) || 1));
+                  const inputValue = e.target.value === '' ? 1 : Number(e.target.value);
+                  const value = Math.max(1, Math.min(20, inputValue || 1));
                   setFormData({ ...formData, adults: value });
                 }}
                 required
@@ -312,9 +314,20 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
                 max="10"
                 value={formData.children}
                 onChange={(e) => {
-                  const children = Math.max(0, Math.min(10, Number(e.target.value) || 0));
+                  const value = e.target.value === '' ? 0 : Number(e.target.value);
+                  const children = Math.max(0, Math.min(10, value || 0));
                   setFormData({ ...formData, children });
-                  setTimeout(updateChildAges, 0);
+                  // Update child ages after state update
+                  setTimeout(() => {
+                    const ages: number[] = [];
+                    for (let i = 0; i < children; i++) {
+                      const ageInput = document.getElementById(`childAge-${i}`) as HTMLInputElement;
+                      if (ageInput && ageInput.value) {
+                        ages.push(Number(ageInput.value));
+                      }
+                    }
+                    setFormData(prev => ({ ...prev, childAges: ages }));
+                  }, 0);
                 }}
               />
             </div>
@@ -330,7 +343,13 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
                       min="0"
                       max="16"
                       placeholder={`Child ${i + 1} age`}
-                      onChange={updateChildAges}
+                      value={formData.childAges[i] || ''}
+                      onChange={(e) => {
+                        const age = e.target.value === '' ? 0 : Number(e.target.value);
+                        const newAges = [...formData.childAges];
+                        newAges[i] = age;
+                        setFormData({ ...formData, childAges: newAges });
+                      }}
                     />
                   ))}
                 </div>

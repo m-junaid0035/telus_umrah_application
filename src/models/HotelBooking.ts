@@ -43,6 +43,7 @@ export interface IHotelBooking extends Document {
   totalAmount?: number;
   paidAmount?: number;
   paymentStatus?: "pending" | "partial" | "paid";
+  paymentMethod?: "cash" | "online";
   
   createdAt: Date;
   updatedAt: Date;
@@ -141,6 +142,10 @@ const hotelBookingSchema = new Schema<IHotelBooking>(
       type: String,
       enum: ["pending", "partial", "paid"],
       default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "online"],
     },
   },
   {
