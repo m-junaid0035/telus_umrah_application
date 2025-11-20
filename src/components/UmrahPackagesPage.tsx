@@ -145,7 +145,7 @@ export function UmrahPackagesPage() {
   } else if (sortBy === 'price-high') {
     filteredPackages = [...filteredPackages].sort((a, b) => b.price - a.price);
   } else if (sortBy === 'rating') {
-    filteredPackages = [...filteredPackages].sort((a, b) => b.rating - a.rating);
+    filteredPackages = [...filteredPackages].sort((a, b) => (b.rating || 0) - (a.rating || 0));
   } else if (sortBy === 'duration') {
     filteredPackages = [...filteredPackages].sort((a, b) => a.duration - b.duration);
   }

@@ -233,9 +233,11 @@ export default function HotelBookingsPage() {
       
       if (result?.data !== undefined) {
         if (Array.isArray(result.data)) {
-          console.log("Admin page - Setting bookings, count:", result.data.length);
-          setBookings(result.data);
-          if (result.data.length === 0) {
+          // Filter out null values and cast to the correct type
+          const validBookings = result.data.filter((booking) => booking !== null) as IHotelBooking[];
+          console.log("Admin page - Setting bookings, count:", validBookings.length);
+          setBookings(validBookings);
+          if (validBookings.length === 0) {
             console.log("Admin page - No bookings to display");
           }
         } else {

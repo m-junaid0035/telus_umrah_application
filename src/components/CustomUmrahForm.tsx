@@ -848,7 +848,7 @@ export function CustomUmrahForm() {
                                 <div className="flex items-center gap-2">
                                   {airline.logo && (
                                     <img 
-                                      src={typeof airline.logo === 'string' ? airline.logo : airline.logo.src} 
+                                      src={typeof airline.logo === 'string' ? airline.logo : (airline.logo as any)?.src || airline.logo} 
                                       alt={airline.name} 
                                       className="w-5 h-5 object-contain" 
                                     />

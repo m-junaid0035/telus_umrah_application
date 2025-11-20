@@ -6,7 +6,7 @@ import { User, IUser } from "@/models/User";
 /**
  * Serialize user object for client usage
  */
-const serializeUser = (user: IUser) => ({
+const serializeUser = (user: any) => ({
   _id: user._id.toString(),
   name: user.name,
   email: user.email,

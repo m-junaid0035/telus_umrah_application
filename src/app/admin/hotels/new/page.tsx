@@ -35,6 +35,7 @@ interface FieldErrors {
 interface FormState {
   error?: FieldErrors | { message?: string[] };
   data?: any;
+  formData?: any; // Preserve form data when validation fails
 }
 
 const initialState: FormState = {
@@ -152,7 +153,7 @@ export default function CreateHotelForm() {
             action={(formData) => {
               // Always ensure type is included from formValues (controlled component)
               // This ensures the value is properly submitted even if the select doesn't submit it
-              if (formValues.type && formValues.type !== "") {
+              if (formValues.type && formValues.type !== "" as HotelType | "") {
                 formData.set("type", formValues.type);
               }
               // Filter out empty amenities and images before submission

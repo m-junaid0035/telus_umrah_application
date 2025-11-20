@@ -70,7 +70,7 @@ export default async function PackageViewPage({
 
   if (!result || result.error || !result.data) return notFound();
 
-  const pkg: IUmrahPackage = result.data;
+  const pkg = result.data as unknown as IUmrahPackage;
   console.log("Package Data:", pkg);
 
   return (

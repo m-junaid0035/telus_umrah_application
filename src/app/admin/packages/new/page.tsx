@@ -70,6 +70,7 @@ interface FieldErrors {
 interface FormState {
   error?: FieldErrors | { message?: string[] };
   data?: any;
+  formData?: any; // Preserve form data when validation fails
 }
 
 const initialState: FormState = { error: {} };

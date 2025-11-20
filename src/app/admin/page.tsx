@@ -98,7 +98,11 @@ export default function AdminPage() {
           fetchAllCustomUmrahRequestsAction(),
         ]);
 
-        if (usersRes?.data) setUsers(usersRes.data);
+        if (usersRes?.data) {
+          // Filter out any items with null required fields
+          const validUsers = usersRes.data.filter((user) => user && user.createdAt) as User[];
+          setUsers(validUsers);
+        }
         if (statsRes?.data) setStatistics(statsRes.data);
         if (hotelsRes?.data) {
           setHotels(hotelsRes.data);

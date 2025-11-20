@@ -167,7 +167,9 @@ export default function UmrahPackagesPage() {
     setLoading(true);
     const result = await fetchAllUmrahPackagesAction();
     if (result?.data && Array.isArray(result.data)) {
-      setPackages(result.data);
+      // Filter out any items with undefined required fields and cast to correct type
+      const validPackages = result.data.filter((pkg) => pkg && pkg.createdAt) as IUmrahPackage[];
+      setPackages(validPackages);
     } else {
       toast({
         title: "Error",

@@ -28,8 +28,10 @@ export default function UsersPage() {
       try {
         const result = await fetchAllUsersAction();
         if (result?.data) {
-          setUsers(result.data);
-          setFilteredUsers(result.data);
+          // Filter out any items with null required fields
+          const validUsers = result.data.filter((user) => user && user.createdAt) as User[];
+          setUsers(validUsers);
+          setFilteredUsers(validUsers);
         }
       } catch (error) {
         console.error("Failed to load users:", error);

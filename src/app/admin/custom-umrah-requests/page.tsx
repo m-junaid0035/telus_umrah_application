@@ -61,12 +61,34 @@ interface ICustomUmrahRequest {
   name: string;
   email: string;
   phone: string;
-  status: string;
+  nationality: string;
+  from: string;
+  to: string;
   departDate: string;
   returnDate: string;
+  airline: string;
+  airlineClass: string;
   adults: number;
   children: number;
+  childAges: number[];
+  rooms: number;
+  umrahVisa: boolean;
+  transport: boolean;
+  zaiarat: boolean;
+  meals: boolean;
+  esim: boolean;
+  hotels: Array<{
+    hotelClass: string;
+    hotel: string;
+    stayDuration: string;
+    bedType: string;
+    city: string;
+  }>;
+  status: string;
+  notes?: string;
+  paymentMethod?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 function CustomUmrahRequestsTable({
@@ -222,7 +244,9 @@ export default function CustomUmrahRequestsPage() {
     setLoading(true);
     const result = await fetchAllCustomUmrahRequestsAction();
     if (result?.data && Array.isArray(result.data)) {
-      setRequests(result.data);
+      // Filter out null values
+      const validRequests = result.data.filter((request) => request !== null) as ICustomUmrahRequest[];
+      setRequests(validRequests);
     } else {
       toast({
         title: "Error",

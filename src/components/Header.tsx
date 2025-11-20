@@ -226,18 +226,15 @@ export function Header() {
                 onMouseEnter={() => setUmrahPackagesOpen(true)}
                 onMouseLeave={() => setUmrahPackagesOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${shouldShowWhiteBg
-                    ? (currentPage === '/umrah-packages' || currentPage === '/customize-umrah')
-                      ? 'text-blue-600'
-                      : 'text-gray-700 hover:text-blue-600'
-                    : (currentPage === '/umrah-packages' || currentPage === '/customize-umrah')
-                      ? 'text-white'
-                      : 'text-white/90 hover:text-white'
-                  }`}>
+                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${
+                  (currentPage === '/umrah-packages' || currentPage === '/customize-umrah' || currentPage === '/custom-umrah')
+                    ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
+                    : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
+                }`}>
                   
                   <span>Umrah Packages</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${umrahPackagesOpen ? 'rotate-180' : ''}`} />
-                  {(currentPage === '/umrah-packages' || currentPage === '/customize-umrah') && (
+                  {(currentPage === '/umrah-packages' || currentPage === '/customize-umrah' || currentPage === '/custom-umrah') && (
                     <motion.div
                       layoutId="activeTab"
                       className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${
@@ -288,13 +285,10 @@ export function Header() {
                 onMouseEnter={() => setHotelsOpen(true)}
                 onMouseLeave={() => setHotelsOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${shouldShowWhiteBg
-                    ? (currentPage === '/makkah-hotels' || currentPage === '/madina-hotels')
-                      ? 'text-blue-600'
-                      : 'text-gray-700 hover:text-blue-600'
-                    : (currentPage === '/makkah-hotels' || currentPage === '/madina-hotels')
-                      ? 'text-white'
-                      : 'text-white/90 hover:text-white'
+                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${
+                  (currentPage === '/makkah-hotels' || currentPage === '/madina-hotels')
+                    ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
+                    : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
                 }`}>
                   <span>Hotels</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${hotelsOpen ? 'rotate-180' : ''}`} />
@@ -347,13 +341,10 @@ export function Header() {
                 onMouseEnter={() => setAboutOpen(true)}
                 onMouseLeave={() => setAboutOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${shouldShowWhiteBg
-                    ? (currentPage === '/about' || currentPage === '/faq')
-                      ? 'text-blue-600'
-                      : 'text-gray-700 hover:text-blue-600'
-                    : (currentPage === '/about' || currentPage === '/faq')
-                      ? 'text-white'
-                      : 'text-white/90 hover:text-white'
+                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${
+                  (currentPage === '/about' || currentPage === '/faq')
+                    ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
+                    : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
                 }`}>
                   <span>About</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${aboutOpen ? 'rotate-180' : ''}`} />
@@ -406,13 +397,9 @@ export function Header() {
               <Link href="/contact">
                 <motion.div
                   className={`px-5 py-2 rounded-lg transition-all relative group ${
-                 shouldShowWhiteBg
-                      ? currentPage === '/contact'
-                        ? 'text-blue-600'
-                        : 'text-gray-700 hover:text-blue-600'
-                      : currentPage === '/contact'
-                        ? 'text-white'
-                        : 'text-white/90 hover:text-white'
+                    currentPage === '/contact'
+                      ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
+                      : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
                   }`}
                 >
                   Contact

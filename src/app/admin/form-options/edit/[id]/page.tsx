@@ -85,7 +85,7 @@ export default function EditFormOptionPage() {
       router.push("/admin/form-options");
     } else if (formState?.error) {
       const errorMessages = Object.values(formState.error).flat();
-      errorMessages.forEach((msg) => {
+      errorMessages.forEach((msg: unknown) => {
         if (typeof msg === "string") {
           toast({
             title: "Error",
@@ -93,12 +93,14 @@ export default function EditFormOptionPage() {
             variant: "destructive",
           });
         } else if (Array.isArray(msg)) {
-          msg.forEach((m) => {
-            toast({
-              title: "Error",
-              description: m,
-              variant: "destructive",
-            });
+          msg.forEach((m: unknown) => {
+            if (typeof m === "string") {
+              toast({
+                title: "Error",
+                description: m,
+                variant: "destructive",
+              });
+            }
           });
         }
       });
@@ -112,7 +114,21 @@ export default function EditFormOptionPage() {
   };
 
   const errorFor = (field: string): boolean => {
-    return !!formState?.error?.[field];
+    if (!formState?.error) return false;
+    // Check if error is a Record with field errors
+    if (typeof formState.error === 'object' && !('message' in formState.error)) {
+      return !!(formState.error as Record<string, string[]>)[field];
+    }
+    return false;
+  };
+
+  const getErrorMessage = (field: string): string => {
+    if (!formState?.error) return "";
+    if (typeof formState.error === 'object' && !('message' in formState.error)) {
+      const fieldErrors = (formState.error as Record<string, string[]>)[field];
+      return Array.isArray(fieldErrors) && fieldErrors.length > 0 ? fieldErrors[0] : "";
+    }
+    return "";
   };
 
   if (loading) {
@@ -195,9 +211,7 @@ export default function EditFormOptionPage() {
                 />
                 {errorFor("name") && (
                   <p className="text-sm text-red-500 mt-1">
-                    {Array.isArray(formState.error.name)
-                      ? formState.error.name[0]
-                      : "Name is required"}
+                    {getErrorMessage("name") || "Name is required"}
                   </p>
                 )}
               </div>
@@ -218,9 +232,7 @@ export default function EditFormOptionPage() {
                 />
                 {errorFor("value") && (
                   <p className="text-sm text-red-500 mt-1">
-                    {Array.isArray(formState.error.value)
-                      ? formState.error.value[0]
-                      : "Value is required"}
+                    {getErrorMessage("value") || "Value is required"}
                   </p>
                 )}
               </div>

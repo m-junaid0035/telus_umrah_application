@@ -217,12 +217,24 @@ export default function PackageBookingsPage() {
     bookings,
     (state, id: string) => state.filter((b) => b._id !== id)
   );
-
+  const isIPackageBooking = (booking: any): booking is IPackageBooking => {
+    return (
+      booking &&
+      typeof booking === "object" &&
+      "_id" in booking &&
+      "customerName" in booking &&
+      "customerEmail" in booking &&
+      "customerPhone" in booking
+    );
+  };
+  
   const loadBookings = async () => {
     setLoading(true);
     const result = await fetchAllPackageBookingsAction();
     if (result?.data && Array.isArray(result.data)) {
-      setBookings(result.data);
+      // Filter out null values
+      const validBookings = result.data.filter(isIPackageBooking);
+    setBookings(validBookings);
     } else {
       toast({
         title: "Error",

@@ -6,7 +6,7 @@ import { FormOption, IFormOption, FormOptionType } from "@/models/FormOption";
 /**
  * Serialize form option for client usage
  */
-const serializeFormOption = (option: IFormOption) => ({
+const serializeFormOption = (option: any) => ({
   _id: option._id.toString(),
   type: option.type,
   name: option.name,
