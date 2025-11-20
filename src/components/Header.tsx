@@ -226,7 +226,7 @@ export function Header() {
                 onMouseEnter={() => setUmrahPackagesOpen(true)}
                 onMouseLeave={() => setUmrahPackagesOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${scrolled
+                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${shouldShowWhiteBg
                     ? (currentPage === '/umrah-packages' || currentPage === '/customize-umrah')
                       ? 'text-blue-600'
                       : 'text-gray-700 hover:text-blue-600'
@@ -288,7 +288,7 @@ export function Header() {
                 onMouseEnter={() => setHotelsOpen(true)}
                 onMouseLeave={() => setHotelsOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${scrolled
+                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${shouldShowWhiteBg
                     ? (currentPage === '/makkah-hotels' || currentPage === '/madina-hotels')
                       ? 'text-blue-600'
                       : 'text-gray-700 hover:text-blue-600'
@@ -347,7 +347,7 @@ export function Header() {
                 onMouseEnter={() => setAboutOpen(true)}
                 onMouseLeave={() => setAboutOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${scrolled
+                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${shouldShowWhiteBg
                     ? (currentPage === '/about' || currentPage === '/faq')
                       ? 'text-blue-600'
                       : 'text-gray-700 hover:text-blue-600'
@@ -406,7 +406,7 @@ export function Header() {
               <Link href="/contact">
                 <motion.div
                   className={`px-5 py-2 rounded-lg transition-all relative group ${
-                 scrolled
+                 shouldShowWhiteBg
                       ? currentPage === '/contact'
                         ? 'text-blue-600'
                         : 'text-gray-700 hover:text-blue-600'

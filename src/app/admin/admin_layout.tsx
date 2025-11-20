@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Users, Home, LogOut, Hotel, ListChecks, Scroll, Route, CheckSquare, XSquare, FileText, Package, BookOpen, Calendar} from "lucide-react";
+import { Menu, X, LayoutDashboard, Users, UserCheck, Home, LogOut, Hotel, ListChecks, Scroll, Route, CheckSquare, XSquare, FileText, Package, BookOpen, Calendar } from "lucide-react";
 import { logoutAdminAction } from "@/actions/authActions";
 
 type NavItem = {
@@ -33,6 +33,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navItems: NavItem[] = [
     { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/admin/users", label: "Users", icon: UserCheck },
     { path: "/admin/packages", label: "Packages", icon: Package },
     { path: "/admin/hotels", label: "Hotels", icon: Hotel },
     { path: "/admin/package-bookings", label: "Package Bookings", icon: BookOpen },
@@ -50,10 +51,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     pathname === path || (path !== "/admin" && pathname.startsWith(path));
 
   const linkClasses = (path: string) =>
-    `flex items-center gap-3 py-2.5 px-4 rounded-lg transition-all font-medium text-sm ${
-      isActive(path)
-        ? "bg-primary text-primary-foreground shadow-sm"
-        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+    `flex items-center gap-3 py-2.5 px-4 rounded-lg transition-all font-medium text-sm ${isActive(path)
+      ? "bg-primary text-primary-foreground shadow-sm"
+      : "text-muted-foreground hover:bg-muted hover:text-foreground"
     }`;
 
   const SidebarContent = () => (
@@ -77,10 +77,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           Home
         </Link>
 
+        {/* MAIN SECTION */}
         <div className="mb-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
             Main
           </p>
+
+          {/* Dashboard, Users, Packages */}
           {navItems.slice(0, 3).map(({ path, label, icon: Icon }) => (
             <Link
               key={path}
@@ -92,13 +95,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {label}
             </Link>
           ))}
+
+          {/* Hotels moved here */}
+          <Link
+            href="/admin/hotels"
+            className={linkClasses("/admin/hotels")}
+            onClick={() => setDrawerOpen(false)}
+          >
+            <Hotel className="w-4 h-4" />
+            Hotels
+          </Link>
         </div>
 
+        {/* BOOKINGS SECTION */}
         <div className="mb-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
             Bookings
           </p>
-          {navItems.slice(3, 6).map(({ path, label, icon: Icon }) => (
+
+          {/* Package bookings, Hotel bookings */}
+          {navItems.slice(4, 6).map(({ path, label, icon: Icon }) => (
             <Link
               key={path}
               href={path}
@@ -109,13 +125,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {label}
             </Link>
           ))}
+
+          {/* Custom Requests moved here */}
+          <Link
+            href="/admin/custom-umrah-requests"
+            className={linkClasses("/admin/custom-umrah-requests")}
+            onClick={() => setDrawerOpen(false)}
+          >
+            <FileText className="w-4 h-4" />
+            Custom Requests
+          </Link>
         </div>
 
+        {/* CONTENT SECTION – untouched */}
         <div className="mb-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
             Content
           </p>
-          {navItems.slice(6).map(({ path, label, icon: Icon }) => (
+
+          {navItems.slice(7).map(({ path, label, icon: Icon }) => (
             <Link
               key={path}
               href={path}

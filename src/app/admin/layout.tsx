@@ -12,16 +12,11 @@ export default async function AdminPageLayout({ children }: { children: React.Re
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
-  // if (!token) {
-  //   redirect("/auth/login");
-  // }
+  if (!token) {
+    redirect("/auth/login");
+  }
 
   return (
-    <html lang="en">
-      <head />
-      <body>
-        <AdminLayout>{children}</AdminLayout>
-      </body>
-    </html>
+    <AdminLayout>{children}</AdminLayout>
   );
 }

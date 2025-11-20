@@ -1,6 +1,6 @@
 "use server";
 
-import { loginApplication, verifyOtpAndLogin, sendOtp, getCurrentApplication, loginAdmin } from "@/functions/authFunctions";
+import { loginApplication, verifyOtpAndLogin, sendOtp, getCurrentApplication, loginAdmin, signupUser, loginUser, getCurrentUser } from "@/functions/authFunctions";
 import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/db";
 
@@ -155,25 +155,24 @@ export async function loginAdminAction(
 ): Promise<ApplicationAuthFormState> {
   await connectToDatabase();
 
-  // Extract form data
-  const email =
+  // Extract form data - can be username or email
+  const usernameOrEmail =
     typeof (formData as any).get === "function"
-      ? (formData as FormData).get("email")?.toString()
-      : (formData as any).email;
+      ? (formData as FormData).get("username")?.toString() || (formData as FormData).get("email")?.toString()
+      : (formData as any).username || (formData as any).email;
 
   const password =
     typeof (formData as any).get === "function"
       ? (formData as FormData).get("password")?.toString()
       : (formData as any).password;
 
-  if (!email || !password) {
-    return { error: { message: ["Admin email and password are required"] } };
+  if (!usernameOrEmail || !password) {
+    return { error: { message: ["Admin username/email and password are required"] } };
   }
 
   try {
-    console.log(email,password)
     // Call loginAdmin function that uses bcrypt and Admin schema
-    const { token, admin } = await loginAdmin(email, password);
+    const { token, admin } = await loginAdmin(usernameOrEmail, password);
 
     // Save token in httpOnly cookie
     const cookieStore = await cookies();
@@ -197,4 +196,120 @@ export async function logoutAdminAction() {
   cookieStore.delete({ name: "token", path: "/" });
 
   return { success: true, message: "Admin logged out successfully" };
+}
+
+/**
+ * User Signup Action
+ */
+export async function signupUserAction(
+  prevState: ApplicationAuthFormState,
+  formData: FormData | Record<string, any>
+): Promise<ApplicationAuthFormState> {
+  await connectToDatabase();
+
+  // Extract form data
+  const name =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("name")?.toString()
+      : (formData as any).name;
+
+  const email =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("email")?.toString()
+      : (formData as any).email;
+
+  const password =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("password")?.toString()
+      : (formData as any).password;
+
+  if (!name || !email || !password) {
+    return { error: { message: ["Name, email, and password are required"] } };
+  }
+
+  try {
+    const { token, user } = await signupUser(name, email, password);
+
+    // Save token in httpOnly cookie
+    const cookieStore = await cookies();
+    cookieStore.set("userToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return { data: { user } };
+  } catch (error: any) {
+    return { error: { message: [error.message || "Signup failed"] } };
+  }
+}
+
+/**
+ * User Login Action
+ */
+export async function loginUserAction(
+  prevState: ApplicationAuthFormState,
+  formData: FormData | Record<string, any>
+): Promise<ApplicationAuthFormState> {
+  await connectToDatabase();
+
+  // Extract form data
+  const email =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("email")?.toString()
+      : (formData as any).email;
+
+  const password =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("password")?.toString()
+      : (formData as any).password;
+
+  if (!email || !password) {
+    return { error: { message: ["Email and password are required"] } };
+  }
+
+  try {
+    const { token, user } = await loginUser(email, password);
+
+    // Save token in httpOnly cookie
+    const cookieStore = await cookies();
+    cookieStore.set("userToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return { data: { user } };
+  } catch (error: any) {
+    return { error: { message: [error.message || "Login failed"] } };
+  }
+}
+
+/**
+ * User Logout Action
+ */
+export async function logoutUserAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete({ name: "userToken", path: "/" });
+  return { success: true };
+}
+
+/**
+ * Get Current User Action
+ */
+export async function getCurrentUserAction() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("userToken")?.value;
+
+  if (!token) return null;
+
+  try {
+    const user = await getCurrentUser(token);
+    return user;
+  } catch (err) {
+    console.error("Failed to get current user:", err);
+    return null;
+  }
 }

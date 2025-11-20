@@ -8,6 +8,7 @@ import { IApplication } from "@/models/Application";
 import { sendOtpEmail } from "@/lib/sendOtpEmail";  // Import the OTP email sending function
 import { generateOtp } from "@/lib/generateOtp";  // Import the OTP generation function
 import { Admin, IAdmin } from "@/models/Admin";
+import { User, IUser } from "@/models/User";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 if (!JWT_SECRET) throw new Error("JWT_SECRET not defined");
@@ -53,22 +54,28 @@ export const loginApplication = async (userName: string, password: string) => {
   };
 };
 /**
- * Admin login function
+ * Admin login function - accepts username or email
  */
-export const loginAdmin = async (email: string, password: string) => {
+export const loginAdmin = async (usernameOrEmail: string, password: string) => {
   await connectToDatabase();
 
-  // Find admin by username
-  const admin = await Admin.findOne({ email }).select("+password") as IAdmin | null;
-  if (!admin) throw new Error("Invalid admin email or password");
+  // Find admin by username or email
+  const admin = await Admin.findOne({ 
+    $or: [
+      { userName: usernameOrEmail },
+      { email: usernameOrEmail }
+    ]
+  }).select("+password") as IAdmin | null;
+  
+  if (!admin) throw new Error("Invalid admin username/email or password");
 
   // Compare password with hashed password
   const isMatch = await bcrypt.compare(password, admin.password);
-  if (!isMatch) throw new Error("Invalid admin email or password");
+  if (!isMatch) throw new Error("Invalid admin username/email or password");
 
   // Generate JWT token for admin
   const token = jwt.sign(
-    { _id: admin._id.toString(), email: admin.email, role: "admin" },
+    { _id: admin._id.toString(), email: admin.email, userName: admin.userName, role: "admin" },
     JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -84,6 +91,27 @@ export const loginAdmin = async (email: string, password: string) => {
       updatedAt: admin.updatedAt?.toISOString(),
     },
   };
+};
+
+/**
+ * Initialize admin user if it doesn't exist
+ */
+export const initializeAdmin = async () => {
+  await connectToDatabase();
+
+  const adminExists = await Admin.findOne({ userName: "admin" });
+  if (adminExists) {
+    return { message: "Admin user already exists" };
+  }
+
+  const admin = new Admin({
+    userName: "admin",
+    email: "admin@telusumrah.com",
+    password: "admin", // Will be hashed by pre-save hook
+  });
+
+  await admin.save();
+  return { message: "Admin user created successfully" };
 };
 /**
  * Send OTP to user's email for 2FA verification
@@ -176,6 +204,101 @@ export const getCurrentApplication = async (token: string) => {
     if (!app) return null;
 
     return serializeApplication(app);
+  } catch (err) {
+    console.error("Invalid or expired token:", err);
+    return null;
+  }
+};
+
+/**
+ * Serialize user object for client usage
+ */
+const serializeUser = (user: IUser) => ({
+  id: user._id.toString(),
+  name: user.name,
+  email: user.email,
+  avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+});
+
+/**
+ * User signup function
+ */
+export const signupUser = async (name: string, email: string, password: string) => {
+  await connectToDatabase();
+
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error("User with this email already exists");
+  }
+
+  // Create new user
+  const user = new User({
+    name,
+    email,
+    password, // Will be hashed by pre-save hook
+  });
+
+  await user.save();
+
+  // Generate JWT token
+  const token = jwt.sign(
+    { _id: user._id.toString(), email: user.email, role: "user" },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return {
+    token,
+    user: serializeUser(user),
+  };
+};
+
+/**
+ * User login function
+ */
+export const loginUser = async (email: string, password: string) => {
+  await connectToDatabase();
+
+  // Find user by email and include password
+  const user = await User.findOne({ email }).select("+password") as IUser | null;
+  if (!user) {
+    throw new Error("Invalid email or password");
+  }
+
+  // Compare password with hashed password
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    throw new Error("Invalid email or password");
+  }
+
+  // Generate JWT token
+  const token = jwt.sign(
+    { _id: user._id.toString(), email: user.email, role: "user" },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return {
+    token,
+    user: serializeUser(user),
+  };
+};
+
+/**
+ * Get current logged-in user from token
+ */
+export const getCurrentUser = async (token: string) => {
+  if (!token) return null;
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { _id: string; email: string; role: string };
+    await connectToDatabase();
+
+    const user = await User.findById(decoded._id) as IUser | null;
+    if (!user) return null;
+
+    return serializeUser(user);
   } catch (err) {
     console.error("Invalid or expired token:", err);
     return null;

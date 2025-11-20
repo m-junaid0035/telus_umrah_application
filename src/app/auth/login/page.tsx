@@ -51,18 +51,18 @@ export default function AdminLoginPage() {
         </div>
 
         <form action={formAction} className="space-y-6">
-          {/* Email */}
+          {/* Username */}
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-700">Email</Label>
+            <Label htmlFor="username" className="text-gray-700">Username</Label>
             <Input
-              id="email"
-              name="email" // matches backend field
-              type="email"
-              placeholder="admin@example.com"
+              id="username"
+              name="username"
+              type="text"
+              placeholder="admin"
               className="w-full border-gray-300 focus:border-black focus:ring-black"
               required
             />
-            {errorFor("email") && <p className="text-sm text-red-500">{errorFor("email")}</p>}
+            {errorFor("username") && <p className="text-sm text-red-500">{errorFor("username")}</p>}
           </div>
 
           {/* Password */}
