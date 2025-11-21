@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from './ui/switch';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format } from 'date-fns';
+import { format, isBefore, startOfDay, addDays } from 'date-fns';
 import { createCustomUmrahRequestAction } from '@/actions/customUmrahRequestActions';
 import { fetchAllHotelsAction } from '@/actions/hotelActions';
 import { fetchFormOptionsByTypeAction } from '@/actions/formOptionActions';
@@ -86,6 +86,9 @@ export function CustomUmrahForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [backendHotels, setBackendHotels] = useState<BackendHotel[]>([]);
   const [loadingHotels, setLoadingHotels] = useState(true);
+  
+  // Form validation errors state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
   // Form options from backend
   const [fromCities, setFromCities] = useState<Array<{name: string, value: string, logo?: string}>>([]);
@@ -170,23 +173,128 @@ export function CustomUmrahForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate all fields before submission
+    const validation = validateAllFields();
+    if (!validation.isValid) {
+      const errorCount = Object.keys(validation.errors).length;
+      const firstError = Object.values(validation.errors)[0];
+      
+      toast({
+        title: "Validation Error",
+        description: firstError || `Please fix ${errorCount} error${errorCount > 1 ? 's' : ''} before submitting`,
+        variant: "destructive",
+      });
+      
+      // Scroll to first error field after a short delay to ensure DOM is updated
+      setTimeout(() => {
+        const firstErrorField = document.querySelector('[class*="border-red-500"]');
+        if (firstErrorField) {
+          firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      
+      return;
+    }
+    
     setIsSubmitting(true);
 
-    // Validate required fields
-    if (!formData.name || !formData.email || !formData.phone || !formData.nationality) {
+    // Validate contact information
+    if (!formData.name || formData.name.trim().length < 2) {
       toast({
         title: "Error",
-        description: "Please fill in all contact information fields",
+        description: "Please enter your full name (at least 2 characters)",
         variant: "destructive",
       });
       setIsSubmitting(false);
       return;
     }
 
-    if (!formData.from || !formData.to || !formData.departDate || !formData.returnDate || !formData.airline || !formData.airlineClass) {
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       toast({
         title: "Error",
-        description: "Please fill in all flight details",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.phone || formData.phone.trim().length < 5) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid phone number",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.nationality || formData.nationality.trim().length < 2) {
+      toast({
+        title: "Error",
+        description: "Please select your nationality",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate flight details
+    if (!formData.from || formData.from.trim().length < 2) {
+      toast({
+        title: "Error",
+        description: "Please select departure city",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.to || formData.to.trim().length < 2) {
+      toast({
+        title: "Error",
+        description: "Please select destination city",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.departDate) {
+      toast({
+        title: "Error",
+        description: "Please select departure date",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.returnDate) {
+      toast({
+        title: "Error",
+        description: "Please select return date",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.airline || formData.airline.trim().length < 2) {
+      toast({
+        title: "Error",
+        description: "Please select an airline",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.airlineClass || formData.airlineClass.trim().length < 1) {
+      toast({
+        title: "Error",
+        description: "Please select airline class",
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -220,6 +328,16 @@ export function CustomUmrahForm() {
     }
 
     // Validate hotel selections
+    if (!hotelSelections || hotelSelections.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one hotel",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     const invalidHotels = hotelSelections.filter((h, idx) => {
       const missing = !h.hotelClass || !h.hotel || !h.stayDuration || !h.bedType;
       if (missing) {
@@ -234,9 +352,10 @@ export function CustomUmrahForm() {
     });
     
     if (invalidHotels.length > 0) {
+      const hotelNumbers = invalidHotels.map((_, idx) => idx + 1).join(', ');
       toast({
         title: "Error",
-        description: `Please fill in all hotel details${invalidHotels.length > 1 ? ' for all hotels' : ''}`,
+        description: `Please fill in all hotel details for hotel${invalidHotels.length > 1 ? 's' : ''} ${hotelNumbers}`,
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -248,7 +367,7 @@ export function CustomUmrahForm() {
       const duration = parseInt(h.stayDuration || '0');
       const invalid = isNaN(duration) || duration < 1 || duration > 90;
       if (invalid) {
-        console.log(`Hotel ${idx + 1} has invalid duration:`, h.stayDuration);
+        console.log(`Hotel has invalid duration:`, h.stayDuration);
       }
       return invalid;
     });
@@ -256,7 +375,22 @@ export function CustomUmrahForm() {
     if (invalidDurations.length > 0) {
       toast({
         title: "Error",
-        description: `Stay duration must be between 1 and 90 nights${invalidDurations.length > 1 ? ' for all hotels' : ''}`,
+        description: `Stay duration must be between 1 and 90 nights for all hotels`,
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate hotel names are not empty strings
+    const emptyHotelNames = hotelSelections.filter((h, idx) => {
+      return !h.hotel || h.hotel.trim().length === 0;
+    });
+    
+    if (emptyHotelNames.length > 0) {
+      toast({
+        title: "Error",
+        description: `Please select a hotel name for all hotel selections`,
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -278,18 +412,27 @@ export function CustomUmrahForm() {
       const formDataObj = new FormData();
       
       // Contact Information
-      formDataObj.append("name", formData.name);
-      formDataObj.append("email", formData.email);
-      formDataObj.append("phone", formData.phone);
-      formDataObj.append("nationality", formData.nationality);
+      formDataObj.append("name", formData.name.trim());
+      formDataObj.append("email", formData.email.trim().toLowerCase());
+      formDataObj.append("phone", formData.phone.trim());
+      formDataObj.append("nationality", formData.nationality.trim());
 
       // Flight Details
-      formDataObj.append("from", formData.from);
-      formDataObj.append("to", formData.to);
+      formDataObj.append("from", formData.from.trim());
+      formDataObj.append("to", formData.to.trim());
+      if (!formData.departDate || !formData.returnDate) {
+        toast({
+          title: "Error",
+          description: "Please select both departure and return dates",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
       formDataObj.append("departDate", formData.departDate.toISOString());
       formDataObj.append("returnDate", formData.returnDate.toISOString());
-      formDataObj.append("airline", formData.airline);
-      formDataObj.append("airlineClass", formData.airlineClass);
+      formDataObj.append("airline", formData.airline.trim());
+      formDataObj.append("airlineClass", formData.airlineClass.trim());
 
       // Travelers
       formDataObj.append("adults", formData.adults.toString());
@@ -310,17 +453,40 @@ export function CustomUmrahForm() {
       formDataObj.append("hotelCount", hotelSelections.length.toString());
       hotelSelections.forEach((hotel, index) => {
         const city = index === 0 ? "Makkah" : "Madina";
-        console.log(`Adding hotel ${index + 1}:`, { ...hotel, city });
-        formDataObj.append(`hotels[${index}][hotelClass]`, hotel.hotelClass || '');
-        formDataObj.append(`hotels[${index}][hotel]`, hotel.hotel || '');
-        formDataObj.append(`hotels[${index}][stayDuration]`, hotel.stayDuration || '1');
-        formDataObj.append(`hotels[${index}][bedType]`, hotel.bedType || '');
+        console.log(`Adding hotel ${index + 1}:`, { 
+          hotelClass: hotel.hotelClass,
+          hotel: hotel.hotel,
+          stayDuration: hotel.stayDuration,
+          bedType: hotel.bedType,
+          city 
+        });
+        formDataObj.append(`hotels[${index}][hotelClass]`, hotel.hotelClass.trim());
+        formDataObj.append(`hotels[${index}][hotel]`, hotel.hotel.trim());
+        formDataObj.append(`hotels[${index}][stayDuration]`, hotel.stayDuration.trim());
+        formDataObj.append(`hotels[${index}][bedType]`, hotel.bedType.trim());
         formDataObj.append(`hotels[${index}][city]`, city);
       });
       
       console.log("Submitting form with hotels:", hotelSelections.length);
+      console.log("Form data being sent:", {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        from: formData.from,
+        to: formData.to,
+        departDate: formData.departDate?.toISOString(),
+        returnDate: formData.returnDate?.toISOString(),
+        airline: formData.airline,
+        airlineClass: formData.airlineClass,
+        adults: formData.adults,
+        children: formData.children,
+        rooms: formData.rooms,
+        hotelCount: hotelSelections.length,
+      });
 
       const result = await createCustomUmrahRequestAction({}, formDataObj);
+      
+      console.log("Server response:", result);
 
       if (result?.data) {
         toast({
@@ -356,8 +522,19 @@ export function CustomUmrahForm() {
         let errorMessage = "Failed to submit request. Please try again.";
         
         if (result?.error) {
-          if (Array.isArray(result.error.message)) {
-            errorMessage = result.error.message[0];
+          // Handle Zod validation errors (fieldErrors format)
+          if (typeof result.error === 'object' && !result.error.message) {
+            const fieldErrors = Object.entries(result.error)
+              .map(([field, errors]) => {
+                const errorArray = Array.isArray(errors) ? errors : [errors];
+                return `${field}: ${errorArray.join(', ')}`;
+              })
+              .join('; ');
+            if (fieldErrors) {
+              errorMessage = `Validation error: ${fieldErrors}`;
+            }
+          } else if (Array.isArray(result.error.message)) {
+            errorMessage = result.error.message.join(', ');
           } else if (typeof result.error.message === 'string') {
             errorMessage = result.error.message;
           } else if (typeof result.error === 'object') {
@@ -476,15 +653,276 @@ export function CustomUmrahForm() {
     }
   };
 
+  // Validation functions
+  const validateField = (field: string, value: any) => {
+    const errors: Record<string, string> = { ...formErrors };
+    
+    switch (field) {
+      case 'name':
+        if (!value || value.trim().length < 2) {
+          errors.name = 'Name must be at least 2 characters';
+        } else {
+          delete errors.name;
+        }
+        break;
+      case 'email':
+        if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          errors.email = 'Please enter a valid email address';
+        } else {
+          delete errors.email;
+        }
+        break;
+      case 'phone':
+        if (!value || value.trim().length < 5) {
+          errors.phone = 'Please enter a valid phone number';
+        } else {
+          delete errors.phone;
+        }
+        break;
+      case 'nationality':
+        if (!value || value.trim().length < 2) {
+          errors.nationality = 'Please select your nationality';
+        } else {
+          delete errors.nationality;
+        }
+        break;
+      case 'from':
+        if (!value || value.trim().length < 2) {
+          errors.from = 'Please select departure city';
+        } else {
+          delete errors.from;
+        }
+        break;
+      case 'to':
+        if (!value || value.trim().length < 2) {
+          errors.to = 'Please select destination city';
+        } else {
+          delete errors.to;
+        }
+        break;
+      case 'departDate':
+        if (!value) {
+          errors.departDate = 'Please select departure date';
+        } else {
+          const today = startOfDay(new Date());
+          const selectedDate = startOfDay(new Date(value));
+          if (isBefore(selectedDate, today)) {
+            errors.departDate = 'Departure date cannot be in the past';
+          } else {
+            delete errors.departDate;
+            // If return date exists and is before or equal to departure, show error
+            if (formData.returnDate) {
+              const returnDate = startOfDay(new Date(formData.returnDate));
+              if (isBefore(returnDate, selectedDate) || returnDate.getTime() === selectedDate.getTime()) {
+                errors.returnDate = 'Return date must be after departure date';
+              } else {
+                delete errors.returnDate;
+              }
+            }
+          }
+        }
+        break;
+      case 'returnDate':
+        if (!value) {
+          errors.returnDate = 'Please select return date';
+        } else if (formData.departDate) {
+          const departDate = startOfDay(new Date(formData.departDate));
+          const returnDate = startOfDay(new Date(value));
+          if (isBefore(returnDate, departDate) || returnDate.getTime() === departDate.getTime()) {
+            errors.returnDate = 'Return date must be after departure date';
+          } else {
+            delete errors.returnDate;
+          }
+        } else {
+          errors.returnDate = 'Please select departure date first';
+        }
+        break;
+      case 'airline':
+        if (!value || value.trim().length < 2) {
+          errors.airline = 'Please select an airline';
+        } else {
+          delete errors.airline;
+        }
+        break;
+      case 'airlineClass':
+        if (!value || value.trim().length < 1) {
+          errors.airlineClass = 'Please select airline class';
+        } else {
+          delete errors.airlineClass;
+        }
+        break;
+    }
+    
+    setFormErrors(errors);
+  };
+
+  const validateAllFields = (): { isValid: boolean; errors: Record<string, string> } => {
+    const errors: Record<string, string> = {};
+    
+    // Contact information
+    if (!formData.name || formData.name.trim().length < 2) {
+      errors.name = 'Name must be at least 2 characters';
+    }
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    if (!formData.phone || formData.phone.trim().length < 5) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+    if (!formData.nationality || formData.nationality.trim().length < 2) {
+      errors.nationality = 'Please select your nationality';
+    }
+    
+    // Flight details
+    if (!formData.from || formData.from.trim().length < 2) {
+      errors.from = 'Please select departure city';
+    }
+    if (!formData.to || formData.to.trim().length < 2) {
+      errors.to = 'Please select destination city';
+    }
+    if (!formData.departDate) {
+      errors.departDate = 'Please select departure date';
+    } else {
+      const today = startOfDay(new Date());
+      const selectedDate = startOfDay(new Date(formData.departDate));
+      if (isBefore(selectedDate, today)) {
+        errors.departDate = 'Departure date cannot be in the past';
+      }
+    }
+    if (!formData.returnDate) {
+      errors.returnDate = 'Please select return date';
+    } else if (formData.departDate) {
+      const departDate = startOfDay(new Date(formData.departDate));
+      const returnDate = startOfDay(new Date(formData.returnDate));
+      if (isBefore(returnDate, departDate) || returnDate.getTime() === departDate.getTime()) {
+        errors.returnDate = 'Return date must be after departure date';
+      }
+    }
+    if (!formData.airline || formData.airline.trim().length < 2) {
+      errors.airline = 'Please select an airline';
+    }
+    if (!formData.airlineClass || formData.airlineClass.trim().length < 1) {
+      errors.airlineClass = 'Please select airline class';
+    }
+    
+    // Hotel validation
+    if (!hotelSelections || hotelSelections.length === 0) {
+      errors.hotels = 'Please add at least one hotel';
+    } else {
+      hotelSelections.forEach((hotel, idx) => {
+        if (!hotel.hotelClass || !hotel.hotel || !hotel.stayDuration || !hotel.bedType) {
+          errors[`hotel_${idx}`] = `Please fill in all details for hotel ${idx + 1}`;
+        } else {
+          const duration = parseInt(hotel.stayDuration || '0');
+          if (isNaN(duration) || duration < 1 || duration > 90) {
+            errors[`hotel_${idx}_duration`] = `Stay duration must be between 1 and 90 nights for hotel ${idx + 1}`;
+          }
+        }
+      });
+    }
+    
+    // Set errors in state immediately
+    setFormErrors(errors);
+    
+    return { isValid: Object.keys(errors).length === 0, errors };
+  };
+
   const nextStep = () => {
-    if (currentStep < 3) {
+    // Validate current step before proceeding
+    let canProceed = true;
+    const stepErrors: Record<string, string> = {};
+    
+    if (currentStep === 1) {
+      // Validate flight details
+      if (!formData.from || formData.from.trim().length < 2) {
+        stepErrors.from = 'Please select departure city';
+        canProceed = false;
+      }
+      if (!formData.to || formData.to.trim().length < 2) {
+        stepErrors.to = 'Please select destination city';
+        canProceed = false;
+      }
+      if (!formData.departDate) {
+        stepErrors.departDate = 'Please select departure date';
+        canProceed = false;
+      } else {
+        const today = startOfDay(new Date());
+        const selectedDate = startOfDay(new Date(formData.departDate));
+        if (isBefore(selectedDate, today)) {
+          stepErrors.departDate = 'Departure date cannot be in the past';
+          canProceed = false;
+        }
+      }
+      if (!formData.returnDate) {
+        stepErrors.returnDate = 'Please select return date';
+        canProceed = false;
+      } else if (formData.departDate) {
+        const departDate = startOfDay(new Date(formData.departDate));
+        const returnDate = startOfDay(new Date(formData.returnDate));
+        if (isBefore(returnDate, departDate) || returnDate.getTime() === departDate.getTime()) {
+          stepErrors.returnDate = 'Return date must be after departure date';
+          canProceed = false;
+        }
+      }
+      if (!formData.airline || formData.airline.trim().length < 2) {
+        stepErrors.airline = 'Please select an airline';
+        canProceed = false;
+      }
+      if (!formData.airlineClass || formData.airlineClass.trim().length < 1) {
+        stepErrors.airlineClass = 'Please select airline class';
+        canProceed = false;
+      }
+    } else if (currentStep === 2) {
+      // Validate hotels
+      if (!hotelSelections || hotelSelections.length === 0) {
+        stepErrors.hotels = 'Please add at least one hotel';
+        canProceed = false;
+      } else {
+        hotelSelections.forEach((hotel, idx) => {
+          if (!hotel.hotelClass || !hotel.hotel || !hotel.stayDuration || !hotel.bedType) {
+            stepErrors[`hotel_${idx}`] = `Please fill in all details for hotel ${idx + 1}`;
+            canProceed = false;
+          } else {
+            const duration = parseInt(hotel.stayDuration || '0');
+            if (isNaN(duration) || duration < 1 || duration > 90) {
+              stepErrors[`hotel_${idx}_duration`] = `Stay duration must be between 1 and 90 nights`;
+              canProceed = false;
+            }
+          }
+        });
+      }
+    }
+    
+    if (canProceed && currentStep < 3) {
+      setFormErrors({});
       setCurrentStep(currentStep + 1);
+    } else if (!canProceed) {
+      // Set errors and show them
+      setFormErrors(stepErrors);
+      // Show toast for first error
+      const firstError = Object.values(stepErrors)[0];
+      if (firstError) {
+        toast({
+          title: "Validation Error",
+          description: firstError,
+          variant: "destructive",
+        });
+      }
+      // Scroll to first error after state update
+      setTimeout(() => {
+        const firstErrorField = document.querySelector('[class*="border-red-500"]');
+        if (firstErrorField) {
+          firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      // Clear errors when going back
+      setFormErrors({});
     }
   };
 
@@ -619,6 +1057,34 @@ export function CustomUmrahForm() {
 
         {/* Right Side - Form Content */}
         <div className="flex-1 p-6 md:p-8">
+          {/* Error Summary Banner */}
+          {Object.keys(formErrors).length > 0 && (
+            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Please fix the following errors:
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc list-inside space-y-1">
+                      {Object.values(formErrors).slice(0, 5).map((error, idx) => (
+                        <li key={idx}>{error}</li>
+                      ))}
+                      {Object.keys(formErrors).length > 5 && (
+                        <li>...and {Object.keys(formErrors).length - 5} more error(s)</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Step 1: Additional Services & Flight Details */}
             {currentStep === 1 && (
@@ -751,8 +1217,14 @@ export function CustomUmrahForm() {
                       <Label htmlFor="from" className="text-sm mb-2 flex items-center gap-1">
                         <MapPin className="w-4 h-4" /> From
                       </Label>
-                      <Select value={formData.from} onValueChange={(value) => setFormData({ ...formData, from: value })}>
-                        <SelectTrigger className="bg-white">
+                      <Select 
+                        value={formData.from} 
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, from: value });
+                          validateField('from', value);
+                        }}
+                      >
+                        <SelectTrigger className={`bg-white ${formErrors.from ? 'border-red-500' : ''}`}>
                           <SelectValue placeholder="Select departure city" />
                         </SelectTrigger>
                         <SelectContent>
@@ -767,14 +1239,23 @@ export function CustomUmrahForm() {
                           )}
                         </SelectContent>
                       </Select>
+                      {formErrors.from && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.from}</p>
+                      )}
                     </div>
                     
                     <div>
                       <Label htmlFor="to" className="text-sm mb-2 flex items-center gap-1">
                         <MapPin className="w-4 h-4" /> To
                       </Label>
-                      <Select value={formData.to} onValueChange={(value) => setFormData({ ...formData, to: value })}>
-                        <SelectTrigger className="bg-white">
+                      <Select 
+                        value={formData.to} 
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, to: value });
+                          validateField('to', value);
+                        }}
+                      >
+                        <SelectTrigger className={`bg-white ${formErrors.to ? 'border-red-500' : ''}`}>
                           <SelectValue placeholder="Select destination" />
                         </SelectTrigger>
                         <SelectContent>
@@ -789,6 +1270,9 @@ export function CustomUmrahForm() {
                           )}
                         </SelectContent>
                       </Select>
+                      {formErrors.to && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.to}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -797,7 +1281,12 @@ export function CustomUmrahForm() {
                       </Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left bg-white">
+                          <Button 
+                            variant="outline" 
+                            className={`w-full justify-start text-left bg-white ${
+                              formErrors.departDate ? 'border-red-500 focus:border-red-500' : ''
+                            }`}
+                          >
                             {formData.departDate ? format(formData.departDate, 'PPP') : 'Select date'}
                           </Button>
                         </PopoverTrigger>
@@ -805,11 +1294,24 @@ export function CustomUmrahForm() {
                           <Calendar
                             mode="single"
                             selected={formData.departDate}
-                            onSelect={(date) => setFormData({ ...formData, departDate: date })}
+                            onSelect={(date) => {
+                              if (date) {
+                                setFormData({ ...formData, departDate: date });
+                                validateField('departDate', date);
+                                // If return date exists and is invalid, re-validate it
+                                if (formData.returnDate) {
+                                  validateField('returnDate', formData.returnDate);
+                                }
+                              }
+                            }}
+                            disabled={(date) => isBefore(date, startOfDay(new Date()))}
                             initialFocus
                           />
                         </PopoverContent>
                       </Popover>
+                      {formErrors.departDate && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.departDate}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -818,7 +1320,12 @@ export function CustomUmrahForm() {
                       </Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left bg-white">
+                          <Button 
+                            variant="outline" 
+                            className={`w-full justify-start text-left bg-white ${
+                              formErrors.returnDate ? 'border-red-500 focus:border-red-500' : ''
+                            }`}
+                          >
                             {formData.returnDate ? format(formData.returnDate, 'PPP') : 'Select date'}
                           </Button>
                         </PopoverTrigger>
@@ -826,11 +1333,30 @@ export function CustomUmrahForm() {
                           <Calendar
                             mode="single"
                             selected={formData.returnDate}
-                            onSelect={(date) => setFormData({ ...formData, returnDate: date })}
+                            onSelect={(date) => {
+                              if (date) {
+                                setFormData({ ...formData, returnDate: date });
+                                validateField('returnDate', date);
+                              }
+                            }}
+                            disabled={(date) => {
+                              const today = startOfDay(new Date());
+                              // Disable past dates
+                              if (isBefore(date, today)) return true;
+                              // Disable dates before or equal to departure date
+                              if (formData.departDate) {
+                                const departDate = startOfDay(new Date(formData.departDate));
+                                return isBefore(date, addDays(departDate, 1)) || date.getTime() === departDate.getTime();
+                              }
+                              return false;
+                            }}
                             initialFocus
                           />
                         </PopoverContent>
                       </Popover>
+                      {formErrors.returnDate && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.returnDate}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -862,12 +1388,21 @@ export function CustomUmrahForm() {
                           )}
                         </SelectContent>
                       </Select>
+                      {formErrors.airline && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.airline}</p>
+                      )}
                     </div>
                     
                     <div>
                       <Label htmlFor="airlineClass" className="text-sm mb-2">Class</Label>
-                      <Select value={formData.airlineClass} onValueChange={(value) => setFormData({ ...formData, airlineClass: value })}>
-                        <SelectTrigger className="bg-white">
+                      <Select 
+                        value={formData.airlineClass} 
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, airlineClass: value });
+                          validateField('airlineClass', value);
+                        }}
+                      >
+                        <SelectTrigger className={`bg-white ${formErrors.airlineClass ? 'border-red-500' : ''}`}>
                           <SelectValue placeholder="Select class" />
                         </SelectTrigger>
                         <SelectContent>
@@ -887,6 +1422,9 @@ export function CustomUmrahForm() {
                           )}
                         </SelectContent>
                       </Select>
+                      {formErrors.airlineClass && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.airlineClass}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1073,6 +1611,17 @@ export function CustomUmrahForm() {
                           <h4 className="text-sm text-gray-700 mb-3 font-semibold">Madina Hotel {index} Details</h4>
                         )}
                         
+                        {(formErrors[`hotel_${index}`] || formErrors[`hotel_${index}_duration`]) && (
+                          <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded">
+                            {formErrors[`hotel_${index}`] && (
+                              <p className="text-sm text-red-600">{formErrors[`hotel_${index}`]}</p>
+                            )}
+                            {formErrors[`hotel_${index}_duration`] && (
+                              <p className="text-sm text-red-600">{formErrors[`hotel_${index}_duration`]}</p>
+                            )}
+                          </div>
+                        )}
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <Label className="text-sm mb-2 flex items-center gap-1">
@@ -1080,9 +1629,17 @@ export function CustomUmrahForm() {
                             </Label>
                             <Select 
                               value={selection.hotelClass} 
-                              onValueChange={(value) => updateHotelSelection(index, 'hotelClass', value)}
+                              onValueChange={(value) => {
+                                updateHotelSelection(index, 'hotelClass', value);
+                                // Clear hotel error when hotel class is selected
+                                if (formErrors[`hotel_${index}`]) {
+                                  const newErrors = { ...formErrors };
+                                  delete newErrors[`hotel_${index}`];
+                                  setFormErrors(newErrors);
+                                }
+                              }}
                             >
-                              <SelectTrigger className="bg-white">
+                              <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.hotelClass ? 'border-red-500' : ''}`}>
                                 <SelectValue placeholder="Select rating first" />
                               </SelectTrigger>
                               <SelectContent>
@@ -1099,12 +1656,20 @@ export function CustomUmrahForm() {
                               value={selection.hotel ? `${index}:${selection.hotel}` : undefined} 
                               onValueChange={(value) => {
                                 // Extract hotel name from value format "selectionIndex:hotelName"
-                                const hotelName = value.includes(':') ? value.split(':')[1] : value;
+                                // Split only on the first colon to handle hotel names with colons
+                                const colonIndex = value.indexOf(':');
+                                const hotelName = colonIndex > -1 ? value.substring(colonIndex + 1) : value;
                                 updateHotelSelection(index, 'hotel', hotelName);
+                                // Clear hotel error when hotel is selected
+                                if (formErrors[`hotel_${index}`]) {
+                                  const newErrors = { ...formErrors };
+                                  delete newErrors[`hotel_${index}`];
+                                  setFormErrors(newErrors);
+                                }
                               }}
                               disabled={!selection.hotelClass}
                             >
-                              <SelectTrigger className="bg-white">
+                              <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.hotel ? 'border-red-500' : ''}`}>
                                 <SelectValue placeholder={selection.hotelClass ? "Select hotel" : "Select class first"} />
                               </SelectTrigger>
                               <SelectContent>
@@ -1181,9 +1746,17 @@ export function CustomUmrahForm() {
                             </Label>
                             <Select 
                               value={selection.bedType} 
-                              onValueChange={(value) => updateHotelSelection(index, 'bedType', value)}
+                              onValueChange={(value) => {
+                                updateHotelSelection(index, 'bedType', value);
+                                // Clear hotel error when bed type is selected
+                                if (formErrors[`hotel_${index}`]) {
+                                  const newErrors = { ...formErrors };
+                                  delete newErrors[`hotel_${index}`];
+                                  setFormErrors(newErrors);
+                                }
+                              }}
                             >
-                              <SelectTrigger className="bg-white">
+                              <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.bedType ? 'border-red-500' : ''}`}>
                                 <SelectValue placeholder="Select bed type" />
                               </SelectTrigger>
                               <SelectContent>
@@ -1222,11 +1795,17 @@ export function CustomUmrahForm() {
                       <Input
                         id="name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value });
+                          validateField('name', e.target.value);
+                        }}
                         placeholder="John Doe"
                         required
-                        className="bg-white"
+                        className={`bg-white ${formErrors.name ? 'border-red-500' : ''}`}
                       />
+                      {formErrors.name && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -1235,11 +1814,17 @@ export function CustomUmrahForm() {
                         id="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value });
+                          validateField('email', e.target.value);
+                        }}
                         placeholder="john@example.com"
                         required
-                        className="bg-white"
+                        className={`bg-white ${formErrors.email ? 'border-red-500' : ''}`}
                       />
+                      {formErrors.email && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -1248,20 +1833,29 @@ export function CustomUmrahForm() {
                         id="phone"
                         type="tel"
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, phone: e.target.value });
+                          validateField('phone', e.target.value);
+                        }}
                         placeholder="+92 300 1234567"
                         required
-                        className="bg-white"
+                        className={`bg-white ${formErrors.phone ? 'border-red-500' : ''}`}
                       />
+                      {formErrors.phone && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>
+                      )}
                     </div>
 
                     <div>
                       <Label htmlFor="nationality" className="text-sm mb-2">Nationality</Label>
                       <Select 
                         value={formData.nationality} 
-                        onValueChange={(value) => setFormData({ ...formData, nationality: value })}
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, nationality: value });
+                          validateField('nationality', value);
+                        }}
                       >
-                        <SelectTrigger className="bg-white">
+                        <SelectTrigger className={`bg-white ${formErrors.nationality ? 'border-red-500' : ''}`}>
                           <SelectValue placeholder="Select nationality" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1287,6 +1881,9 @@ export function CustomUmrahForm() {
                           )}
                         </SelectContent>
                       </Select>
+                      {formErrors.nationality && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.nationality}</p>
+                      )}
                     </div>
                   </div>
                 </div>

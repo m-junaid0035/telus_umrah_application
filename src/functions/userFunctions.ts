@@ -80,3 +80,15 @@ export const getUserStatistics = async () => {
   };
 };
 
+/**
+ * Delete user by ID
+ */
+export const deleteUser = async (id: string) => {
+  await connectToDatabase();
+  const user = await User.findByIdAndDelete(id);
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return { message: "User deleted successfully" };
+};
+

@@ -16,12 +16,14 @@ interface LoginDialogProps {
 export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: LoginDialogProps) {
   const [mode, setMode] = useState<'login' | 'signup'>(defaultMode);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login, signup } = useAuth();
   
   // Reset mode when dialog opens with new defaultMode
   useEffect(() => {
     if (open) {
       setMode(defaultMode);
+      setError(null);
     }
   }, [open, defaultMode]);
   
@@ -34,17 +36,24 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       if (mode === 'login') {
         await login(formData.email, formData.password);
+        onOpenChange(false);
+        setFormData({ name: '', email: '', password: '' });
       } else {
         await signup(formData.name, formData.email, formData.password);
+        onOpenChange(false);
+        setFormData({ name: '', email: '', password: '' });
       }
-      onOpenChange(false);
-      setFormData({ name: '', email: '', password: '' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth error:', error);
+      const errorMessage = error?.message || (mode === 'login' 
+        ? 'Invalid email or password. Please check your credentials and try again.' 
+        : 'Signup failed. Please try again.');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -60,6 +69,7 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
   const toggleMode = () => {
     setMode(mode === 'login' ? 'signup' : 'login');
     setFormData({ name: '', email: '', password: '' });
+    setError(null);
   };
 
   return (
@@ -79,29 +89,31 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <AnimatePresence mode="wait">
             {mode === 'signup' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Label htmlFor="name" className="text-sm text-gray-700">
-                  Full Name
-                </Label>
-                <div className="relative mt-2">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required={mode === 'signup'}
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="pl-10"
-                    placeholder="John Doe"
-                  />
-                </div>
-              </motion.div>
+              <>
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Label htmlFor="name" className="text-sm text-gray-700">
+                    Full Name
+                  </Label>
+                  <div className="relative mt-2">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      required={mode === 'signup'}
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="pl-10"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
 
@@ -152,6 +164,13 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
               <button type="button" className="text-blue-600 hover:text-blue-700">
                 Forgot password?
               </button>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
             </div>
           )}
 

@@ -68,24 +68,39 @@ function parseCustomUmrahRequestFormData(formData: FormData) {
   const childAgesStr = formData.getAll("childAges");
   childAgesStr.forEach((age) => {
     const num = Number(age);
-    if (!isNaN(num)) childAges.push(num);
+    if (!isNaN(num) && num >= 0 && num <= 16) childAges.push(num);
   });
 
   // Parse hotels array
   const hotels: any[] = [];
   const hotelCount = Number(formData.get("hotelCount") || 0);
+  console.log(`Parsing ${hotelCount} hotels from FormData`);
+  
   for (let i = 0; i < hotelCount; i++) {
-    const hotel = {
-      hotelClass: str(formData, `hotels[${i}][hotelClass]`),
-      hotel: str(formData, `hotels[${i}][hotel]`),
-      stayDuration: str(formData, `hotels[${i}][stayDuration]`),
-      bedType: str(formData, `hotels[${i}][bedType]`),
-      city: str(formData, `hotels[${i}][city]`),
+    const hotelClass = str(formData, `hotels[${i}][hotelClass]`);
+    const hotel = str(formData, `hotels[${i}][hotel]`);
+    const stayDuration = str(formData, `hotels[${i}][stayDuration]`);
+    const bedType = str(formData, `hotels[${i}][bedType]`);
+    const city = str(formData, `hotels[${i}][city]`);
+    
+    console.log(`Hotel ${i}:`, { hotelClass, hotel, stayDuration, bedType, city });
+    
+    const hotelObj = {
+      hotelClass,
+      hotel,
+      stayDuration,
+      bedType,
+      city,
     };
-    if (hotel.hotelClass && hotel.hotel && hotel.stayDuration && hotel.bedType && hotel.city) {
-      hotels.push(hotel);
+    
+    if (hotelObj.hotelClass && hotelObj.hotel && hotelObj.stayDuration && hotelObj.bedType && hotelObj.city) {
+      hotels.push(hotelObj);
+    } else {
+      console.warn(`Hotel ${i} is missing required fields:`, hotelObj);
     }
   }
+
+  console.log(`Successfully parsed ${hotels.length} valid hotels`);
 
   return {
     name: str(formData, "name"),
@@ -119,17 +134,63 @@ export async function createCustomUmrahRequestAction(
   prevState: CustomUmrahRequestFormState,
   formData: FormData
 ): Promise<CustomUmrahRequestFormState> {
-  await connectToDatabase();
-  const parsed = parseCustomUmrahRequestFormData(formData);
-  const result = customUmrahRequestSchema.safeParse(parsed);
-
-  if (!result.success) return { error: result.error.flatten().fieldErrors };
-
   try {
-    const request = await createCustomUmrahRequest(result.data);
+    // Connect to database
+    await connectToDatabase();
+    
+    // Parse form data
+    let parsed;
+    try {
+      parsed = parseCustomUmrahRequestFormData(formData);
+    } catch (parseError: any) {
+      console.error("Error parsing form data:", parseError);
+      return { error: { message: [parseError?.message || "Invalid form data"] } };
+    }
+    
+    console.log("Parsed form data:", {
+      name: parsed.name,
+      email: parsed.email,
+      phone: parsed.phone,
+      from: parsed.from,
+      to: parsed.to,
+      departDate: parsed.departDate,
+      returnDate: parsed.returnDate,
+      airline: parsed.airline,
+      airlineClass: parsed.airlineClass,
+      adults: parsed.adults,
+      children: parsed.children,
+      rooms: parsed.rooms,
+      hotelsCount: parsed.hotels?.length || 0,
+      hotels: parsed.hotels,
+    });
+    
+    // Validate with Zod schema
+    const result = customUmrahRequestSchema.safeParse(parsed);
+
+    if (!result.success) {
+      console.error("Validation errors:", result.error.flatten().fieldErrors);
+      return { error: result.error.flatten().fieldErrors };
+    }
+
+    // Create request in database
+    console.log("Validation passed, creating request...");
+    let request;
+    try {
+      request = await createCustomUmrahRequest(result.data);
+      console.log("Request created successfully:", request._id);
+    } catch (dbError: any) {
+      console.error("Database error:", dbError);
+      return { error: { message: [dbError?.message || "Failed to save request to database"] } };
+    }
+    
     return { data: request };
   } catch (error: any) {
-    return { error: { message: [error?.message || "Failed to create request"] } };
+    console.error("Unexpected error creating custom Umrah request:", error);
+    // Log full error for debugging
+    if (error?.stack) {
+      console.error("Error stack:", error.stack);
+    }
+    return { error: { message: [error?.message || "An unexpected error occurred. Please try again."] } };
   }
 }
 

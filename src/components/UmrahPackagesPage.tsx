@@ -428,42 +428,54 @@ export function UmrahPackagesPage() {
                         {(pkg.hotels.makkah || pkg.hotels.madinah) && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                             {pkg.hotels.makkah && (
-                              <div className="bg-gray-50 rounded-lg p-2">
-                                <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                                  <div className="flex items-center gap-1.5">
-                                    <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
-                                    <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
+                              <Link
+                                href={`/makkah-hotels/makkah/${pkg.hotels.makkah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                                className="block"
+                              >
+                                <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                                  <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                                    <div className="flex items-center gap-1.5">
+                                      <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
+                                      <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
+                                    </div>
+                                    <ArrowRight className="w-3 h-3 text-gray-400" />
+                                  </div>
+                                  <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.makkah.name}</p>
+                                  {pkg.hotels.makkah.distance && (
+                                    <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.makkah.distance}</p>
+                                  )}
+                                  <div className="flex">
+                                    {[...Array(pkg.hotels.makkah.star || 0)].map((_, i) => (
+                                      <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                                    ))}
                                   </div>
                                 </div>
-                                <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.makkah.name}</p>
-                                {pkg.hotels.makkah.distance && (
-                                  <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.makkah.distance}</p>
-                                )}
-                                <div className="flex">
-                                  {[...Array(pkg.hotels.makkah.star || 0)].map((_, i) => (
-                                    <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                                  ))}
-                                </div>
-                              </div>
+                              </Link>
                             )}
                             {pkg.hotels.madinah && (
-                              <div className="bg-gray-50 rounded-lg p-2">
-                                <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                                  <div className="flex items-center gap-1.5">
-                                    <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
-                                    <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
+                              <Link
+                                href={`/madina-hotels/madinah/${pkg.hotels.madinah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                                className="block"
+                              >
+                                <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                                  <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                                    <div className="flex items-center gap-1.5">
+                                      <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
+                                      <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
+                                    </div>
+                                    <ArrowRight className="w-3 h-3 text-gray-400" />
+                                  </div>
+                                  <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.madinah.name}</p>
+                                  {pkg.hotels.madinah.distance && (
+                                    <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.madinah.distance}</p>
+                                  )}
+                                  <div className="flex">
+                                    {[...Array(pkg.hotels.madinah.star || 0)].map((_, i) => (
+                                      <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                                    ))}
                                   </div>
                                 </div>
-                                <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.madinah.name}</p>
-                                {pkg.hotels.madinah.distance && (
-                                  <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.madinah.distance}</p>
-                                )}
-                                <div className="flex">
-                                  {[...Array(pkg.hotels.madinah.star || 0)].map((_, i) => (
-                                    <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                                  ))}
-                                </div>
-                              </div>
+                              </Link>
                             )}
                           </div>
                         )}

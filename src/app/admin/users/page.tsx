@@ -6,8 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Users, Search, Loader2 } from "lucide-react";
-import { fetchAllUsersAction } from "@/actions/userActions";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Users, Search, Loader2, Trash2 } from "lucide-react";
+import { fetchAllUsersAction, deleteUserAction } from "@/actions/userActions";
+import { toast } from "@/hooks/use-toast";
 
 interface User {
   _id: string;
@@ -22,25 +25,17 @@ export default function UsersPage() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const result = await fetchAllUsersAction();
-        if (result?.data) {
-          // Filter out any items with null required fields
-          const validUsers = result.data.filter((user) => user && user.createdAt) as User[];
-          setUsers(validUsers);
-          setFilteredUsers(validUsers);
-        }
-      } catch (error) {
-        console.error("Failed to load users:", error);
-      } finally {
-        setLoading(false);
-      }
+    const loadData = async () => {
+      setLoading(true);
+      await loadUsers();
+      setLoading(false);
     };
-
-    loadUsers();
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -73,6 +68,56 @@ export default function UsersPage() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const loadUsers = async () => {
+    try {
+      const result = await fetchAllUsersAction();
+      if (result?.data) {
+        const validUsers = result.data.filter((user) => user && user.createdAt) as User[];
+        setUsers(validUsers);
+        setFilteredUsers(validUsers);
+      }
+    } catch (error) {
+      console.error("Failed to load users:", error);
+    }
+  };
+
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!userToDelete) return;
+
+    setDeleting(true);
+    try {
+      const result = await deleteUserAction(userToDelete._id);
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error.message?.[0] || "Failed to delete user",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "User deleted successfully",
+        });
+        await loadUsers();
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -130,6 +175,7 @@ export default function UsersPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Registration Date</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -160,21 +206,71 @@ export default function UsersPage() {
                           Active
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(user)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">
-                {searchTerm ? "No users found matching your search" : "No users registered yet"}
-              </p>
-            </div>
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-12">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">
+                  {searchTerm ? "No users found matching your search" : "No users registered yet"}
+                </p>
+              </TableCell>
+            </TableRow>
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {userToDelete?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setUserToDelete(null);
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

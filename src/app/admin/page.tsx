@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
 import { 
   Users, 
   Package, 
@@ -16,9 +19,10 @@ import {
   DollarSign,
   Loader2,
   MapPin,
-  Star
+  Star,
+  Trash2
 } from "lucide-react";
-import { fetchAllUsersAction, fetchUserStatisticsAction } from "@/actions/userActions";
+import { fetchAllUsersAction, fetchUserStatisticsAction, deleteUserAction } from "@/actions/userActions";
 import { fetchAllHotelsAction } from "@/actions/hotelActions";
 import { fetchHotelStatisticsAction } from "@/actions/hotelStatisticsActions";
 import { fetchAllUmrahPackagesAction } from "@/actions/packageActions";
@@ -67,6 +71,9 @@ export default function AdminPage() {
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [hotelStatistics, setHotelStatistics] = useState<HotelStatistics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [stats, setStats] = useState({
     totalPackages: 0,
     totalHotels: 0,
@@ -99,7 +106,6 @@ export default function AdminPage() {
         ]);
 
         if (usersRes?.data) {
-          // Filter out any items with null required fields
           const validUsers = usersRes.data.filter((user) => user && user.createdAt) as User[];
           setUsers(validUsers);
         }
@@ -138,6 +144,55 @@ export default function AdminPage() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const loadUsers = async () => {
+    try {
+      const usersRes = await fetchAllUsersAction();
+      if (usersRes?.data) {
+        const validUsers = usersRes.data.filter((user) => user && user.createdAt) as User[];
+        setUsers(validUsers);
+      }
+    } catch (error) {
+      console.error("Failed to load users:", error);
+    }
+  };
+
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!userToDelete) return;
+
+    setDeleting(true);
+    try {
+      const result = await deleteUserAction(userToDelete._id);
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error.message?.[0] || "Failed to delete user",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "User deleted successfully",
+        });
+        await loadUsers();
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -316,6 +371,7 @@ export default function AdminPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -346,6 +402,16 @@ export default function AdminPage() {
                           Active
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(user)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -359,6 +425,44 @@ export default function AdminPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {userToDelete?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setUserToDelete(null);
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

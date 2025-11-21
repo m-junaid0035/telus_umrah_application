@@ -1,7 +1,7 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/db";
-import { getAllUsers, getUserById, getUserStatistics } from "@/functions/userFunctions";
+import { getAllUsers, getUserById, getUserStatistics, deleteUser } from "@/functions/userFunctions";
 
 export type UserFormState = {
   error?: Record<string, string[]> | { message?: string[] };
@@ -36,6 +36,16 @@ export async function fetchUserStatisticsAction() {
     return { data: statistics };
   } catch (error: any) {
     return { error: { message: [error?.message || "Failed to fetch user statistics"] } };
+  }
+}
+
+export async function deleteUserAction(id: string) {
+  await connectToDatabase();
+  try {
+    await deleteUser(id);
+    return { data: { message: "User deleted successfully" } };
+  } catch (error: any) {
+    return { error: { message: [error?.message || "Failed to delete user"] } };
   }
 }
 

@@ -1,15 +1,15 @@
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import {  useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { fetchAllUmrahPackagesAction } from '@/actions/packageActions';
 import { fetchAllHotelsAction } from '@/actions/hotelActions';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { 
-  Sparkles, 
-  Shield, 
-  Clock, 
+import {
+  Sparkles,
+  Shield,
+  Clock,
   HeadphonesIcon,
   Award,
   Globe,
@@ -136,26 +136,26 @@ interface BackendHotel {
 // Our Services Data
 // To customize service images, simply replace the image URL below
 const services = [
-  { 
-    name: 'Flight Booking', 
+  {
+    name: 'Flight Booking',
     description: 'Book flights to worldwide destinations',
     // Replace the image URL below with your custom image
     image: 'https://images.unsplash.com/photo-1719058292683-a358b17bc282?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmbGlnaHQlMjBhaXJwbGFuZSUyMGJvb2tpbmd8ZW58MXx8fHwxNzYyMTA5NTkwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
   },
-  { 
-    name: 'Hotel Reservation', 
+  {
+    name: 'Hotel Reservation',
     description: 'Luxury hotels at best prices',
     // Replace the image URL below with your custom image
     image: 'https://images.unsplash.com/photo-1700878354382-46816bf47ffc?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
-  { 
-    name: 'Visa Services', 
+  {
+    name: 'Visa Services',
     description: 'Hassle-free visa processing',
     // Replace the image URL below with your custom image
     image: 'https://images.unsplash.com/photo-1655722725332-9925c96dd627?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYXNzcG9ydCUyMHZpc2ElMjB0cmF2ZWx8ZW58MXx8fHwxNzYyMDgwMDk2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
   },
-  { 
-    name: 'Umrah Service', 
+  {
+    name: 'Umrah Service',
     description: 'Complete Umrah pilgrimage services',
     // Replace the image URL below with your custom image
     image: 'https://images.unsplash.com/photo-1564769625905-50e93615e769?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
@@ -257,7 +257,7 @@ export function HomePage() {
   const checkScroll = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    
+
     setCanScrollLeft(container.scrollLeft > 0);
     setCanScrollRight(
       container.scrollLeft < container.scrollWidth - container.clientWidth - 10
@@ -267,11 +267,11 @@ export function HomePage() {
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    
+
     checkScroll();
     container.addEventListener('scroll', checkScroll);
     window.addEventListener('resize', checkScroll);
-    
+
     return () => {
       container.removeEventListener('scroll', checkScroll);
       window.removeEventListener('resize', checkScroll);
@@ -283,7 +283,7 @@ export function HomePage() {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroCarouselImages.length);
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -310,7 +310,7 @@ export function HomePage() {
             <motion.div
               key={index}
               initial={{ opacity: 0 }}
-              animate={{ 
+              animate={{
                 opacity: currentSlide === index ? 1 : 0,
                 scale: currentSlide === index ? 1 : 1.05,
               }}
@@ -386,8 +386,8 @@ export function HomePage() {
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="bg-white/95 backdrop-blur-sm border-2 border-white text-gray-900 hover:bg-white hover:border-white px-8 py-6 text-base shadow-xl min-w-[240px] group"
                   >
                     <Sparkles className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
@@ -469,11 +469,10 @@ export function HomePage() {
             <motion.button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`rounded-full transition-all ${
-                currentSlide === index 
-                  ? 'bg-white h-12 w-3' 
+              className={`rounded-full transition-all ${currentSlide === index
+                  ? 'bg-white h-12 w-3'
                   : 'bg-white/50 h-3 w-3 hover:bg-white/80'
-              }`}
+                }`}
               whileHover={{ scale: 1.3 }}
               whileTap={{ scale: 0.9 }}
               aria-label={`Go to slide ${index + 1}`}
@@ -522,7 +521,7 @@ export function HomePage() {
                 const makkahHotel = pkg.hotels?.makkah;
                 const madinahHotel = pkg.hotels?.madinah;
                 const features = pkg.features || [];
-                
+
                 return (
                   <motion.div
                     key={pkg._id}
@@ -531,187 +530,185 @@ export function HomePage() {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className={`overflow-hidden hover:shadow-xl transition-shadow ${
-                      pkg.popular ? 'ring-2 ring-blue-500' : ''
-                    }`}>
+                    <Card className={`overflow-hidden hover:shadow-xl transition-shadow ${pkg.popular ? 'ring-2 ring-blue-500' : ''
+                      }`}>
                       <CardContent className="p-0">
                         {/* Header Section */}
                         <div className={`${badgeColor} p-4 text-white`}>
-                      <div className="flex items-start justify-between flex-wrap gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            {pkg.badge && (
-                              <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
-                                {pkg.badge}
-                              </Badge>
-                            )}
-                            {pkg.popular && (
-                              <Badge className="bg-yellow-500 text-white flex items-center gap-1 text-xs">
-                                <Star className="w-3 h-3 fill-white" />
-                                <span>Popular</span>
-                              </Badge>
-                            )}
-                          </div>
-                          <h3 className="font-bold text-xl mb-2">{pkg.name}</h3>
-                          <div className="flex items-center gap-3 text-white/90 flex-wrap text-xs">
-                            {pkg.duration && (
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5" />
-                                <span>{pkg.duration} Days</span>
+                          <div className="flex items-start justify-between flex-wrap gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                {pkg.badge && (
+                                  <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
+                                    {pkg.badge}
+                                  </Badge>
+                                )}
+                                {pkg.popular && (
+                                  <Badge className="bg-yellow-500 text-white flex items-center gap-1 text-xs">
+                                    <Star className="w-3 h-3 fill-white" />
+                                    <span>Popular</span>
+                                  </Badge>
+                                )}
                               </div>
-                            )}
-                            {pkg.departureCity && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3.5 h-3.5" />
-                                <span>{pkg.departureCity}</span>
-                              </div>
-                            )}
-                            {pkg.airline && (
-                              <div className="flex items-center gap-1.5">
-                                <img 
-                                  src={getAirlineLogo(pkg.airline).toString()} 
-                                  alt={pkg.airline}
-                                  className="w-4 h-4 object-contain bg-white rounded p-0.5"
-                                />
-                                <span className="truncate max-w-[120px]">{pkg.airline}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-white/80 text-xs mb-0.5">Starting from</p>
-                          <p className="text-2xl font-bold">
-                            PKR {pkg.price?.toLocaleString() || 'N/A'}
-                          </p>
-                          <p className="text-white/80 text-xs">per person</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4">
-                      {/* Rating */}
-                      {(pkg.rating || pkg.reviews) && (
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-3.5 h-3.5 ${
-                                  i < Math.floor(pkg.rating || 0)
-                                    ? 'fill-yellow-400 text-yellow-400'
-                                    : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-xs text-gray-600">
-                            {pkg.rating || 0} ({pkg.reviews || 0} reviews)
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Hotels */}
-                      {(makkahHotel || madinahHotel) && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                          {makkahHotel && (
-                            <Link 
-                              href={`/makkah-hotels/makkah/${makkahHotel.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
-                              className="block"
-                            >
-                              <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
-                                <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                              <h3 className="font-bold text-xl mb-2">{pkg.name}</h3>
+                              <div className="flex items-center gap-3 text-white/90 flex-wrap text-xs">
+                                {pkg.duration && (
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    <span>{pkg.duration} Days</span>
+                                  </div>
+                                )}
+                                {pkg.departureCity && (
+                                  <div className="flex items-center gap-1">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    <span>{pkg.departureCity}</span>
+                                  </div>
+                                )}
+                                {pkg.airline && (
                                   <div className="flex items-center gap-1.5">
-                                    <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
-                                    <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
-                                  </div>
-                                  <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                </div>
-                                <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{makkahHotel.name || 'N/A'}</p>
-                                {makkahHotel.distance && (
-                                  <p className="text-xs text-gray-500 mb-0.5">{makkahHotel.distance}</p>
-                                )}
-                                {makkahHotel.star && (
-                                  <div className="flex">
-                                    {[...Array(makkahHotel.star)].map((_, i) => (
-                                      <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                                    ))}
+                                    <img
+                                      src={getAirlineLogo(pkg.airline).toString()}
+                                      alt={pkg.airline}
+                                      className="w-4 h-4 object-contain bg-white rounded p-0.5"
+                                    />
+                                    <span className="truncate max-w-[120px]">{pkg.airline}</span>
                                   </div>
                                 )}
                               </div>
-                            </Link>
-                          )}
-                          {madinahHotel && (
-                            <Link 
-                              href={`/madina-hotels/madinah/${madinahHotel.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
-                              className="block"
-                            >
-                              <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
-                                <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                                  <div className="flex items-center gap-1.5">
-                                    <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
-                                    <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
-                                  </div>
-                                  <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                </div>
-                                <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{madinahHotel.name || 'N/A'}</p>
-                                {madinahHotel.distance && (
-                                  <p className="text-xs text-gray-500 mb-0.5">{madinahHotel.distance}</p>
-                                )}
-                                {madinahHotel.star && (
-                                  <div className="flex">
-                                    {[...Array(madinahHotel.star)].map((_, i) => (
-                                      <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </Link>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Features */}
-                      {features.length > 0 && (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
-                          {features.slice(0, 8).map((feature: any, idx: number) => (
-                            <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
-                              <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
-                              <span className="truncate text-xs">{feature.feature_text || feature}</span>
                             </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-3 border-t">
-                        {pkg.travelers && (
-                          <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                            <Users className="w-3.5 h-3.5" />
-                            <span>{pkg.travelers}</span>
+                            <div className="text-right">
+                              <p className="text-white/80 text-xs mb-0.5">Starting from</p>
+                              <p className="text-2xl font-bold">
+                                PKR {pkg.price?.toLocaleString() || 'N/A'}
+                              </p>
+                              <p className="text-white/80 text-xs">per person</p>
+                            </div>
                           </div>
-                        )}
-                        <div className="flex gap-2 ml-auto">
-                          <Link href={`/umrah-packages/${pkg._id}`}>
-                            <Button variant="outline" size="sm" className="text-xs h-8">
-                              View Details
-                            </Button>
-                          </Link>
-                          <Link href="/umrah-packages">
-                            <Button 
-                              size="sm"
-                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-xs h-8"
-                            >
-                              Book Now
-                              <Plane className="w-3.5 h-3.5 ml-1.5" />
-                            </Button>
-                          </Link>
                         </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+
+                        {/* Content */}
+                        <div className="p-4">
+                          {/* Rating */}
+                          {(pkg.rating || pkg.reviews) && (
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="flex items-center">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-3.5 h-3.5 ${i < Math.floor(pkg.rating || 0)
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-300'
+                                      }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-xs text-gray-600">
+                                {pkg.rating || 0} ({pkg.reviews || 0} reviews)
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Hotels */}
+                          {(makkahHotel || madinahHotel) && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                              {makkahHotel && (
+                                <Link
+                                  href={`/makkah-hotels/makkah/${makkahHotel.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                                  className="block"
+                                >
+                                  <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                                    <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                                      <div className="flex items-center gap-1.5">
+                                        <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
+                                        <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
+                                      </div>
+                                      <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                                    </div>
+                                    <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{makkahHotel.name || 'N/A'}</p>
+                                    {makkahHotel.distance && (
+                                      <p className="text-xs text-gray-500 mb-0.5">{makkahHotel.distance}</p>
+                                    )}
+                                    {makkahHotel.star && (
+                                      <div className="flex">
+                                        {[...Array(makkahHotel.star)].map((_, i) => (
+                                          <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </Link>
+                              )}
+                              {madinahHotel && (
+                                <Link
+                                  href={`/madina-hotels/madinah/${madinahHotel.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                                  className="block"
+                                >
+                                  <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+                                    <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                                      <div className="flex items-center gap-1.5">
+                                        <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
+                                        <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
+                                      </div>
+                                      <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                                    </div>
+                                    <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{madinahHotel.name || 'N/A'}</p>
+                                    {madinahHotel.distance && (
+                                      <p className="text-xs text-gray-500 mb-0.5">{madinahHotel.distance}</p>
+                                    )}
+                                    {madinahHotel.star && (
+                                      <div className="flex">
+                                        {[...Array(madinahHotel.star)].map((_, i) => (
+                                          <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </Link>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Features */}
+                          {features.length > 0 && (
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
+                              {features.slice(0, 8).map((feature: any, idx: number) => (
+                                <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
+                                  <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
+                                  <span className="truncate text-xs">{feature.feature_text || feature}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Footer */}
+                          <div className="flex items-center justify-between pt-3 border-t">
+                            {pkg.travelers && (
+                              <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                                <Users className="w-3.5 h-3.5" />
+                                <span>{pkg.travelers}</span>
+                              </div>
+                            )}
+                            <div className="flex gap-2 ml-auto">
+                              <Link href={`/umrah-packages/${pkg._id}`}>
+                                <Button variant="outline" size="sm" className="text-xs h-8">
+                                  View Details
+                                </Button>
+                              </Link>
+                              <Link href="/umrah-packages">
+                                <Button
+                                  size="sm"
+                                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-xs h-8"
+                                >
+                                  Book Now
+                                  <Plane className="w-3.5 h-3.5 ml-1.5" />
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 );
               })
             )}
@@ -726,7 +723,7 @@ export function HomePage() {
           >
             <Link href="/umrah-packages">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button 
+                <Button
                   className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-5 rounded-lg text-sm gap-2 shadow-md"
                 >
                   View All Packages
@@ -734,11 +731,11 @@ export function HomePage() {
                 </Button>
               </motion.div>
             </Link>
-            
+
             <Link href="/customize-umrah">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="border-2 border-green-600 text-green-600 hover:bg-green-50 px-8 py-5 rounded-lg text-sm gap-2"
                 >
                   <Settings className="w-4 h-4" />
@@ -800,7 +797,7 @@ export function HomePage() {
             </motion.button>
 
             {/* Scroll Container */}
-            <div 
+            <div
               ref={scrollContainerRef}
               className="overflow-x-auto scrollbar-hide overflow-y-visible px-12"
             >
@@ -822,10 +819,10 @@ export function HomePage() {
                         alt={service.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
-                      
+
                       {/* Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                      
+
                       {/* Content */}
                       <div className="absolute inset-0 flex flex-col justify-end p-6">
                         <motion.div
@@ -838,7 +835,7 @@ export function HomePage() {
                           <h3 className="text-white text-xl md:text-2xl mb-2">
                             {service.name}
                           </h3>
-                          
+
                           {/* Description */}
                           <p className="text-white/80 text-sm md:text-base">
                             {service.description}
@@ -915,7 +912,7 @@ export function HomePage() {
                     />
                   </motion.div>
                 ))}
-                
+
                 {/* Duplicate set for seamless loop */}
                 {airlines.map((airline, index) => (
                   <motion.div
@@ -1005,10 +1002,10 @@ export function HomePage() {
                 const slug = hotel.name.toLowerCase().replace(/\s+/g, '-');
                 const cityPath = hotel.type === 'Makkah' ? 'makkah' : 'madinah';
                 const basePath = hotel.type === 'Makkah' ? '/makkah-hotels' : '/madina-hotels';
-                const hotelImage = hotel.images && hotel.images.length > 0 
-                  ? hotel.images[0] 
+                const hotelImage = hotel.images && hotel.images.length > 0
+                  ? hotel.images[0]
                   : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80';
-                
+
                 return (
                   <Link key={hotel._id} href={`${basePath}/${cityPath}/${slug}`}>
                     <motion.div
@@ -1026,7 +1023,7 @@ export function HomePage() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        
+
                         {/* Stars Badge */}
                         {hotel.star > 0 && (
                           <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-0.5">
@@ -1035,7 +1032,7 @@ export function HomePage() {
                             ))}
                           </div>
                         )}
-                        
+
                         {/* Content Overlay */}
                         <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                           <div className="flex items-center gap-1 text-xs text-blue-300 mb-1">
@@ -1185,7 +1182,7 @@ export function HomePage() {
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Duplicate set for seamless loop */}
                 {[
                   {
@@ -1283,21 +1280,26 @@ export function HomePage() {
             <p className="text-white/80 text-sm md:text-base mb-6 max-w-xl mx-auto">
               Join thousands of satisfied travelers with Telus Umrah
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-5 rounded-lg shadow-lg text-sm h-auto">
-                  <span>Book Your Trip</span>
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                <Link href="/umrah-packages">
+                  <Button className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-5 rounded-lg shadow-lg text-sm h-auto">
+                    <span>Book Your Trip</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
               </motion.div>
-              
+
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-5 rounded-lg text-sm h-auto">
-                  Contact Us
-                </Button>
+                <Link href="/contact">
+                  <Button variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-5 rounded-lg text-sm h-auto">
+                    Contact Us
+                  </Button>
+                </Link>
               </motion.div>
             </div>
+
 
             <div className="flex flex-wrap gap-4 justify-center items-center text-white/70 text-xs">
               <div className="flex items-center gap-1.5">

@@ -23,16 +23,16 @@ export function Footer() {
               Your trusted travel partner for seamless flight and hotel bookings worldwide.
             </p>
             <div className="flex gap-3 mb-6">
-              <a href="#" className="bg-gray-800 p-2 rounded-lg hover:bg-blue-600 transition-colors">
+              <a href="/" className="bg-gray-800 p-2 rounded-lg hover:bg-blue-600 transition-colors">
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" className="bg-gray-800 p-2 rounded-lg hover:bg-blue-600 transition-colors">
+              <a href="/" className="bg-gray-800 p-2 rounded-lg hover:bg-blue-600 transition-colors">
                 <Twitter className="w-4 h-4" />
               </a>
-              <a href="#" className="bg-gray-800 p-2 rounded-lg hover:bg-blue-600 transition-colors">
+              <a href="/" className="bg-gray-800 p-2 rounded-lg hover:bg-blue-600 transition-colors">
                 <Instagram className="w-4 h-4" />
               </a>
-              <a href="#" className="bg-gray-800 p-2 rounded-lg hover:bg-blue-600 transition-colors">
+              <a href="/" className="bg-gray-800 p-2 rounded-lg hover:bg-blue-600 transition-colors">
                 <Linkedin className="w-4 h-4" />
               </a>
             </div>
@@ -54,11 +54,11 @@ export function Footer() {
           <div>
             <h3 className="text-white mb-4">Services</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="#flight-booking" className="hover:text-blue-400 transition-colors">Flight Booking</a></li>
-              <li><a href="#hotel-reservation" className="hover:text-blue-400 transition-colors">Hotel Reservation</a></li>
-              <li><a href="#travel-packages" className="hover:text-blue-400 transition-colors">Travel Packages</a></li>
-              <li><a href="#visa-services" className="hover:text-blue-400 transition-colors">Visa Services</a></li>
-              <li><a href="#umrah-service" className="hover:text-blue-400 transition-colors">Umrah Service</a></li>
+              <li><a href="/" className="hover:text-blue-400 transition-colors">Flight Booking</a></li>
+              <li><a href="/" className="hover:text-blue-400 transition-colors">Hotel Reservation</a></li>
+              <li><a href="/" className="hover:text-blue-400 transition-colors">Travel Packages</a></li>
+              <li><a href="/" className="hover:text-blue-400 transition-colors">Visa Services</a></li>
+              <li><a href="/" className="hover:text-blue-400 transition-colors">Umrah Service</a></li>
             </ul>
           </div>
 
@@ -93,7 +93,7 @@ export function Footer() {
               Terms & Conditions
             </a>
             <span className="text-gray-600">|</span>
-            <a href="/privacy" className="text-gray-400 hover:text-blue-400 transition-colors">
+            <a href="/privacy-policy" className="text-gray-400 hover:text-blue-400 transition-colors">
               Privacy Policy
             </a>
             <span className="text-gray-600">|</span>

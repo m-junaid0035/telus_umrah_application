@@ -229,15 +229,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
-      {/* Desktop sidebar */}
-      <aside className="hidden sm:flex w-64 bg-card border-r border-border shadow-sm p-5 flex-col sticky top-0 h-screen overflow-hidden">
+    <div className="min-h-screen flex bg-background text-foreground overflow-hidden">
+      {/* Desktop sidebar - Fixed width, no shrinking */}
+      <aside className="hidden sm:flex w-64 flex-shrink-0 bg-card border-r border-border shadow-sm p-5 flex-col fixed top-0 left-0 h-screen overflow-y-auto">
         <SidebarContent />
       </aside>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 sm:ml-64">
         {/* Mobile top bar */}
-        <header className="sm:hidden flex items-center justify-between px-4 py-3 bg-card border-b border-border shadow-sm">
+        <header className="sm:hidden flex items-center justify-between px-4 py-3 bg-card border-b border-border shadow-sm flex-shrink-0">
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Admin Panel
           </h1>
@@ -260,7 +260,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 animate={{ x: 0 }}
                 exit={{ x: -280 }}
                 transition={{ duration: 0.22 }}
-                className="fixed top-0 left-0 z-40 w-72 h-full bg-card p-6 flex flex-col rounded-tr-2xl shadow-lg sm:hidden border-r border-border"
+                className="fixed top-0 left-0 z-40 w-72 h-full bg-card p-6 flex flex-col rounded-tr-2xl shadow-lg sm:hidden border-r border-border overflow-y-auto"
               >
                 <button
                   className="mb-4 ml-auto rounded-lg p-2 hover:bg-muted"
@@ -286,8 +286,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           )}
         </AnimatePresence>
 
-        {/* Main content */}
-        <main className="flex-1 p-6 sm:p-8">
+        {/* Main content - Scrollable when content is large */}
+        <main className="flex-1 overflow-y-auto p-6 sm:p-8">
           <div className="min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-6rem)] bg-card rounded-3xl shadow-md border border-border p-6 sm:p-8 transition-all">
             {children}
           </div>
