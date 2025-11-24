@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, X, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, X, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAuth } from './AuthContext';
+import { forgotPasswordAction } from '@/actions/authActions';
+import { toast } from '@/hooks/use-toast';
 
 interface LoginDialogProps {
   open: boolean;
@@ -14,9 +16,10 @@ interface LoginDialogProps {
 }
 
 export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: LoginDialogProps) {
-  const [mode, setMode] = useState<'login' | 'signup'>(defaultMode);
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot-password'>(defaultMode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const { login, signup } = useAuth();
   
   // Reset mode when dialog opens with new defaultMode
@@ -24,6 +27,7 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
     if (open) {
       setMode(defaultMode);
       setError(null);
+      setSuccess(null);
     }
   }, [open, defaultMode]);
   
@@ -70,6 +74,35 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
     setMode(mode === 'login' ? 'signup' : 'login');
     setFormData({ name: '', email: '', password: '' });
     setError(null);
+    setSuccess(null);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const formDataObj = new FormData();
+      formDataObj.append('email', formData.email);
+      
+      const result = await forgotPasswordAction({}, formDataObj);
+      
+      if (result.error) {
+        setError(result.error.message?.[0] || 'Failed to send password reset email');
+      } else {
+        setSuccess('Password reset link has been sent to your email. Please check your inbox.');
+        toast({
+          title: "Email Sent",
+          description: "Password reset link has been sent to your email.",
+        });
+      }
+    } catch (error: any) {
+      setError(error?.message || 'Failed to send password reset email');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -77,16 +110,84 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl text-center">
-            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+            {mode === 'login' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Reset Password'}
           </DialogTitle>
           <DialogDescription className="text-center">
             {mode === 'login' 
               ? 'Sign in to your account to continue booking your spiritual journey' 
-              : 'Create a new account to start planning your Umrah journey'}
+              : mode === 'signup'
+              ? 'Create a new account to start planning your Umrah journey'
+              : 'Enter your email address and we\'ll send you a link to reset your password'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+        {mode === 'forgot-password' ? (
+          <form onSubmit={handleForgotPassword} className="space-y-6 pt-4">
+            <div>
+              <Label htmlFor="forgot-email" className="text-sm text-gray-700">
+                Email Address
+              </Label>
+              <div className="relative mt-2">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  id="forgot-email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="pl-10"
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                {success}
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                'Send Reset Link'
+              )}
+            </Button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('login');
+                  setError(null);
+                  setSuccess(null);
+                  setFormData({ name: '', email: '', password: '' });
+                }}
+                className="text-sm text-blue-600 hover:text-blue-700 flex items-center justify-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Login
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <AnimatePresence mode="wait">
             {mode === 'signup' && (
               <>
@@ -161,7 +262,15 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
                 <input type="checkbox" className="rounded border-gray-300" />
                 <span className="text-gray-600">Remember me</span>
               </label>
-              <button type="button" className="text-blue-600 hover:text-blue-700">
+              <button 
+                type="button" 
+                onClick={() => {
+                  setMode('forgot-password');
+                  setError(null);
+                  setSuccess(null);
+                }}
+                className="text-blue-600 hover:text-blue-700"
+              >
                 Forgot password?
               </button>
             </div>
@@ -241,6 +350,7 @@ export function LoginDialog({ open, onOpenChange, defaultMode = 'login' }: Login
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

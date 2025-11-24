@@ -77,7 +77,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             onClick={() => setDrawerOpen(false)}
           >
             <Home className="w-4 h-4" />
-            Home
+            Go to Website
           </Link>
     
           {/* MAIN SECTION */}

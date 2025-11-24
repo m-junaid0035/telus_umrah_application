@@ -1,6 +1,6 @@
 "use server";
 
-import { loginApplication, verifyOtpAndLogin, sendOtp, getCurrentApplication, loginAdmin, signupUser, loginUser, getCurrentUser } from "@/functions/authFunctions";
+import { loginApplication, verifyOtpAndLogin, sendOtp, getCurrentApplication, loginAdmin, signupUser, loginUser, getCurrentUser, forgotPassword, resetPassword } from "@/functions/authFunctions";
 import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/db";
 
@@ -311,5 +311,66 @@ export async function getCurrentUserAction() {
   } catch (err) {
     console.error("Failed to get current user:", err);
     return null;
+  }
+}
+
+/**
+ * Forgot Password Action
+ */
+export async function forgotPasswordAction(
+  prevState: ApplicationAuthFormState,
+  formData: FormData | Record<string, any>
+): Promise<ApplicationAuthFormState> {
+  await connectToDatabase();
+
+  const email =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("email")?.toString()
+      : (formData as any).email;
+
+  if (!email) {
+    return { error: { message: ["Email is required"] } };
+  }
+
+  try {
+    const result = await forgotPassword(email);
+    return { data: { message: result.message } };
+  } catch (error: any) {
+    return { error: { message: [error.message || "Failed to send password reset email"] } };
+  }
+}
+
+/**
+ * Reset Password Action
+ */
+export async function resetPasswordAction(
+  prevState: ApplicationAuthFormState,
+  formData: FormData | Record<string, any>
+): Promise<ApplicationAuthFormState> {
+  await connectToDatabase();
+
+  const token =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("token")?.toString()
+      : (formData as any).token;
+
+  const password =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("password")?.toString()
+      : (formData as any).password;
+
+  if (!token || !password) {
+    return { error: { message: ["Token and password are required"] } };
+  }
+
+  if (password.length < 6) {
+    return { error: { message: ["Password must be at least 6 characters"] } };
+  }
+
+  try {
+    const result = await resetPassword(token, password);
+    return { data: { message: result.message } };
+  } catch (error: any) {
+    return { error: { message: [error.message || "Failed to reset password"] } };
   }
 }

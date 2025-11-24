@@ -46,21 +46,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await loginUserAction({}, { email, password });
       
-      if (result.error) {
-        throw new Error(result.error.message?.[0] || 'Login failed');
+      if (result?.error) {
+        const errorMessage = Array.isArray(result.error.message) 
+          ? result.error.message[0] 
+          : result.error.message || 'Login failed';
+        throw new Error(errorMessage);
       }
       
-      if (result.data?.user) {
+      if (result?.data?.user) {
         setUser(result.data.user);
         toast({
           title: "Success",
           description: "Logged in successfully",
         });
+      } else {
+        throw new Error("Login failed - no user data received");
       }
     } catch (error: any) {
+      const errorMessage = error?.message || "Login failed";
       toast({
         title: "Error",
-        description: error.message || "Login failed",
+        description: errorMessage,
         variant: "destructive",
       });
       throw error;
@@ -71,21 +77,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await signupUserAction({}, { name, email, password });
       
-      if (result.error) {
-        throw new Error(result.error.message?.[0] || 'Signup failed');
+      if (result?.error) {
+        const errorMessage = Array.isArray(result.error.message) 
+          ? result.error.message[0] 
+          : result.error.message || 'Signup failed';
+        throw new Error(errorMessage);
       }
       
-      if (result.data?.user) {
+      if (result?.data?.user) {
         setUser(result.data.user);
         toast({
           title: "Success",
           description: "Account created successfully",
         });
+      } else {
+        throw new Error("Signup failed - no user data received");
       }
     } catch (error: any) {
+      const errorMessage = error?.message || "Signup failed";
       toast({
         title: "Error",
-        description: error.message || "Signup failed",
+        description: errorMessage,
         variant: "destructive",
       });
       throw error;
