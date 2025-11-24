@@ -22,13 +22,8 @@ import {
   Star,
   Trash2
 } from "lucide-react";
-import { fetchAllUsersAction, fetchUserStatisticsAction, deleteUserAction } from "@/actions/userActions";
-import { fetchAllHotelsAction } from "@/actions/hotelActions";
-import { fetchHotelStatisticsAction } from "@/actions/hotelStatisticsActions";
-import { fetchAllUmrahPackagesAction } from "@/actions/packageActions";
-import { fetchAllPackageBookingsAction } from "@/actions/packageBookingActions";
-import { fetchAllHotelBookingsAction } from "@/actions/hotelBookingActions";
-import { fetchAllCustomUmrahRequestsAction } from "@/actions/customUmrahRequestActions";
+import { fetchRecentUsersAction, fetchUserStatisticsAction, deleteUserAction } from "@/actions/userActions";
+import { fetchDashboardStatsAction } from "@/actions/dashboardStatsActions";
 
 interface User {
   _id: string;
@@ -56,21 +51,12 @@ interface HotelStatistics {
   monthlyData: Array<{ month: string; count: number }>;
 }
 
-interface Hotel {
-  _id: string;
-  name: string;
-  type: string;
-  location: string;
-  star: number;
-  createdAt: string;
-}
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [hotels, setHotels] = useState<Hotel[]>([]);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
-  const [hotelStatistics, setHotelStatistics] = useState<HotelStatistics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -82,27 +68,41 @@ export default function AdminPage() {
     totalCustomRequests: 0,
   });
 
+  // Load stats first (fast - only counts)
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const dashboardStatsRes = await fetchDashboardStatsAction();
+        if (dashboardStatsRes?.data) {
+          setStats({
+            totalPackages: dashboardStatsRes.data.totalPackages,
+            totalHotels: dashboardStatsRes.data.totalHotels,
+            totalPackageBookings: dashboardStatsRes.data.totalPackageBookings,
+            totalHotelBookings: dashboardStatsRes.data.totalHotelBookings,
+            totalCustomRequests: dashboardStatsRes.data.totalCustomRequests,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load dashboard stats:", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
+
+  // Load detailed data (users and statistics)
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Load only essential data in parallel - much faster!
         const [
           usersRes,
           statsRes,
-          packagesRes,
-          hotelsRes,
-          hotelStatsRes,
-          packageBookingsRes,
-          hotelBookingsRes,
-          customRequestsRes,
         ] = await Promise.all([
-          fetchAllUsersAction(),
+          fetchRecentUsersAction(20), // Only get 20 most recent users
           fetchUserStatisticsAction(),
-          fetchAllUmrahPackagesAction(),
-          fetchAllHotelsAction(),
-          fetchHotelStatisticsAction(),
-          fetchAllPackageBookingsAction(),
-          fetchAllHotelBookingsAction(),
-          fetchAllCustomUmrahRequestsAction(),
         ]);
 
         if (usersRes?.data) {
@@ -110,15 +110,6 @@ export default function AdminPage() {
           setUsers(validUsers);
         }
         if (statsRes?.data) setStatistics(statsRes.data);
-        if (hotelsRes?.data) {
-          setHotels(hotelsRes.data);
-          setStats(prev => ({ ...prev, totalHotels: hotelsRes.data.length }));
-        }
-        if (hotelStatsRes?.data) setHotelStatistics(hotelStatsRes.data);
-        if (packagesRes?.data) setStats(prev => ({ ...prev, totalPackages: packagesRes.data.length }));
-        if (packageBookingsRes?.data) setStats(prev => ({ ...prev, totalPackageBookings: packageBookingsRes.data.length }));
-        if (hotelBookingsRes?.data) setStats(prev => ({ ...prev, totalHotelBookings: hotelBookingsRes.data.length }));
-        if (customRequestsRes?.data) setStats(prev => ({ ...prev, totalCustomRequests: customRequestsRes.data.length }));
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
       } finally {
@@ -148,7 +139,7 @@ export default function AdminPage() {
 
   const loadUsers = async () => {
     try {
-      const usersRes = await fetchAllUsersAction();
+      const usersRes = await fetchRecentUsersAction(20);
       if (usersRes?.data) {
         const validUsers = usersRes.data.filter((user) => user && user.createdAt) as User[];
         setUsers(validUsers);
@@ -195,7 +186,8 @@ export default function AdminPage() {
     }
   };
 
-  if (loading) {
+  // Show stats immediately, even if other data is loading
+  if (loading && statsLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -273,7 +265,11 @@ export default function AdminPage() {
             <CardDescription>New user registrations over time</CardDescription>
           </CardHeader>
           <CardContent>
-            {statistics?.monthlyData ? (
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+              </div>
+            ) : statistics?.monthlyData ? (
               <div className="space-y-4">
                 <div className="flex items-end justify-between h-64 gap-3 px-2">
                   {statistics.monthlyData.map((data, index) => {
@@ -314,43 +310,51 @@ export default function AdminPage() {
             <CardDescription>Overview of system activity</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <UserPlus className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">New Users (30 days)</p>
-                  <p className="text-xs text-gray-600">Monthly registrations</p>
-                </div>
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               </div>
-              <div className="text-2xl font-bold text-blue-600">{statistics?.monthlyUsers || 0}</div>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <UserPlus className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">New Users (30 days)</p>
+                      <p className="text-xs text-gray-600">Monthly registrations</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-600">{statistics?.monthlyUsers || 0}</div>
+                </div>
 
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Growth Rate</p>
-                  <p className="text-xs text-gray-600">User acquisition</p>
+                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Growth Rate</p>
+                      <p className="text-xs text-gray-600">User acquisition</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {statistics?.totalUsers && statistics.totalUsers > 0
+                      ? ((statistics.monthlyUsers / statistics.totalUsers) * 100).toFixed(1)
+                      : 0}
+                    %
+                  </div>
                 </div>
-              </div>
-              <div className="text-2xl font-bold text-green-600">
-                {statistics?.totalUsers && statistics.totalUsers > 0
-                  ? ((statistics.monthlyUsers / statistics.totalUsers) * 100).toFixed(1)
-                  : 0}
-                %
-              </div>
-            </div>
 
-            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-purple-600" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Custom Requests</p>
-                  <p className="text-xs text-gray-600">Pending inquiries</p>
+                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Custom Requests</p>
+                      <p className="text-xs text-gray-600">Pending inquiries</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-purple-600">{stats.totalCustomRequests}</div>
                 </div>
-              </div>
-              <div className="text-2xl font-bold text-purple-600">{stats.totalCustomRequests}</div>
-            </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -358,11 +362,15 @@ export default function AdminPage() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Registered Users</CardTitle>
-          <CardDescription>All users who have signed up on the platform</CardDescription>
+          <CardTitle>Recent Users</CardTitle>
+          <CardDescription>Latest 20 users who have signed up on the platform</CardDescription>
         </CardHeader>
         <CardContent>
-          {users.length > 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            </div>
+          ) : users.length > 0 ? (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
