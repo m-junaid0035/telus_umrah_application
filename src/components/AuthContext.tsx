@@ -45,7 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const result = await loginUserAction({}, { email, password });
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('password', password);
+      const result = await loginUserAction({}, formData);
       
       if (result?.error) {
         const errorMessage = Array.isArray(result.error.message) 
@@ -76,7 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithPhone = async (phone: string, password: string) => {
     try {
-      const result = await loginUserWithPhoneAction({}, { phone, password });
+      const formData = new FormData();
+      formData.append('phone', phone);
+      formData.append('password', password);
+      const result = await loginUserWithPhoneAction({}, formData);
       
       if (result.error) {
         throw new Error(result.error.message?.[0] || 'Login failed');
@@ -101,7 +107,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = async (name: string, email: string, password: string, phone: string, countryCode: string) => {
     try {
-      const result = await signupUserAction({}, { name, email, password, phone, countryCode });
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('phone', phone);
+      formData.append('countryCode', countryCode);
+      const result = await signupUserAction({}, formData);
       
       if (result?.error) {
         const errorMessage = Array.isArray(result.error.message) 

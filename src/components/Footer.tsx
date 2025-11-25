@@ -1,9 +1,17 @@
 import { Plane, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
-import telusUmrahLogo from '@/assets/telusUmrahLogo.png';
-import iataLogo from '@/assets/44ef5c6ec3045ea085ceaddcef7fbb8f2515c014.png';
-import bbbLogo from '@/assets/b711db395614cbcb996756ed291a7626740b6387.png';
-import travelAssociationLogo from '@/assets/ce778b366133b437fd922787fd579366f984e6a0.png';
-import taapLogo from '@/assets/6995a250b2ba12c7621346bbaac407e97bf8f98b.png';
+import telusUmrahLogo from '@/assets/telus-umrah-white.png';
+import iataLogo from '@/assets/iata-logo.png';
+import bbbLogo from '@/assets/bbb-logo.png';
+import travelAssociationLogo from '@/assets/pata-logo.png';
+import taapLogo from '@/assets/taap-logo.png';
+import visaLogo from '@/assets/payment-icons/Visa.svg';
+import mastercardLogo from '@/assets/payment-icons/Mastercard.svg';
+import amexLogo from '@/assets/payment-icons/Amex.svg';
+import paypalLogo from '@/assets/payment-icons/PayPal.svg';
+import stripeLogo from '@/assets/payment-icons/Stripe.svg';
+import applePayLogo from '@/assets/payment-icons/ApplePay.svg';
+import googlePayLogo from '@/assets/payment-icons/GooglePay.svg';
+import bitpayLogo from '@/assets/payment-icons/Bitpay.svg';
 
 export function Footer() {
   return (
@@ -87,44 +95,10 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8">
-          {/* Links Section */}
-          <div className="flex flex-wrap justify-center gap-4 mb-6 text-sm">
-            <a href="/terms" className="text-gray-400 hover:text-blue-400 transition-colors">
-              Terms & Conditions
-            </a>
-            <span className="text-gray-600">|</span>
-            <a href="/privacy-policy" className="text-gray-400 hover:text-blue-400 transition-colors">
-              Privacy Policy
-            </a>
-            <span className="text-gray-600">|</span>
-            <a href="/faq" className="text-gray-400 hover:text-blue-400 transition-colors">
-              FAQ
-            </a>
-          </div>
-          
           {/* Copyright Section with Logos */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            {/* Left Side - Certification Logos */}
-            <div className="flex gap-3 flex-wrap justify-center md:justify-start">
-              <img 
-                src={iataLogo.src} 
-                alt="IATA Member" 
-                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
-              />
-              <img 
-                src={travelAssociationLogo.src} 
-                alt="Travel Association" 
-                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
-              />
-              <img 
-                src={taapLogo.src} 
-                alt="TAAP - Travel Agents Association of Pakistan" 
-                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
-              />
-            </div>
-            
-            {/* Center - Copyright Text */}
-            <p className="text-sm text-gray-400 text-center">
+            {/* Left Side - Copyright Text */}
+            <p className="text-sm text-gray-400 text-left">
               &copy; 2025 Telus Umrah. All rights reserved. Powered by Multi Travel Pvt. Ltd
             </p>
             
@@ -149,6 +123,39 @@ export function Footer() {
           </div>
         </div>
       </div>
+        <div className="bg-gray-800 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap flex-col sm:flex-row items-center justify-center md:justify-between">
+            <div>
+              <p className="text-sm text-gray-400 text-left mb-2">
+                We accept all major credit and debit cards
+              </p>
+              <div className="flex flex-wrap justify-start gap-4 text-xs">
+                <a href="/terms" className="text-gray-400 hover:text-blue-400 transition-colors">
+                  Terms & Conditions
+                </a>
+                <span className="text-gray-600">|</span>
+                <a href="/privacy-policy" className="text-gray-400 hover:text-blue-400 transition-colors">
+                  Privacy Policy
+                </a>
+                <span className="text-gray-600">|</span>
+                <a href="/faq" className="text-gray-400 hover:text-blue-400 transition-colors">
+                  FAQ
+                </a>
+              </div>
+            </div>
+            <div className="flex items-center flex-wrap justify-center md:justify-end gap-4 mt-4 sm:mt-0">
+              <img src={visaLogo.src} alt="Visa" className="h-8" />
+              <img src={mastercardLogo.src} alt="Mastercard" className="h-8" />
+              <img src={amexLogo.src} alt="American Express" className="h-8" />
+              <img src={paypalLogo.src} alt="PayPal" className="h-8" />
+              <img src={stripeLogo.src} alt="Stripe" className="h-8" />
+              <img src={applePayLogo.src} alt="Apple Pay" className="h-8" />
+              <img src={googlePayLogo.src} alt="Google Pay" className="h-8" />
+              <img src={bitpayLogo.src} alt="Bitpay" className="h-8" />
+            </div>
+          </div>
+        </div>
     </footer>
   );
 }
+

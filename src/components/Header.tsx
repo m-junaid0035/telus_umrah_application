@@ -15,10 +15,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
-import telusUmrahLogo from '@/assets/da561ea93488a57b45c1621c80c95e0815322c9e.png';
-import telusUmrahLogoWhite from '@/assets/telusUmrahLogo.png';
-import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
-import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
+import telusUmrahLogo from '@/assets/telus-umrah-blue.png';
+import telusUmrahLogoWhite from '@/assets/telus-umrah-white.png';
+import makkahIcon from '@/assets/makkah-icon.png';
+import madinaIcon from '@/assets/madina-icon.png';
 
 export function Header() {
   const currentPage = usePathname();
@@ -104,7 +104,7 @@ export function Header() {
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-3 h-3" />
-                <span>Lahore, Pakistan</span>
+                <span>UG-14, Lucky center, 7-8 Jail Road, Lahore, 54000 Pakistan</span>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -785,7 +785,7 @@ export function Header() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-blue-600" />
-                    <span>multitravel@hotmail.com</span>
+                    <span>support@telusumrah.com</span>
                   </div>
                 </div>
               </div>
@@ -803,3 +803,4 @@ export function Header() {
     </div>
   );
 }
+

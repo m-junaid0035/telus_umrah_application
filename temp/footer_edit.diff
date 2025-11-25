@@ -1,0 +1,69 @@
+{/* Left Side - Certification Logos */}
+            <div className="flex gap-3 flex-wrap justify-center md:justify-start">
+              <img 
+                src={iataLogo.src} 
+                alt="IATA Member" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+              <img 
+                src={travelAssociationLogo.src} 
+                alt="Travel Association" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+              <img 
+                src={taapLogo.src} 
+                alt="TAAP - Travel Agents Association of Pakistan" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+            </div>
+            
+            {/* Center - Copyright Text */}
+            <p className="text-sm text-gray-400 text-center">
+              &copy; 2025 Telus Umrah. All rights reserved. Powered by Multi Travel Pvt. Ltd
+            </p>
+            
+            {/* Right Side - Certification Logos */}
+            <div className="flex gap-3 flex-wrap justify-center md:justify-end">
+              <img 
+                src={iataLogo.src} 
+                alt="IATA Member" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+              <img 
+                src={travelAssociationLogo.src} 
+                alt="Travel Association" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+              <img 
+                src={taapLogo.src} 
+                alt="TAAP - Travel Agents Association of Pakistan" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+            </div>
+          </div>
+=======
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Left Side - Copyright Text */}
+            <p className="text-sm text-gray-400 text-left">
+              &copy; 2025 Telus Umrah. All rights reserved. Powered by Multi Travel Pvt. Ltd
+            </p>
+            
+            {/* Right Side - Certification Logos */}
+            <div className="flex gap-3 flex-wrap justify-center md:justify-end">
+              <img 
+                src={iataLogo.src} 
+                alt="IATA Member" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+              <img 
+                src={travelAssociationLogo.src} 
+                alt="Travel Association" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+              <img 
+                src={taapLogo.src} 
+                alt="TAAP - Travel Agents Association of Pakistan" 
+                className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              />
+            </div>
+          </div>

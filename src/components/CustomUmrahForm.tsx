@@ -16,13 +16,13 @@ import { FormOptionType } from '@/models/FormOption';
 import { toast } from '@/hooks/use-toast';
 
 // Import airline logos
-import sereneAirLogo from '@/assets/d0c55b978a086a73b2fb50854cf04ff81b6aac0b.png';
-import gulfAirLogo from '@/assets/e28e0a2d39614f5bf7ea2c55d6fc579d46d4c9fc.png';
-import turkishAirlinesLogo from '@/assets/ac3c2c97ff797a518e5f4d4cb47dcefc00bcb019.png';
-import qatarAirwaysLogo from '@/assets/e8f7e43e4182484eee13d1fd750ab600da4a61b1.png';
-import saudiaLogo from '@/assets/b9f20e713c92c82b6e94ffa74d871a980c8049ba.png';
-import piaLogo from '@/assets/35293a117c78f2e22505cf3ae7ef2f152cf09f0b.png';
-import emiratesLogo from '@/assets/bbf68fd4ecd3e7277285a22042637fbaafc25a7c.png';
+import sereneAirLogo from '@/assets/serene-air-logo.png';
+import gulfAirLogo from '@/assets/gulf-air-logo.png';
+import turkishAirlinesLogo from '@/assets/turkish-airline-logo.png';
+import qatarAirwaysLogo from '@/assets/qatar-air-logo.png';
+import saudiaLogo from '@/assets/saudi-air-logo.png';
+import piaLogo from '@/assets/pia-logo.png';
+import emiratesLogo from '@/assets/emirates-logo.png';
 
 // Form options now fetched from backend
 // Airlines logos mapping for display

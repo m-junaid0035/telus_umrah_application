@@ -44,8 +44,8 @@ import { fetchUmrahPackageByIdAction } from '@/actions/packageActions';
 import { toast } from '@/hooks/use-toast';
 
 // Import Makkah and Madina icons
-import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
-import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
+import makkahIcon from '@/assets/makkah-icon.png';
+import madinaIcon from '@/assets/madina-icon.png';
 
 // Mock data removed - now fetching from backend
 /*
@@ -975,3 +975,4 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
     </div>
   );
 }
+

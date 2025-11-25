@@ -31,21 +31,21 @@ import { PackageBookingDialog } from './PackageBookingDialog';
 import { toast } from '@/hooks/use-toast';
 
 // Import Makkah and Madina icons
-import makkahIcon from '@/assets/ba6627702a0a2db3ec399c151ab739781dad0897.png';
-import madinaIcon from '@/assets/4c0ebc2b4c4fd59170b1c28e046aa03ac40a6f01.png';
+import makkahIcon from '@/assets/makkah-icon.png';
+import madinaIcon from '@/assets/madina-icon.png';
 
 // Import airline logos
-import sereneAirLogo from '@/assets/d0c55b978a086a73b2fb50854cf04ff81b6aac0b.png';
-import gulfAirLogo from '@/assets/e28e0a2d39614f5bf7ea2c55d6fc579d46d4c9fc.png';
-import turkishAirlinesLogo from '@/assets/ac3c2c97ff797a518e5f4d4cb47dcefc00bcb019.png';
-import qatarAirwaysLogo from '@/assets/e8f7e43e4182484eee13d1fd750ab600da4a61b1.png';
-import thaiAirwaysLogo from '@/assets/cdb220143886cc62c69f62df943f6d4696ae28fd.png';
-import saudiaLogo from '@/assets/b9f20e713c92c82b6e94ffa74d871a980c8049ba.png';
-import piaLogo from '@/assets/35293a117c78f2e22505cf3ae7ef2f152cf09f0b.png';
-import etihadLogo from '@/assets/713718ae1d0268b59f79364ed8d891884e2f5326.png';
-import shaheenAirLogo from '@/assets/dc2814087104402377fd7a3913ebe47172426e2f.png';
-import emiratesLogo from '@/assets/bbf68fd4ecd3e7277285a22042637fbaafc25a7c.png';
-import airblueLogo from '@/assets/46162b64c705ab0c6c4e53a96bd897744d3a77d9.png';
+import sereneAirLogo from '@/assets/serene-air-logo.png';
+import gulfAirLogo from '@/assets/gulf-air-logo.png';
+import turkishAirlinesLogo from '@/assets/turkish-airline-logo.png';
+import qatarAirwaysLogo from '@/assets/qatar-air-logo.png';
+import thaiAirwaysLogo from '@/assets/thai-air.png';
+import saudiaLogo from '@/assets/saudi-air-logo.png';
+import piaLogo from '@/assets/pia-logo.png';
+import etihadLogo from '@/assets/etihad-logo.png';
+import shaheenAirLogo from '@/assets/shaheen-logo.png';
+import emiratesLogo from '@/assets/emirates-logo.png';
+import airblueLogo from '@/assets/airblue-logo.png';
 
 // Helper function to get airline logo
 const getAirlineLogo = (airlineName: string) => {
@@ -569,3 +569,4 @@ export function UmrahPackagesPage() {
     </div>
   );
 }
+

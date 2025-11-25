@@ -273,7 +273,7 @@ export function PrivacyPage() {
                   <p>UG-14, Lucky Center, 7-8 Jail Road</p>
                   <p>PO. Box 717 GPO, Lahore, 54000 Pakistan</p>
                   <p>Phone: (+92) 42 37595151</p>
-                  <p>Email: multitravel@hotmail.com</p>
+                  <p>Email: support@telusumrah.com</p>
                 </div>
               </div>
             </section>

@@ -87,7 +87,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'How can I contact Telus Umrah for inquiries?',
-    answer: 'You can reach us by phone at (+92) 42 37595151 or (+92) 300 4554040, WhatsApp at (+92) 300 4554040, toll-free at 080033333, email at multitravel@hotmail.com, or visit our office at UG-14, Lucky Center, Jail Road, Lahore. Our office hours are 9:00 AM to 6:00 PM, Monday to Saturday. Emergency support is available 24/7.'
+    answer: 'You can reach us by phone at (+92) 42 37595151 or (+92) 300 4554040, WhatsApp at (+92) 300 4554040, toll-free at 080033333, email at support@telusumrah.com, or visit our office at UG-14, Lucky Center, Jail Road, Lahore. Our office hours are 9:00 AM to 6:00 PM, Monday to Saturday. Emergency support is available 24/7.'
   }
 ];
 
@@ -217,7 +217,7 @@ export function FAQPage() {
             </motion.a>
             
             <motion.a
-              href="mailto:multitravel@hotmail.com"
+              href="mailto:support@telusumrah.com"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="bg-white text-[rgb(30,58,109)] rounded-xl p-6 flex flex-col items-center gap-3 hover:shadow-xl transition-shadow"
@@ -225,7 +225,7 @@ export function FAQPage() {
               <Mail className="w-8 h-8" />
               <div className="text-center">
                 <div className="text-sm text-gray-600 mb-1">Email Us</div>
-                <div className="text-sm">multitravel@hotmail.com</div>
+                <div className="text-sm">support@telusumrah.com</div>
               </div>
             </motion.a>
             

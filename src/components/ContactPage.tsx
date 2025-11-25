@@ -8,8 +8,8 @@ const contactInfo = [
   {
     icon: Mail,
     title: 'Email Us',
-    details: 'multitravel@hotmail.com',
-    subdetails: 'multitravel@hotmail.com',
+    details: 'support@telusumrah.com',
+    subdetails: 'support@telusumrah.com',
   },
   {
     icon: Phone,
@@ -20,8 +20,8 @@ const contactInfo = [
   {
     icon: MapPin,
     title: 'Visit Us',
-    details: 'UG-21, Lucky center, 7-8 Jail Road',
-    subdetails: 'PO. Box 717 GPO, Lahore, 54000 Pakistan',
+    details: 'UG-14, Lucky center, 7-8 Jail Road',
+    subdetails: 'Lahore, 54000 Pakistan',
   },
   {
     icon: Clock,
@@ -268,10 +268,10 @@ export function ContactPage() {
                   ></iframe>
                 </div>
                 <p className="text-gray-600 text-sm mb-2">
-                  UG-21, Lucky center, 7-8 Jail Road
+                  UG-14, Lucky center, 7-8 Jail Road
                 </p>
                 <p className="text-gray-600 text-sm">
-                  PO. Box 717 GPO, Lahore, 54000 Pakistan
+                  Lahore, 54000 Pakistan
                 </p>
               </div>
             </motion.div>
