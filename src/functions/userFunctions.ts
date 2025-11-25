@@ -27,6 +27,15 @@ export const getAllUsers = async () => {
 };
 
 /**
+ * Get recent users (limited for dashboard)
+ */
+export const getRecentUsers = async (limit: number = 20) => {
+  await connectToDatabase();
+  const users = await User.find().sort({ createdAt: -1 }).limit(limit).lean();
+  return users.map(serializeUser);
+};
+
+/**
  * Get user by ID
  */
 export const getUserById = async (id: string) => {

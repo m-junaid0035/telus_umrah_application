@@ -9,10 +9,11 @@ export interface IUser extends Document {
   phone: string;
   countryCode: string;
   avatar?: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpires?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 
-  // Methods
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -24,11 +25,15 @@ const UserSchema = new Schema<IUser>(
     phone: { type: String, required: true, trim: true, unique: true },
     countryCode: { type: String, required: true, trim: true },
     avatar: { type: String, trim: true },
+
+    // FIXED: Ensure fields ALWAYS exist in DB
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
-// Hash password before saving
+// Hash before save
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
@@ -37,10 +42,14 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
-// Method to compare passwords
+// Compare passwords
 UserSchema.methods.comparePassword = async function (candidatePassword: string) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+// Delete existing model to force recompilation with new schema fields
+if (mongoose.models.User) {
+  delete mongoose.models.User;
+}
 
+export const User = mongoose.model<IUser>("User", UserSchema);

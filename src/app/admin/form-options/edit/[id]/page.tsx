@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useActionState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { updateFormOptionAction, fetchFormOptionByIdAction } from "@/actions/formOptionActions";
@@ -34,6 +34,7 @@ export default function EditFormOptionPage() {
 
   const [option, setOption] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const [formState, formAction] = useActionState(
     async (prevState: any, formData: FormData) => {
       return await updateFormOptionAction(prevState, optionId, formData);
@@ -110,7 +111,9 @@ export default function EditFormOptionPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formDataObj = new FormData(e.currentTarget);
-    formAction(formDataObj);
+    startTransition(() => {
+      formAction(formDataObj);
+    });
   };
 
   const errorFor = (field: string): boolean => {
@@ -169,8 +172,8 @@ export default function EditFormOptionPage() {
                 <Label htmlFor="type">
                   Option Type <span className="text-red-500">*</span>
                 </Label>
+                <input type="hidden" name="type" value={formData.type} />
                 <Select
-                  name="type"
                   value={formData.type}
                   onValueChange={(value) =>
                     setFormData({ ...formData, type: value as FormOptionType })
@@ -271,7 +274,6 @@ export default function EditFormOptionPage() {
               <div className="md:col-span-2 flex items-center space-x-2">
                 <Switch
                   id="isActive"
-                  name="isActive"
                   checked={formData.isActive}
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, isActive: checked })
@@ -292,8 +294,8 @@ export default function EditFormOptionPage() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={formState?.data}>
-                {formState?.data ? (
+              <Button type="submit" disabled={isPending || formState?.data}>
+                {isPending || formState?.data ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Updating...

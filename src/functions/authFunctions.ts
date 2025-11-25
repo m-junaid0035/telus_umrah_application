@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Application } from "@/models/Application";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { IApplication } from "@/models/Application";
 import { sendOtpEmail } from "@/lib/sendOtpEmail";  // Import the OTP email sending function
 import { generateOtp } from "@/lib/generateOtp";  // Import the OTP generation function
@@ -347,4 +348,172 @@ export const getCurrentUser = async (token: string) => {
     console.error("Invalid or expired token:", err);
     return null;
   }
+};
+
+/**
+ * Generate random token for password reset
+ */
+const generateResetToken = () => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+/**
+ * Forgot password - generate reset token and send email
+ */
+export const forgotPassword = async (email: string) => {
+  await connectToDatabase();
+
+  // Find user by email
+  const user = await User.findOne({ email: email.toLowerCase() }) as IUser | null;
+  if (!user) {
+    // Don't reveal if user exists or not for security
+    return { message: "If an account exists with this email, a password reset link has been sent." };
+  }
+
+  // Generate reset token
+  const resetToken = generateResetToken();
+  const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  console.log('Generated reset token:', resetToken);
+  console.log('Token expiry:', resetTokenExpiry);
+  console.log('User ID:', user._id.toString());
+
+  // Use updateOne to directly update the database
+  const updateResult = await User.updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        resetPasswordToken: resetToken,
+        resetPasswordExpires: resetTokenExpiry,
+      },
+    }
+  );
+
+  console.log('Update result:', updateResult);
+
+  // Verify token was saved by querying directly from database
+  // Convert ObjectId to string for MongoDB query
+  const mongoose = await import('mongoose');
+  const userId = mongoose.Types.ObjectId.isValid(user._id) 
+    ? new mongoose.Types.ObjectId(user._id.toString())
+    : user._id;
+  
+  const db = mongoose.connection.db;
+  if (db) {
+    const usersCollection = db.collection('users');
+    const verifyUserRaw = await usersCollection.findOne({ _id: userId });
+    console.log('Token saved verification (raw):', verifyUserRaw?.resetPasswordToken === resetToken);
+    console.log('Token in DB (raw):', verifyUserRaw?.resetPasswordToken);
+    console.log('Expected token:', resetToken);
+    console.log('Full user object keys (raw):', Object.keys(verifyUserRaw || {}));
+  }
+
+  // Send password reset email
+  const { sendPasswordResetEmail } = await import('@/lib/sendPasswordResetEmail');
+  await sendPasswordResetEmail(user.email, resetToken);
+
+  return { message: "If an account exists with this email, a password reset link has been sent." };
+};
+
+/**
+ * Reset password using token
+ */
+export const resetPassword = async (token: string, newPassword: string) => {
+  await connectToDatabase();
+
+  if (!token || token.trim() === '') {
+    throw new Error("Reset token is required");
+  }
+
+  console.log('Reset password - received token:', token);
+  console.log('Token length:', token.length);
+
+  // Decode URL-encoded token (in case it was encoded in the URL)
+  let decodedToken = token;
+  try {
+    decodedToken = decodeURIComponent(token);
+    console.log('Decoded token:', decodedToken);
+  } catch (e) {
+    // If decoding fails, use original token
+    decodedToken = token;
+    console.log('Decoding failed, using original token');
+  }
+
+  // Find user with matching reset token using raw MongoDB query
+  // This bypasses Mongoose schema issues where fields might not be in the compiled model
+  const mongoose = await import('mongoose');
+  const db = mongoose.connection.db;
+  
+  if (!db) {
+    throw new Error("Database connection not available");
+  }
+
+  const usersCollection = db.collection('users');
+  
+  // Try with decoded token first
+  let userDoc = await usersCollection.findOne({
+    resetPasswordToken: decodedToken,
+  });
+
+  console.log('User found with decoded token (raw):', !!userDoc);
+
+  // If not found, try with original token
+  if (!userDoc) {
+    userDoc = await usersCollection.findOne({
+      resetPasswordToken: token,
+    });
+    console.log('User found with original token (raw):', !!userDoc);
+  }
+
+  // If still not found, check if any users have reset tokens for debugging
+  if (!userDoc) {
+    const usersWithTokens = await usersCollection.find({
+      resetPasswordToken: { $exists: true, $ne: null },
+    }).limit(5).toArray();
+    console.log('Users with reset tokens (raw):', usersWithTokens.length);
+    if (usersWithTokens.length > 0) {
+      console.log('Sample token from DB:', usersWithTokens[0].resetPasswordToken);
+      console.log('Token match check:', usersWithTokens[0].resetPasswordToken === decodedToken);
+      console.log('Token match check (original):', usersWithTokens[0].resetPasswordToken === token);
+    }
+    throw new Error("Invalid reset token");
+  }
+
+  // Check if token has expired
+  const now = new Date();
+  const expiresAt = userDoc.resetPasswordExpires;
+  if (!expiresAt || expiresAt <= now) {
+    throw new Error("Reset token has expired. Please request a new password reset.");
+  }
+
+  // Verify token matches (double check)
+  const userToken = userDoc.resetPasswordToken;
+  if (userToken !== decodedToken && userToken !== token) {
+    console.log('Token mismatch - DB token:', userToken, 'Received token:', token, 'Decoded token:', decodedToken);
+    throw new Error("Invalid reset token");
+  }
+
+  // Get the user document using Mongoose for password update
+  const finalUser = await User.findById(userDoc._id).select('+password') as IUser | null;
+  if (!finalUser) {
+    throw new Error("User not found");
+  }
+
+  // Update password (will be hashed by pre-save hook)
+  finalUser.password = newPassword;
+  await finalUser.save();
+
+  // Clear reset token using raw update
+  await usersCollection.updateOne(
+    { _id: userDoc._id },
+    {
+      $unset: {
+        resetPasswordToken: "",
+        resetPasswordExpires: "",
+      },
+    }
+  );
+
+  console.log('Password reset successful');
+  return { message: "Password has been reset successfully" };
 };

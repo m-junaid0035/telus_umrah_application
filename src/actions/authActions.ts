@@ -1,6 +1,18 @@
 "use server";
 
-import { loginApplication, verifyOtpAndLogin, sendOtp, getCurrentApplication, loginAdmin, signupUser, loginUser, loginUserWithPhone, getCurrentUser } from "@/functions/authFunctions";
+import {
+  loginApplication,
+  verifyOtpAndLogin,
+  sendOtp,
+  getCurrentApplication,
+  loginAdmin,
+  signupUser,
+  loginUser,
+  loginUserWithPhone,
+  getCurrentUser,
+  forgotPassword,
+  resetPassword,
+} from "@/functions/authFunctions";
 import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/db";
 
@@ -36,35 +48,29 @@ export async function loginApplicationAction(
   }
 
   try {
-    // Call loginApplication to validate user and send OTP
     const { tempToken, applicationId } = await loginApplication(userName, password);
 
-    // Save the temporary token to be used for OTP verification
     const cookieStore = await cookies();
     cookieStore.set("tempToken", tempToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 10, // Temp token valid for 10 minutes
+      maxAge: 60 * 10,
     });
 
-    return { data: { applicationId } }; // Only return applicationId for OTP verification step
+    return { data: { applicationId } };
   } catch (error: any) {
     return { error: { message: [error.message || "Login failed"] } };
   }
 }
 
 /**
- * Send OTP (Separate Server Action)
- * This action only sends OTP to user's email, given the applicationId
+ * Send OTP
  */
 export async function sendOtpAction(applicationId: string): Promise<ApplicationAuthFormState> {
   await connectToDatabase();
-  console.log(applicationId)
   try {
-    // Call the sendOtp function with the applicationId to send OTP to the registered email
     await sendOtp(applicationId);
-
     return { data: { message: "OTP sent successfully to your registered email." } };
   } catch (error: any) {
     return { error: { message: [error.message || "Failed to send OTP"] } };
@@ -72,8 +78,7 @@ export async function sendOtpAction(applicationId: string): Promise<ApplicationA
 }
 
 /**
- * Verify OTP and get the final JWT token (Server Action)
- * After the user enters OTP, this will validate it and return the actual JWT token
+ * Verify OTP
  */
 export async function verifyOtpAction(
   prevState: ApplicationAuthFormState,
@@ -81,17 +86,13 @@ export async function verifyOtpAction(
 ): Promise<ApplicationAuthFormState> {
   await connectToDatabase();
 
-  // Extract form data
   const otp =
     typeof (formData as any).get === "function"
       ? (formData as FormData).get("otp")?.toString()
       : (formData as any).otp;
 
-  if (!otp) {
-    return { error: { message: ["OTP is required"] } };
-  }
+  if (!otp) return { error: { message: ["OTP is required"] } };
 
-  // Retrieve temporary token from cookies
   const cookieStore = await cookies();
   const tempToken = cookieStore.get("tempToken")?.value;
 
@@ -100,15 +101,13 @@ export async function verifyOtpAction(
   }
 
   try {
-    // Call verifyOtpAndLogin to validate OTP and return JWT token
     const { token, application } = await verifyOtpAndLogin(tempToken, otp);
 
-    // Save the final token to the cookie for further requests
     cookieStore.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days for final JWT token
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return { data: { application } };
@@ -118,17 +117,17 @@ export async function verifyOtpAction(
 }
 
 /**
- * LOGOUT Application (Server Action)
+ * Logout Application
  */
 export async function logoutApplicationAction() {
   const cookieStore = await cookies();
   cookieStore.delete({ name: "token", path: "/" });
-  cookieStore.delete({ name: "tempToken", path: "/" }); // Delete tempToken as well
+  cookieStore.delete({ name: "tempToken", path: "/" });
   return { success: true };
 }
 
 /**
- * Get CURRENT logged-in application (Server Action)
+ * Get Current Application
  */
 export async function getCurrentApplicationAction() {
   const cookieStore = await cookies();
@@ -139,15 +138,13 @@ export async function getCurrentApplicationAction() {
   try {
     const application = await getCurrentApplication(token);
     return application;
-  } catch (err) {
-    console.error("Failed to get current application:", err);
+  } catch {
     return null;
   }
 }
 
-
 /**
- * LOGIN Admin (Direct token, no OTP)
+ * LOGIN Admin
  */
 export async function loginAdminAction(
   prevState: ApplicationAuthFormState,
@@ -155,10 +152,10 @@ export async function loginAdminAction(
 ): Promise<ApplicationAuthFormState> {
   await connectToDatabase();
 
-  // Extract form data - can be username or email
   const usernameOrEmail =
     typeof (formData as any).get === "function"
-      ? (formData as FormData).get("username")?.toString() || (formData as FormData).get("email")?.toString()
+      ? (formData as FormData).get("username")?.toString() ||
+        (formData as FormData).get("email")?.toString()
       : (formData as any).username || (formData as any).email;
 
   const password =
@@ -171,16 +168,14 @@ export async function loginAdminAction(
   }
 
   try {
-    // Call loginAdmin function that uses bcrypt and Admin schema
     const { token, admin } = await loginAdmin(usernameOrEmail, password);
 
-    // Save token in httpOnly cookie
     const cookieStore = await cookies();
     cookieStore.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return { data: { admin } };
@@ -191,47 +186,24 @@ export async function loginAdminAction(
 
 export async function logoutAdminAction() {
   const cookieStore = await cookies();
-
-  // Correct usage: pass an object with name and options
   cookieStore.delete({ name: "token", path: "/" });
-
-  return { success: true, message: "Admin logged out successfully" };
+  return { success: true };
 }
 
 /**
- * User Signup Action
+ * User Signup
  */
 export async function signupUserAction(
   prevState: ApplicationAuthFormState,
-  formData: FormData | Record<string, any>
+  formData: FormData
 ): Promise<ApplicationAuthFormState> {
   await connectToDatabase();
 
-  // Extract form data
-  const name =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("name")?.toString()
-      : (formData as any).name;
-
-  const email =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("email")?.toString()
-      : (formData as any).email;
-
-  const phone =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("phone")?.toString()
-      : (formData as any).phone;
-
-  const password =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("password")?.toString()
-      : (formData as any).password;
-
-  const countryCode =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("countryCode")?.toString()
-      : (formData as any).countryCode;
+  const name = formData.get("name")?.toString();
+  const email = formData.get("email")?.toString();
+  const phone = formData.get("phone")?.toString();
+  const password = formData.get("password")?.toString();
+  const countryCode = formData.get("countryCode")?.toString();
 
   if (!name || !email || !password || !phone || !countryCode) {
     return { error: { message: ["Name, email, password, phone, and country code are required"] } };
@@ -240,13 +212,12 @@ export async function signupUserAction(
   try {
     const { token, user } = await signupUser(name, email, password, phone, countryCode);
 
-    // Save token in httpOnly cookie
     const cookieStore = await cookies();
     cookieStore.set("userToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return { data: { user } };
@@ -256,24 +227,16 @@ export async function signupUserAction(
 }
 
 /**
- * User Login Action
+ * User Login
  */
 export async function loginUserAction(
   prevState: ApplicationAuthFormState,
-  formData: FormData | Record<string, any>
+  formData: FormData
 ): Promise<ApplicationAuthFormState> {
   await connectToDatabase();
 
-  // Extract form data
-  const email =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("email")?.toString()
-      : (formData as any).email;
-
-  const password =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("password")?.toString()
-      : (formData as any).password;
+  const email = formData.get("email")?.toString();
+  const password = formData.get("password")?.toString();
 
   if (!email || !password) {
     return { error: { message: ["Email and password are required"] } };
@@ -282,13 +245,12 @@ export async function loginUserAction(
   try {
     const { token, user } = await loginUser(email, password);
 
-    // Save token in httpOnly cookie
     const cookieStore = await cookies();
     cookieStore.set("userToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return { data: { user } };
@@ -298,24 +260,16 @@ export async function loginUserAction(
 }
 
 /**
- * User Login with Phone Action
+ * Login with Phone
  */
 export async function loginUserWithPhoneAction(
   prevState: ApplicationAuthFormState,
-  formData: FormData | Record<string, any>
+  formData: FormData
 ): Promise<ApplicationAuthFormState> {
   await connectToDatabase();
 
-  // Extract form data
-  const phone =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("phone")?.toString()
-      : (formData as any).phone;
-
-  const password =
-    typeof (formData as any).get === "function"
-      ? (formData as FormData).get("password")?.toString()
-      : (formData as any).password;
+  const phone = formData.get("phone")?.toString();
+  const password = formData.get("password")?.toString();
 
   if (!phone || !password) {
     return { error: { message: ["Phone number and password are required"] } };
@@ -324,13 +278,12 @@ export async function loginUserWithPhoneAction(
   try {
     const { token, user } = await loginUserWithPhone(phone, password);
 
-    // Save token in httpOnly cookie
     const cookieStore = await cookies();
     cookieStore.set("userToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return { data: { user } };
@@ -340,7 +293,7 @@ export async function loginUserWithPhoneAction(
 }
 
 /**
- * User Logout Action
+ * Logout User
  */
 export async function logoutUserAction() {
   const cookieStore = await cookies();
@@ -349,7 +302,7 @@ export async function logoutUserAction() {
 }
 
 /**
- * Get Current User Action
+ * Get Current User
  */
 export async function getCurrentUserAction() {
   const cookieStore = await cookies();
@@ -358,10 +311,56 @@ export async function getCurrentUserAction() {
   if (!token) return null;
 
   try {
-    const user = await getCurrentUser(token);
-    return user;
-  } catch (err) {
-    console.error("Failed to get current user:", err);
+    return await getCurrentUser(token);
+  } catch {
     return null;
+  }
+}
+
+/**
+ * Forgot Password
+ */
+export async function forgotPasswordAction(
+  prevState: ApplicationAuthFormState,
+  formData: FormData
+): Promise<ApplicationAuthFormState> {
+  await connectToDatabase();
+
+  const email = formData.get("email")?.toString();
+  if (!email) return { error: { message: ["Email is required"] } };
+
+  try {
+    const result = await forgotPassword(email);
+    return { data: { message: result.message } };
+  } catch (error: any) {
+    return { error: { message: [error.message || "Failed to send password reset email"] } };
+  }
+}
+
+/**
+ * Reset Password
+ */
+export async function resetPasswordAction(
+  prevState: ApplicationAuthFormState,
+  formData: FormData
+): Promise<ApplicationAuthFormState> {
+  await connectToDatabase();
+
+  const token = formData.get("token")?.toString();
+  const password = formData.get("password")?.toString();
+
+  if (!token || !password) {
+    return { error: { message: ["Token and password are required"] } };
+  }
+
+  if (password.length < 6) {
+    return { error: { message: ["Password must be at least 6 characters"] } };
+  }
+
+  try {
+    const result = await resetPassword(token, password);
+    return { data: { message: result.message } };
+  } catch (error: any) {
+    return { error: { message: [error.message || "Failed to reset password"] } };
   }
 }
