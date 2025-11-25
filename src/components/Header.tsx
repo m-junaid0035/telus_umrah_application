@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Plane, Menu, X, Phone, Mail, MapPin, ChevronDown, Globe, DollarSign, LogOut, BookmarkPlus, Package, Sparkles, Hotel, Info, HelpCircle, LogIn, UserPlus } from 'lucide-react';
+import { Plane, Menu, X, Phone, Mail, MapPin, ChevronDown, Globe, DollarSign, LogOut, BookmarkPlus, Package, Sparkles, Hotel, Info, HelpCircle, LogIn, UserPlus, ArrowUp, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -19,6 +19,7 @@ import telusUmrahLogo from '@/assets/telus-umrah-blue.png';
 import telusUmrahLogoWhite from '@/assets/telus-umrah-white.png';
 import makkahIcon from '@/assets/makkah-icon.png';
 import madinaIcon from '@/assets/madina-icon.png';
+import whatsappIcon from '@/assets/whatsapp-icon.svg';
 
 export function Header() {
   const currentPage = usePathname();
@@ -794,6 +795,30 @@ export function Header() {
         </AnimatePresence>
       </header>
 
+      {/* Floating Icons */}
+      <div className={`fixed bottom-8 right-8 flex flex-col gap-4 z-50 transition-opacity duration-300 ${
+        scrolled ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}>
+        {/* Back to Top Icon */}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Back to top"
+          className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"
+        >
+          <ArrowUp size={24} />
+        </button>
+
+          {/* WhatsApp Icon */}
+          <a
+            href="https://wa.me/923001234567"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Chat on WhatsApp"
+            className="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center shadow-lg hover:bg-green-700 transition-colors"
+          >
+            <img src={whatsappIcon.src} alt="WhatsApp" className="w-6 h-6" />
+          </a>
+      </div>
       {/* Login Dialog */}
       <LoginDialog 
         open={loginDialogOpen} 
