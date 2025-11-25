@@ -16,6 +16,8 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  phone: string;
+  countryCode?: string;
   avatar?: string;
   createdAt: string;
 }
@@ -45,7 +47,8 @@ export default function UsersPage() {
       const filtered = users.filter(
         (user) =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase())
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.phone.includes(searchTerm)
       );
       setFilteredUsers(filtered);
     }
@@ -148,7 +151,7 @@ export default function UsersPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
               type="text"
-              placeholder="Search users by name or email..."
+              placeholder="Search users by name, email or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -173,6 +176,7 @@ export default function UsersPage() {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
                     <TableHead>Registration Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
@@ -199,6 +203,9 @@ export default function UsersPage() {
                         <p className="text-sm text-gray-900">{user.email}</p>
                       </TableCell>
                       <TableCell>
+                        <p className="text-sm text-gray-900">{user.countryCode} {user.phone}</p>
+                      </TableCell>
+                      <TableCell>
                         <p className="text-sm text-gray-600">{formatDate(user.createdAt)}</p>
                       </TableCell>
                       <TableCell>
@@ -223,7 +230,7 @@ export default function UsersPage() {
             </div>
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-12">
+              <TableCell colSpan={6} className="text-center py-12">
                 <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">
                   {searchTerm ? "No users found matching your search" : "No users registered yet"}

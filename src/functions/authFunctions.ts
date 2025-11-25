@@ -223,13 +223,24 @@ const serializeUser = (user: IUser) => ({
 /**
  * User signup function
  */
-export const signupUser = async (name: string, email: string, password: string) => {
+export const signupUser = async (name: string, email: string, password: string, phone: string, countryCode: string) => {
   await connectToDatabase();
 
-  // Check if user already exists
+  // Validate inputs
+  if (!name || !email || !password || !phone || !countryCode) {
+    throw new Error("Name, email, password, phone, and country code are required");
+  }
+
+  // Check if user already exists by email
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new Error("User with this email already exists");
+  }
+
+  // Check if phone already exists
+  const existingPhone = await User.findOne({ phone });
+  if (existingPhone) {
+    throw new Error("User with this phone number already exists");
   }
 
   // Create new user
@@ -237,6 +248,8 @@ export const signupUser = async (name: string, email: string, password: string) 
     name,
     email,
     password, // Will be hashed by pre-save hook
+    phone,
+    countryCode,
   });
 
   await user.save();
@@ -270,6 +283,37 @@ export const loginUser = async (email: string, password: string) => {
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {
     throw new Error("Invalid email or password");
+  }
+
+  // Generate JWT token
+  const token = jwt.sign(
+    { _id: user._id.toString(), email: user.email, role: "user" },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return {
+    token,
+    user: serializeUser(user),
+  };
+};
+
+/**
+ * User login with phone number
+ */
+export const loginUserWithPhone = async (phone: string, password: string) => {
+  await connectToDatabase();
+
+  // Find user by phone and include password
+  const user = await User.findOne({ phone }).select("+password") as IUser | null;
+  if (!user) {
+    throw new Error("Invalid phone number or password");
+  }
+
+  // Compare password with hashed password
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    throw new Error("Invalid phone number or password");
   }
 
   // Generate JWT token

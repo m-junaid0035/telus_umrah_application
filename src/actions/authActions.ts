@@ -1,6 +1,6 @@
 "use server";
 
-import { loginApplication, verifyOtpAndLogin, sendOtp, getCurrentApplication, loginAdmin, signupUser, loginUser, getCurrentUser } from "@/functions/authFunctions";
+import { loginApplication, verifyOtpAndLogin, sendOtp, getCurrentApplication, loginAdmin, signupUser, loginUser, loginUserWithPhone, getCurrentUser } from "@/functions/authFunctions";
 import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/db";
 
@@ -218,17 +218,27 @@ export async function signupUserAction(
       ? (formData as FormData).get("email")?.toString()
       : (formData as any).email;
 
+  const phone =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("phone")?.toString()
+      : (formData as any).phone;
+
   const password =
     typeof (formData as any).get === "function"
       ? (formData as FormData).get("password")?.toString()
       : (formData as any).password;
 
-  if (!name || !email || !password) {
-    return { error: { message: ["Name, email, and password are required"] } };
+  const countryCode =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("countryCode")?.toString()
+      : (formData as any).countryCode;
+
+  if (!name || !email || !password || !phone || !countryCode) {
+    return { error: { message: ["Name, email, password, phone, and country code are required"] } };
   }
 
   try {
-    const { token, user } = await signupUser(name, email, password);
+    const { token, user } = await signupUser(name, email, password, phone, countryCode);
 
     // Save token in httpOnly cookie
     const cookieStore = await cookies();
@@ -271,6 +281,48 @@ export async function loginUserAction(
 
   try {
     const { token, user } = await loginUser(email, password);
+
+    // Save token in httpOnly cookie
+    const cookieStore = await cookies();
+    cookieStore.set("userToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return { data: { user } };
+  } catch (error: any) {
+    return { error: { message: [error.message || "Login failed"] } };
+  }
+}
+
+/**
+ * User Login with Phone Action
+ */
+export async function loginUserWithPhoneAction(
+  prevState: ApplicationAuthFormState,
+  formData: FormData | Record<string, any>
+): Promise<ApplicationAuthFormState> {
+  await connectToDatabase();
+
+  // Extract form data
+  const phone =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("phone")?.toString()
+      : (formData as any).phone;
+
+  const password =
+    typeof (formData as any).get === "function"
+      ? (formData as FormData).get("password")?.toString()
+      : (formData as any).password;
+
+  if (!phone || !password) {
+    return { error: { message: ["Phone number and password are required"] } };
+  }
+
+  try {
+    const { token, user } = await loginUserWithPhone(phone, password);
 
     // Save token in httpOnly cookie
     const cookieStore = await cookies();

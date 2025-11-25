@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { loginUserAction, signupUserAction, logoutUserAction, getCurrentUserAction } from '@/actions/authActions';
+import { loginUserAction, signupUserAction, logoutUserAction, getCurrentUserAction, loginUserWithPhoneAction } from '@/actions/authActions';
 import { toast } from '@/hooks/use-toast';
 
 interface User {
@@ -13,7 +13,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  loginWithPhone: (phone: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, phone: string, countryCode: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
@@ -67,9 +68,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const loginWithPhone = async (phone: string, password: string) => {
     try {
-      const result = await signupUserAction({}, { name, email, password });
+      const result = await loginUserWithPhoneAction({}, { phone, password });
+      
+      if (result.error) {
+        throw new Error(result.error.message?.[0] || 'Login failed');
+      }
+      
+      if (result.data?.user) {
+        setUser(result.data.user);
+        toast({
+          title: "Success",
+          description: "Logged in successfully",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Login failed",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const signup = async (name: string, email: string, password: string, phone: string, countryCode: string) => {
+    try {
+      const result = await signupUserAction({}, { name, email, password, phone, countryCode });
       
       if (result.error) {
         throw new Error(result.error.message?.[0] || 'Signup failed');
@@ -112,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         login,
+        loginWithPhone,
         signup,
         logout,
         isAuthenticated: !!user,

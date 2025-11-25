@@ -10,6 +10,8 @@ const serializeUser = (user: any) => ({
   _id: user._id.toString(),
   name: user.name,
   email: user.email,
+  phone: user.phone,
+  countryCode: user.countryCode,
   avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
   createdAt: user.createdAt?.toISOString() || null,
   updatedAt: user.updatedAt?.toISOString() || null,

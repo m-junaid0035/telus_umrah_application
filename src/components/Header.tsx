@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Plane, Menu, X, Phone, Mail, MapPin, ChevronDown, Globe, DollarSign, LogOut, BookmarkPlus, Package, Sparkles, Hotel, Info, HelpCircle } from 'lucide-react';
+import { Plane, Menu, X, Phone, Mail, MapPin, ChevronDown, Globe, DollarSign, LogOut, BookmarkPlus, Package, Sparkles, Hotel, Info, HelpCircle, LogIn, UserPlus } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -464,31 +464,50 @@ export function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <>
-                    <Button 
-                      onClick={() => {
-                        setDialogMode('login');
-                        setLoginDialogOpen(true);
-                      }}
-                      variant="outline"
-                      className={`transition-all ${
-                        shouldShowWhiteBg 
-                          ? 'border-blue-600 text-blue-600 hover:bg-blue-50' 
-                          : 'border-white text-blue-600 hover:bg-white/10'
-                      }`}
-                    >
-                      Login
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        setDialogMode('signup');
-                        setLoginDialogOpen(true);
-                      }}
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all"
-                    >
-                      Signup
-                    </Button>
-                  </>
+                  <div
+                    className="relative"
+                    onMouseEnter={() => {
+                      // Auto open dropdown on hover
+                      const trigger = document.querySelector('[data-register-trigger]');
+                      if (trigger) {
+                        trigger.dispatchEvent(new Event('click', { bubbles: true }));
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      // Optionally close on hover out
+                    }}
+                  >
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        data-register-trigger
+                        className={`px-4 py-2 rounded-lg transition-all cursor-pointer text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl`}
+                      >
+                        Register Now
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setDialogMode('login');
+                            setLoginDialogOpen(true);
+                          }}
+                          className="cursor-pointer flex items-center"
+                        >
+                          <LogIn className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>Login</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setDialogMode('signup');
+                            setLoginDialogOpen(true);
+                          }}
+                          className="cursor-pointer flex items-center"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2 text-green-600" />
+                          <span>Sign Up</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 )}
               </div>
             </nav>
@@ -664,27 +683,35 @@ export function Header() {
                     </div>
                   ) : (
                     <div className="flex gap-2">
-                      <Button 
-                        onClick={() => {
-                          setDialogMode('login');
-                          setLoginDialogOpen(true);
-                          setMobileMenuOpen(false);
-                        }}
-                        variant="outline"
-                        className="flex-1 border-blue-600 text-blue-600"
-                      >
-                        Login
-                      </Button>
-                      <Button 
-                        onClick={() => {
-                          setDialogMode('signup');
-                          setLoginDialogOpen(true);
-                          setMobileMenuOpen(false);
-                        }}
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700"
-                      >
-                        Signup
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center shadow font-medium">
+                          Register Now
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-48">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setDialogMode('login');
+                              setLoginDialogOpen(true);
+                              setMobileMenuOpen(false);
+                            }}
+                            className="flex items-center cursor-pointer"
+                          >
+                            <LogIn className="w-4 h-4 mr-2 text-blue-600" />
+                            <span>Login</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setDialogMode('signup');
+                              setLoginDialogOpen(true);
+                              setMobileMenuOpen(false);
+                            }}
+                            className="flex items-center cursor-pointer"
+                          >
+                            <UserPlus className="w-4 h-4 mr-2 text-green-600" />
+                            <span>Sign Up</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   )}
                 </div>
