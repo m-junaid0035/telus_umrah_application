@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import {
   ChevronLeftIcon,
@@ -40,27 +42,47 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 type PaginationLinkProps = {
   isActive?: boolean;
 } & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.ComponentProps<"a">;
+  (React.ComponentProps<"a"> | (React.ComponentProps<"button"> & { href?: never }));
 
 function PaginationLink({
   className,
   isActive,
   size = "icon",
+  onClick,
+  href,
   ...props
 }: PaginationLinkProps) {
+  const baseClassName = cn(
+    buttonVariants({
+      variant: isActive ? "outline" : "ghost",
+      size,
+    }),
+    className,
+  );
+
+  // If onClick is provided, use a button; otherwise use an anchor
+  if (onClick || !href) {
+    return (
+      <button
+        type="button"
+        aria-current={isActive ? "page" : undefined}
+        data-slot="pagination-link"
+        data-active={isActive}
+        className={baseClassName}
+        onClick={onClick}
+        {...(props as React.ComponentProps<"button">)}
+      />
+    );
+  }
+
   return (
     <a
       aria-current={isActive ? "page" : undefined}
       data-slot="pagination-link"
       data-active={isActive}
-      className={cn(
-        buttonVariants({
-          variant: isActive ? "outline" : "ghost",
-          size,
-        }),
-        className,
-      )}
-      {...props}
+      className={baseClassName}
+      href={href}
+      {...(props as React.ComponentProps<"a">)}
     />
   );
 }

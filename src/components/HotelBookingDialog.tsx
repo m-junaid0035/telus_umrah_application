@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createHotelBookingAction } from "@/actions/hotelBookingActions";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, DollarSign, CreditCard } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface HotelBookingDialogProps {
   hotelId: string;
@@ -19,11 +21,33 @@ interface HotelBookingDialogProps {
     email?: string;
     phone?: string;
   };
+  hotel?: {
+    standardRoomPrice?: number;
+    deluxeRoomPrice?: number;
+    familySuitPrice?: number;
+    transportPrice?: number;
+    mealsPrice?: number;
+  };
+  selectedRoomType?: number; // 0 = standard, 1 = deluxe, 2 = family
 }
 
-export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelBookingDialogProps) {
+export function HotelBookingDialog({ hotelId, hotelName, trigger, user, hotel, selectedRoomType = 0 }: HotelBookingDialogProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  
+  // Determine room type from selectedRoomType index
+  const getRoomType = (index: number): string => {
+    if (index === 0) return 'standard';
+    if (index === 1) return 'deluxe';
+    if (index === 2) return 'family';
+    return 'standard';
+  };
+  
+  // Get room type from selectedRoomType prop (0=standard, 1=deluxe, 2=family)
+  const currentRoomType = getRoomType(selectedRoomType);
+  
   const [formData, setFormData] = useState({
     customerName: user?.name || "",
     customerEmail: user?.email || "",
@@ -40,6 +64,36 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
     transport: false,
     notes: "",
   });
+  
+  // Calculate price preview using the selected room type from hotel details page
+  const calculatePricePreview = () => {
+    if (!formData.checkInDate || !formData.checkOutDate || !hotel) return 0;
+    
+    const checkIn = new Date(formData.checkInDate);
+    const checkOut = new Date(formData.checkOutDate);
+    const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
+    
+    // Use currentRoomType (from selectedRoomType prop) instead of formData.roomType
+    let roomPrice = 0;
+    if (currentRoomType === 'deluxe' && hotel.deluxeRoomPrice) {
+      roomPrice = hotel.deluxeRoomPrice;
+    } else if (currentRoomType === 'family' && hotel.familySuitPrice) {
+      roomPrice = hotel.familySuitPrice;
+    } else if (hotel.standardRoomPrice) {
+      roomPrice = hotel.standardRoomPrice;
+    }
+    
+    let total = roomPrice * nights * formData.rooms;
+    
+    if (formData.meals && hotel.mealsPrice) {
+      total += hotel.mealsPrice * nights * formData.rooms;
+    }
+    if (formData.transport && hotel.transportPrice) {
+      total += hotel.transportPrice;
+    }
+    
+    return total;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,23 +173,24 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
       if (formData.bedType) {
         formDataObj.append("bedType", formData.bedType);
       }
+      // Always append roomType from selectedRoomType prop (the one clicked on hotel details page)
+      const roomTypeToSend = currentRoomType || "standard";
+      formDataObj.append("roomType", roomTypeToSend);
       formDataObj.append("meals", String(formData.meals));
       formDataObj.append("transport", String(formData.transport));
       if (formData.notes) {
         formDataObj.append("notes", formData.notes);
       }
+      if (paymentMethod) {
+        formDataObj.append("paymentMethod", paymentMethod);
+      }
 
       const result = await createHotelBookingAction({}, formDataObj);
 
-      console.log("Hotel booking result:", result);
-
       if (result?.data) {
-        toast({
-          title: "Success",
-          description: "Your booking request has been submitted! We will contact you soon.",
-        });
         setOpen(false);
         // Reset form
+        setPaymentMethod(null);
         setFormData({
           customerName: user?.name || "",
           customerEmail: user?.email || "",
@@ -152,6 +207,8 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
           transport: false,
           notes: "",
         });
+        // Redirect to thank you page
+        router.push("/thank-you?type=hotel");
       } else {
         // Handle different error formats
         let errorMessage = "Failed to submit booking. Please try again.";
@@ -169,8 +226,6 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
             }
           }
         }
-        
-        console.error("Hotel booking error:", result?.error);
         
         toast({
           title: "Error",
@@ -207,7 +262,80 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
         <DialogHeader>
           <DialogTitle>Book Hotel: {hotelName}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        
+        {!paymentMethod ? (
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-600">Please select your preferred payment method:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  paymentMethod === "cash" ? "ring-2 ring-blue-500" : ""
+                }`}
+                onClick={() => setPaymentMethod("cash")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                    Pay in Cash
+                  </CardTitle>
+                  <CardDescription>
+                    Visit our office to complete payment
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    Fill out the booking form and visit our office to make the payment in person. An invoice will be sent to your email.
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  paymentMethod === "online" ? "ring-2 ring-blue-500" : ""
+                }`}
+                onClick={() => setPaymentMethod("online")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-blue-600" />
+                    Pay Online
+                  </CardTitle>
+                  <CardDescription>
+                    Secure online payment
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    Complete your booking and payment securely online.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : paymentMethod === "online" ? (
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Online Payment:</strong> Payment gateway integration will be added here. 
+                For now, please use the "Pay in Cash" option to complete your booking.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => setPaymentMethod(null)}>
+                Back
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="customerName">Full Name *</Label>
@@ -355,6 +483,22 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
                 </div>
               </div>
             )}
+            {/* Display selected room type (read-only) */}
+            <div>
+              <Label>Selected Room Type</Label>
+              <div className="w-full px-3 py-2 border rounded-md bg-gray-50">
+                {currentRoomType === 'deluxe' && hotel?.deluxeRoomPrice && (
+                  <span className="font-medium">Deluxe Room - PKR {hotel.deluxeRoomPrice.toLocaleString()}/night</span>
+                )}
+                {currentRoomType === 'family' && hotel?.familySuitPrice && (
+                  <span className="font-medium">Family Suite - PKR {hotel.familySuitPrice.toLocaleString()}/night</span>
+                )}
+                {(currentRoomType === 'standard' || (!hotel?.deluxeRoomPrice && !hotel?.familySuitPrice)) && hotel?.standardRoomPrice && (
+                  <span className="font-medium">Standard Room - PKR {hotel.standardRoomPrice.toLocaleString()}/night</span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Selected from hotel details page</p>
+            </div>
             <div>
               <Label htmlFor="bedType">Bed Type</Label>
               <select
@@ -375,27 +519,53 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
 
           <div>
             <Label className="mb-2 block">Additional Services</Label>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.meals}
-                  onChange={(e) => setFormData({ ...formData, meals: e.target.checked })}
-                  className="rounded"
-                />
-                <span>Meals</span>
+            <div className="grid grid-cols-1 gap-3">
+              <label className="flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.meals}
+                    onChange={(e) => setFormData({ ...formData, meals: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span className="font-medium">Meals</span>
+                </div>
+                {hotel?.mealsPrice && (
+                  <span className="text-sm text-gray-600">
+                    PKR {hotel.mealsPrice.toLocaleString()} per room per night
+                  </span>
+                )}
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.transport}
-                  onChange={(e) => setFormData({ ...formData, transport: e.target.checked })}
-                  className="rounded"
-                />
-                <span>Transport</span>
+              <label className="flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.transport}
+                    onChange={(e) => setFormData({ ...formData, transport: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span className="font-medium">Transport</span>
+                </div>
+                {hotel?.transportPrice && (
+                  <span className="text-sm text-gray-600">
+                    PKR {hotel.transportPrice.toLocaleString()}
+                  </span>
+                )}
               </label>
             </div>
           </div>
+          
+          {/* Price Preview */}
+          {formData.checkInDate && formData.checkOutDate && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-gray-900">Estimated Total:</span>
+                <span className="text-2xl font-bold text-blue-600">
+                  PKR {calculatePricePreview().toLocaleString()}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div>
             <Label htmlFor="notes">Notes</Label>
@@ -408,6 +578,9 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
           </div>
 
           <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => setPaymentMethod(null)}>
+              Back
+            </Button>
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
               Cancel
             </Button>
@@ -423,6 +596,7 @@ export function HotelBookingDialog({ hotelId, hotelName, trigger, user }: HotelB
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

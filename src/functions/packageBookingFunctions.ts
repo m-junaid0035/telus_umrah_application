@@ -30,6 +30,11 @@ const sanitizePackageBookingData = (data: any) => ({
   totalAmount: data.totalAmount ? Number(data.totalAmount) : undefined,
   paidAmount: data.paidAmount ? Number(data.paidAmount) : 0,
   paymentStatus: data.paymentStatus || "pending",
+  paymentMethod: data.paymentMethod,
+  invoiceGenerated: data.invoiceGenerated,
+  invoiceSent: data.invoiceSent,
+  invoiceUrl: data.invoiceUrl?.trim(),
+  invoiceNumber: data.invoiceNumber?.trim(),
 });
 
 /**
@@ -83,6 +88,10 @@ export const serializePackageBooking = (booking: any) => {
     paidAmount: Number(booking.paidAmount || 0),
     paymentStatus: String(booking.paymentStatus || "pending"),
     paymentMethod: booking.paymentMethod ? String(booking.paymentMethod) : undefined,
+    invoiceGenerated: Boolean(booking.invoiceGenerated || false),
+    invoiceSent: Boolean(booking.invoiceSent || false),
+    invoiceUrl: booking.invoiceUrl ? String(booking.invoiceUrl) : undefined,
+    invoiceNumber: booking.invoiceNumber ? String(booking.invoiceNumber) : undefined,
     createdAt: booking.createdAt?.toISOString?.() || (booking.createdAt instanceof Date ? booking.createdAt.toISOString() : booking.createdAt) || "",
     updatedAt: booking.updatedAt?.toISOString?.() || (booking.updatedAt instanceof Date ? booking.updatedAt.toISOString() : booking.updatedAt) || "",
   };
@@ -132,10 +141,26 @@ export const getPackageBookingById = async (id: string) => {
 
 /** Update package booking by ID */
 export const updatePackageBooking = async (id: string, data: any) => {
-  const updatedData = sanitizePackageBookingData(data);
+  // Handle partial updates - only include fields that are provided
+  const updateData: any = {};
+  if (data.invoiceGenerated !== undefined) updateData.invoiceGenerated = data.invoiceGenerated;
+  if (data.invoiceSent !== undefined) updateData.invoiceSent = data.invoiceSent;
+  if (data.invoiceUrl !== undefined) updateData.invoiceUrl = data.invoiceUrl;
+  if (data.invoiceNumber !== undefined) updateData.invoiceNumber = data.invoiceNumber;
+  
+  // If other fields are provided, sanitize and include them
+  const hasOtherFields = Object.keys(data).some(key => 
+    !['invoiceGenerated', 'invoiceSent', 'invoiceUrl', 'invoiceNumber'].includes(key)
+  );
+  
+  if (hasOtherFields) {
+    const sanitized = sanitizePackageBookingData(data);
+    Object.assign(updateData, sanitized);
+  }
+  
   const booking = await PackageBooking.findByIdAndUpdate(
     id,
-    { $set: updatedData },
+    { $set: updateData },
     { new: true, runValidators: true }
   ).lean();
   

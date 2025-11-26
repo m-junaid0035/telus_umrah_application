@@ -1,5 +1,6 @@
 import { Header } from "@/components/Header";
 import { AuthProvider } from '@/components/AuthContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 import { Footer } from "@/components/Footer";
 
 export default function PublicLayout({
@@ -8,10 +9,12 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AuthProvider>
-      <Header />
-      {children}
-      <Footer/>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <Header />
+        {children}
+        <Footer/>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

@@ -18,6 +18,11 @@ export interface IHotel extends Document {
   amenities?: string[]; // Array of amenity names
   images?: string[]; // Array of image URLs
   availableBedTypes?: string[]; // e.g., ["single", "double", "twin", "triple", "quad"]
+  standardRoomPrice?: number; // Price for standard room
+  deluxeRoomPrice?: number; // Price for deluxe room
+  familySuitPrice?: number; // Price for family suite
+  transportPrice?: number; // Price for transport service
+  mealsPrice?: number; // Price for meals per room per night
   contact?: {
     phone?: string;
     email?: string;
@@ -72,6 +77,28 @@ const hotelSchema = new Schema<IHotel>(
       default: [],
       enum: ["single", "double", "twin", "triple", "quad"],
     },
+    standardRoomPrice: {
+      type: Number,
+      min: [0, "Price must be non-negative"],
+    },
+    deluxeRoomPrice: {
+      type: Number,
+      min: [0, "Price must be non-negative"],
+    },
+    familySuitPrice: {
+      type: Number,
+      min: [0, "Price must be non-negative"],
+    },
+    transportPrice: {
+      type: Number,
+      min: [0, "Transport price must be non-negative"],
+      default: 10000, // Default 10,000 PKR
+    },
+    mealsPrice: {
+      type: Number,
+      min: [0, "Meals price must be non-negative"],
+      default: 5000, // Default 5,000 PKR per room per night
+    },
     contact: {
       phone: {
         type: String,
@@ -92,6 +119,8 @@ const hotelSchema = new Schema<IHotel>(
   }
 );
 
-// Export model
-export const Hotel: Model<IHotel> =
-  mongoose.models.Hotel || mongoose.model<IHotel>("Hotel", hotelSchema);
+// Export model - delete existing model to ensure schema changes are picked up
+if (mongoose.models.Hotel) {
+  delete mongoose.models.Hotel;
+}
+export const Hotel: Model<IHotel> = mongoose.model<IHotel>("Hotel", hotelSchema);

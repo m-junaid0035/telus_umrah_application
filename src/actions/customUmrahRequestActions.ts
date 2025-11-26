@@ -28,6 +28,14 @@ const customUmrahRequestSchema = z.object({
   children: z.number().int().min(0).optional(),
   childAges: z.array(z.number().int().min(0).max(16)).optional(),
   rooms: z.number().int().min(1, "At least one room is required"),
+  selectedServices: z.array(
+    z.object({
+      serviceId: z.string().min(1),
+      serviceName: z.string().min(1),
+      price: z.number().min(0),
+    })
+  ).default([]),
+  // Legacy fields for backward compatibility
   umrahVisa: z.boolean().optional(),
   transport: z.boolean().optional(),
   zaiarat: z.boolean().optional(),
@@ -58,7 +66,7 @@ function str(formData: FormData, key: string) {
   return (v == null ? "" : String(v)).trim();
 }
 
-function parseCustomUmrahRequestFormData(formData: FormData) {
+async function parseCustomUmrahRequestFormData(formData: FormData) {
   // Parse dates
   const departDateStr = str(formData, "departDate");
   const returnDateStr = str(formData, "returnDate");
@@ -117,6 +125,41 @@ function parseCustomUmrahRequestFormData(formData: FormData) {
     children: Number(formData.get("children") || 0),
     childAges,
     rooms: Number(formData.get("rooms") || 1),
+    selectedServices: await (async () => {
+      const selectedServicesStr = str(formData, "selectedServices");
+      if (selectedServicesStr) {
+        try {
+          const serviceIds = JSON.parse(selectedServicesStr) as string[];
+          if (Array.isArray(serviceIds) && serviceIds.length > 0) {
+            // Fetch service details from database to get names and prices
+            const { getAdditionalServiceById } = await import("@/functions/additionalServiceFunctions");
+            
+            const servicesWithDetails = await Promise.all(
+              serviceIds.map(async (id) => {
+                const service = await getAdditionalServiceById(id);
+                if (service) {
+                  return {
+                    serviceId: id,
+                    serviceName: service.name,
+                    price: service.price,
+                  };
+                }
+                return null;
+              })
+            );
+            
+            const validServices = servicesWithDetails.filter((s): s is { serviceId: string; serviceName: string; price: number } => s !== null);
+            return validServices.length > 0 ? validServices : [];
+          }
+        } catch (error) {
+          // If parsing fails, return empty array
+          return [];
+        }
+      }
+      // Always return an array, even if empty
+      return [];
+    })(),
+    // Legacy fields for backward compatibility
     umrahVisa: formData.get("umrahVisa") === "true",
     transport: formData.get("transport") === "true",
     zaiarat: formData.get("zaiarat") === "true",
@@ -141,7 +184,7 @@ export async function createCustomUmrahRequestAction(
     // Parse form data
     let parsed;
     try {
-      parsed = parseCustomUmrahRequestFormData(formData);
+      parsed = await parseCustomUmrahRequestFormData(formData);
     } catch (parseError: any) {
       console.error("Error parsing form data:", parseError);
       return { error: { message: [parseError?.message || "Invalid form data"] } };
@@ -160,6 +203,8 @@ export async function createCustomUmrahRequestAction(
       adults: parsed.adults,
       children: parsed.children,
       rooms: parsed.rooms,
+      selectedServicesCount: parsed.selectedServices?.length || 0,
+      selectedServices: parsed.selectedServices,
       hotelsCount: parsed.hotels?.length || 0,
       hotels: parsed.hotels,
     });
@@ -200,7 +245,7 @@ export async function updateCustomUmrahRequestAction(
   formData: FormData
 ): Promise<CustomUmrahRequestFormState> {
   await connectToDatabase();
-  const parsed = parseCustomUmrahRequestFormData(formData);
+  const parsed = await parseCustomUmrahRequestFormData(formData);
   const result = customUmrahRequestSchema.safeParse(parsed);
 
   if (!result.success) return { error: result.error.flatten().fieldErrors };

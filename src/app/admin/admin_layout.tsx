@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Users, UserCheck, Home, LogOut, Hotel, ListChecks, Scroll, Route, CheckSquare, XSquare, FileText, Package, BookOpen, Calendar, Settings } from "lucide-react";
+import { Menu, X, LayoutDashboard, Users, UserCheck, Home, LogOut, Hotel, ListChecks, Scroll, Route, CheckSquare, XSquare, FileText, Package, BookOpen, Calendar, Settings, Sparkles } from "lucide-react";
 import { logoutAdminAction } from "@/actions/authActions";
 
 type NavItem = {
@@ -159,6 +159,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Settings className="w-4 h-4" />
               Form Options
+            </Link>
+
+            {/* Additional Services */}
+            <Link
+              href="/admin/additional-services"
+              className={linkClasses("/admin/additional-services")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <Sparkles className="w-4 h-4" />
+              Additional Services
+            </Link>
+
+            {/* Service Types */}
+            <Link
+              href="/admin/service-types"
+              className={linkClasses("/admin/service-types")}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <Settings className="w-4 h-4" />
+              Service Types
             </Link>
 
             {/* Features */}

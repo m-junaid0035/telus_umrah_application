@@ -30,6 +30,7 @@ export interface IHotelBooking extends Document {
   children?: number;
   childAges?: number[];
   bedType?: string; // single, double, twin, triple, quad
+  roomType?: string; // standard, deluxe, family
   
   // Additional Services
   meals?: boolean;
@@ -44,6 +45,12 @@ export interface IHotelBooking extends Document {
   paidAmount?: number;
   paymentStatus?: "pending" | "partial" | "paid";
   paymentMethod?: "cash" | "online";
+  
+  // Invoice Information
+  invoiceGenerated?: boolean;
+  invoiceSent?: boolean;
+  invoiceUrl?: string;
+  invoiceNumber?: string;
   
   createdAt: Date;
   updatedAt: Date;
@@ -112,6 +119,10 @@ const hotelBookingSchema = new Schema<IHotelBooking>(
       type: String,
       enum: ["single", "double", "twin", "triple", "quad"],
     },
+    roomType: {
+      type: String,
+      enum: ["standard", "deluxe", "family"],
+    },
     meals: {
       type: Boolean,
       default: false,
@@ -146,6 +157,24 @@ const hotelBookingSchema = new Schema<IHotelBooking>(
     paymentMethod: {
       type: String,
       enum: ["cash", "online"],
+    },
+    invoiceGenerated: {
+      type: Boolean,
+      default: false,
+    },
+    invoiceSent: {
+      type: Boolean,
+      default: false,
+    },
+    invoiceUrl: {
+      type: String,
+      trim: true,
+    },
+    invoiceNumber: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
     },
   },
   {

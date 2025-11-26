@@ -953,6 +953,11 @@ interface BackendHotel {
   amenities?: string[];
   description?: string;
   availableBedTypes?: string[];
+  standardRoomPrice?: number;
+  deluxeRoomPrice?: number;
+  familySuitPrice?: number;
+  transportPrice?: number;
+  mealsPrice?: number;
   contact?: {
     phone?: string;
     email?: string;
@@ -1087,11 +1092,31 @@ export function HotelDetailsPage() {
   const hotelDescription = hotel.description || 'Comfortable accommodation with excellent amenities.';
   const hotelAddress = hotel.contact?.address || hotel.location || 'Address not available';
   
-  // Mock room types for now (can be added to backend later)
+  // Room types with prices from backend
   const roomTypes = [
-    { type: 'Standard Room', capacity: '2-3 People', size: '25 sqm', price: 50000 },
-    { type: 'Deluxe Room', capacity: '2-4 People', size: '35 sqm', price: 75000 },
-    { type: 'Family Suite', capacity: '4-6 People', size: '50 sqm', price: 100000 }
+    { 
+      type: 'Standard Room', 
+      capacity: '2-3 People', 
+      size: '25 sqm', 
+      price: hotel.standardRoomPrice || 50000 
+    },
+    { 
+      type: 'Deluxe Room', 
+      capacity: '2-4 People', 
+      size: '35 sqm', 
+      price: hotel.deluxeRoomPrice || 75000 
+    },
+    { 
+      type: 'Family Suite', 
+      capacity: '4-6 People', 
+      size: '50 sqm', 
+      price: hotel.familySuitPrice || 100000 
+    }
+  ].filter(room => room.price > 0); // Only show rooms with valid prices
+  
+  // Fallback: if no valid prices, show at least standard room with default price
+  const displayRoomTypes = roomTypes.length > 0 ? roomTypes : [
+    { type: 'Standard Room', capacity: '2-3 People', size: '25 sqm', price: 50000 }
   ];
 
   return (
@@ -1173,7 +1198,7 @@ export function HotelDetailsPage() {
                 
                 <div className="text-right bg-white/10 backdrop-blur-md p-6 rounded-lg">
                   <p className="text-white/80 text-sm mb-1">Starting from</p>
-                  <p className="text-3xl font-bold text-white">PKR {roomTypes[0].price.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-white">PKR {displayRoomTypes[0].price.toLocaleString()}</p>
                   <p className="text-white/70 text-sm">per night</p>
                 </div>
               </div>
@@ -1224,7 +1249,7 @@ export function HotelDetailsPage() {
               <CardContent className="p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Room Types & Pricing</h2>
                 <div className="space-y-4">
-                  {roomTypes.map((room: any, index: number) => (
+                  {displayRoomTypes.map((room: any, index: number) => (
                     <motion.div
                       key={index}
                       whileHover={{ scale: 1.01 }}
@@ -1286,12 +1311,12 @@ export function HotelDetailsPage() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-3xl font-bold text-blue-600">
-                      PKR {roomTypes[selectedRoomType].price.toLocaleString()}
+                      PKR {displayRoomTypes[selectedRoomType]?.price.toLocaleString() || displayRoomTypes[0]?.price.toLocaleString()}
                     </span>
                     <span className="text-gray-600">/night</span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    {roomTypes[selectedRoomType].type}
+                    {displayRoomTypes[selectedRoomType]?.type || displayRoomTypes[0]?.type}
                   </p>
                 </div>
 
@@ -1319,6 +1344,14 @@ export function HotelDetailsPage() {
                         hotelId={hotelId}
                         hotelName={hotel.name}
                         user={user}
+                        hotel={{
+                          standardRoomPrice: hotel.standardRoomPrice,
+                          deluxeRoomPrice: hotel.deluxeRoomPrice,
+                          familySuitPrice: hotel.familySuitPrice,
+                          transportPrice: hotel.transportPrice || 10000,
+                          mealsPrice: hotel.mealsPrice || 5000,
+                        }}
+                        selectedRoomType={selectedRoomType}
                         trigger={
                           <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-6">
                             <Calendar className="w-5 h-5 mr-2" />

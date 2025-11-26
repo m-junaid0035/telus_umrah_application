@@ -68,6 +68,11 @@ export default function CreateHotelForm() {
     contactPhone: "",
     contactEmail: "",
     contactAddress: "",
+    standardRoomPrice: "",
+    deluxeRoomPrice: "",
+    familySuitPrice: "",
+    transportPrice: "",
+    mealsPrice: "",
   });
 
   const [formState, dispatch, isPending] = useActionState(
@@ -97,6 +102,11 @@ export default function CreateHotelForm() {
         contactPhone: formState.formData.contact?.phone || "",
         contactEmail: formState.formData.contact?.email || "",
         contactAddress: formState.formData.contact?.address || "",
+        standardRoomPrice: formState.formData.standardRoomPrice?.toString() || "",
+        deluxeRoomPrice: formState.formData.deluxeRoomPrice?.toString() || "",
+        familySuitPrice: formState.formData.familySuitPrice?.toString() || "",
+        transportPrice: formState.formData.transportPrice?.toString() || "",
+        mealsPrice: formState.formData.mealsPrice?.toString() || "",
       });
       
       if (formState.formData.amenities && formState.formData.amenities.length > 0) {
@@ -125,6 +135,11 @@ export default function CreateHotelForm() {
         contactPhone: "",
         contactEmail: "",
         contactAddress: "",
+        standardRoomPrice: "",
+        deluxeRoomPrice: "",
+        familySuitPrice: "",
+        transportPrice: "",
+        mealsPrice: "",
       });
       setAmenities([""]);
       setImages([""]);
@@ -284,6 +299,101 @@ export default function CreateHotelForm() {
               {errorFor("distance") && (
                 <p className="text-sm text-red-500">{errorFor("distance")}</p>
               )}
+            </div>
+
+            {/* Room Prices */}
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-lg font-semibold">Room Prices (PKR)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="standardRoomPrice">Standard Room Price</Label>
+                <Input
+                  id="standardRoomPrice"
+                  name="standardRoomPrice"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={formValues.standardRoomPrice}
+                  onChange={(e) => setFormValues({ ...formValues, standardRoomPrice: e.target.value })}
+                  aria-invalid={errorFor("standardRoomPrice") ? "true" : "false"}
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  placeholder="Enter price for standard room"
+                />
+                {errorFor("standardRoomPrice") && (
+                  <p className="text-sm text-red-500">{errorFor("standardRoomPrice")}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="deluxeRoomPrice">Deluxe Room Price</Label>
+                <Input
+                  id="deluxeRoomPrice"
+                  name="deluxeRoomPrice"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={formValues.deluxeRoomPrice}
+                  onChange={(e) => setFormValues({ ...formValues, deluxeRoomPrice: e.target.value })}
+                  aria-invalid={errorFor("deluxeRoomPrice") ? "true" : "false"}
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  placeholder="Enter price for deluxe room"
+                />
+                {errorFor("deluxeRoomPrice") && (
+                  <p className="text-sm text-red-500">{errorFor("deluxeRoomPrice")}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="familySuitPrice">Family Suite Price</Label>
+                <Input
+                  id="familySuitPrice"
+                  name="familySuitPrice"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={formValues.familySuitPrice}
+                  onChange={(e) => setFormValues({ ...formValues, familySuitPrice: e.target.value })}
+                  aria-invalid={errorFor("familySuitPrice") ? "true" : "false"}
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  placeholder="Enter price for family suite"
+                />
+                {errorFor("familySuitPrice") && (
+                  <p className="text-sm text-red-500">{errorFor("familySuitPrice")}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="transportPrice">Transport Price (PKR)</Label>
+                <Input
+                  id="transportPrice"
+                  name="transportPrice"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={formValues.transportPrice}
+                  onChange={(e) => setFormValues({ ...formValues, transportPrice: e.target.value })}
+                  aria-invalid={errorFor("transportPrice") ? "true" : "false"}
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  placeholder="Enter price for transport service"
+                />
+                {errorFor("transportPrice") && (
+                  <p className="text-sm text-red-500">{errorFor("transportPrice")}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mealsPrice">Meals Price per Room per Night (PKR)</Label>
+                <Input
+                  id="mealsPrice"
+                  name="mealsPrice"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={formValues.mealsPrice}
+                  onChange={(e) => setFormValues({ ...formValues, mealsPrice: e.target.value })}
+                  aria-invalid={errorFor("mealsPrice") ? "true" : "false"}
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  placeholder="Enter price for meals per room per night"
+                />
+                {errorFor("mealsPrice") && (
+                  <p className="text-sm text-red-500">{errorFor("mealsPrice")}</p>
+                )}
+              </div>
             </div>
 
             {/* Amenities */}

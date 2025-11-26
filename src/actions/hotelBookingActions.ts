@@ -28,6 +28,7 @@ const hotelBookingSchema = z.object({
   children: z.number().int().min(0).optional(),
   childAges: z.array(z.number().int().min(0).max(16)).optional(),
   bedType: z.enum(["single", "double", "twin", "triple", "quad"]).optional(),
+  roomType: z.enum(["standard", "deluxe", "family"]).optional(),
   meals: z.boolean().optional(),
   transport: z.boolean().optional(),
   status: z.nativeEnum(HotelBookingStatus).optional(),
@@ -72,6 +73,7 @@ function parseHotelBookingFormData(formData: FormData) {
     children: Number(formData.get("children") || 0),
     childAges: childAges.length > 0 ? childAges : undefined,
     bedType: str(formData, "bedType") || undefined,
+    roomType: str(formData, "roomType") || "standard", // Default to standard if not provided
     meals: formData.get("meals") === "true",
     transport: formData.get("transport") === "true",
     status: str(formData, "status") || HotelBookingStatus.Pending,
@@ -91,21 +93,138 @@ export async function createHotelBookingAction(
   try {
     await connectToDatabase();
     const parsed = parseHotelBookingFormData(formData);
-    console.log("Parsed hotel booking data:", parsed);
     
     const result = hotelBookingSchema.safeParse(parsed);
 
     if (!result.success) {
-      console.error("Hotel booking validation error:", result.error.flatten().fieldErrors);
       return { error: result.error.flatten().fieldErrors };
     }
 
-    console.log("Creating hotel booking with data:", result.data);
+    // Calculate total amount based on room type, dates, and services
+    let calculatedTotal = 0;
+    if (result.data.checkInDate && result.data.checkOutDate) {
+      const { Hotel } = await import('@/models/Hotel');
+      const hotel = await Hotel.findById(result.data.hotelId).lean();
+      
+      if (hotel) {
+        const checkIn = new Date(result.data.checkInDate);
+        const checkOut = new Date(result.data.checkOutDate);
+        const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
+        
+        // Get room price based on roomType (default to standard if not provided)
+        const roomType = result.data.roomType || 'standard';
+        let roomPricePerNight = 0;
+        if (roomType === 'deluxe' && hotel.deluxeRoomPrice && hotel.deluxeRoomPrice > 0) {
+          roomPricePerNight = hotel.deluxeRoomPrice;
+        } else if (roomType === 'family' && hotel.familySuitPrice && hotel.familySuitPrice > 0) {
+          roomPricePerNight = hotel.familySuitPrice;
+        } else if (hotel.standardRoomPrice && hotel.standardRoomPrice > 0) {
+          roomPricePerNight = hotel.standardRoomPrice;
+        }
+        
+        calculatedTotal = roomPricePerNight * nights * (result.data.rooms || 1);
+        
+        // Add meals - use hotel price or default 5000 PKR per room per night
+        if (result.data.meals) {
+          const mealsPrice = hotel.mealsPrice || 5000; // Default 5000 PKR if not set
+          const mealsCost = mealsPrice * nights * (result.data.rooms || 1);
+          calculatedTotal += mealsCost;
+        }
+        
+        // Add transport - use hotel price or default 10000 PKR
+        if (result.data.transport) {
+          const transportPrice = hotel.transportPrice || 10000; // Default 10000 PKR if not set
+          calculatedTotal += transportPrice;
+        }
+      }
+    }
+    
+    // Add calculated total to booking data
+    result.data.totalAmount = calculatedTotal > 0 ? calculatedTotal : result.data.totalAmount;
+    
     const booking = await createHotelBooking(result.data);
-    console.log("Hotel booking created successfully:", booking);
+    
+    // Generate invoice for ALL bookings
+    if (booking?._id) {
+      try {
+        const { generateInvoiceNumber, generateInvoicePDF } = await import('@/lib/generateInvoice');
+        const { Hotel } = await import('@/models/Hotel');
+        const { sendInvoiceEmail } = await import('@/lib/sendInvoiceEmail');
+        
+        // Get hotel details
+        await connectToDatabase(); // Ensure DB connection
+        const hotel = await Hotel.findById(result.data.hotelId).lean();
+        const itemName = hotel?.name || result.data.hotelName || 'Hotel Booking';
+        
+        // Generate invoice number
+        const invoiceNumber = generateInvoiceNumber(booking._id.toString(), 'hotel');
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const invoiceUrl = `${baseUrl}/api/invoice/${booking._id}?type=hotel`;
+        
+        // Prepare invoice data - handle dates properly
+        const checkInDate = result.data.checkInDate 
+          ? (result.data.checkInDate instanceof Date ? result.data.checkInDate : new Date(result.data.checkInDate))
+          : undefined;
+        const checkOutDate = result.data.checkOutDate 
+          ? (result.data.checkOutDate instanceof Date ? result.data.checkOutDate : new Date(result.data.checkOutDate))
+          : undefined;
+        
+        const invoiceData = {
+          invoiceNumber,
+          bookingId: booking._id.toString(),
+          bookingType: 'hotel' as const,
+          customerName: result.data.customerName,
+          customerEmail: result.data.customerEmail,
+          customerPhone: result.data.customerPhone,
+          customerNationality: result.data.customerNationality,
+          bookingDate: booking.createdAt ? new Date(booking.createdAt) : new Date(),
+          checkInDate,
+          checkOutDate,
+          itemName,
+          totalAmount: result.data.totalAmount || 0,
+          paymentMethod: result.data.paymentMethod || 'cash',
+          rooms: result.data.rooms,
+          additionalServices: [
+            ...(result.data.meals ? ['Meals'] : []),
+            ...(result.data.transport ? ['Transport'] : []),
+          ],
+        };
+        
+        // Update booking with invoice info
+        // PDF will be generated on-demand when user clicks download (avoids font errors during booking)
+        await updateHotelBooking(booking._id.toString(), {
+          invoiceGenerated: true,
+          invoiceNumber,
+          invoiceUrl,
+        });
+        
+        // Send invoice email to ALL bookings (with PDF attached)
+        try {
+          const emailResult = await sendInvoiceEmail({
+            to: result.data.customerEmail,
+            customerName: result.data.customerName,
+            invoiceNumber,
+            bookingType: 'hotel',
+            invoiceUrl,
+            bookingId: booking._id.toString(),
+          });
+          
+          // Update booking with invoice sent status if email was sent successfully
+          if (emailResult.success) {
+            await updateHotelBooking(booking._id.toString(), {
+              invoiceSent: true,
+            });
+          }
+        } catch (emailError: any) {
+          // Don't fail the booking if email fails
+        }
+      } catch (invoiceError: any) {
+        // Don't fail the booking if invoice generation fails
+      }
+    }
+    
     return { data: booking };
   } catch (error: any) {
-    console.error("Hotel booking creation error:", error);
     return { error: { message: [error?.message || "Failed to create booking"] } };
   }
 }
@@ -142,13 +261,9 @@ export async function deleteHotelBookingAction(id: string) {
 export async function fetchAllHotelBookingsAction() {
   try {
     await connectToDatabase();
-    console.log("fetchAllHotelBookingsAction - Fetching bookings...");
     const bookings = await getAllHotelBookings();
-    console.log("fetchAllHotelBookingsAction - Fetched bookings count:", bookings?.length || 0);
-    console.log("fetchAllHotelBookingsAction - Sample booking:", bookings?.[0]);
     return { data: bookings };
   } catch (error: any) {
-    console.error("fetchAllHotelBookingsAction - Error:", error);
     return { error: { message: [error?.message || "Failed to fetch bookings"] } };
   }
 }

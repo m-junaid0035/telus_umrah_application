@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar as CalendarIcon, MapPin, Plane, Hotel, Users, Bed, Star, CheckCircle, Send, Plus, Minus, X, Wifi, ChevronRight, ChevronLeft, Check, Award, Globe, Headphones, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -12,6 +13,8 @@ import { format, isBefore, startOfDay, addDays } from 'date-fns';
 import { createCustomUmrahRequestAction } from '@/actions/customUmrahRequestActions';
 import { fetchAllHotelsAction } from '@/actions/hotelActions';
 import { fetchFormOptionsByTypeAction } from '@/actions/formOptionActions';
+import { fetchActiveAdditionalServicesAction } from '@/actions/additionalServiceActions';
+import { ServiceTypeDialog } from '@/components/ServiceTypeDialog';
 import { FormOptionType } from '@/models/FormOption';
 import { toast } from '@/hooks/use-toast';
 
@@ -57,6 +60,7 @@ interface BackendHotel {
 }
 
 export function CustomUmrahForm() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     from: '',
@@ -69,11 +73,7 @@ export function CustomUmrahForm() {
     children: 0,
     childAges: [] as number[],
     rooms: 1,
-    umrahVisa: false,
-    transport: false,
-    zaiarat: false,
-    meals: false,
-    esim: false,
+    selectedServices: [] as string[], // Array of service IDs
     name: '',
     email: '',
     phone: '',
@@ -96,6 +96,21 @@ export function CustomUmrahForm() {
   const [airlines, setAirlines] = useState<Array<{name: string, value: string, logo?: string}>>([]);
   const [airlineClasses, setAirlineClasses] = useState<Array<{name: string, value: string}>>([]);
   const [nationalities, setNationalities] = useState<Array<{name: string, value: string}>>([]);
+  const [additionalServices, setAdditionalServices] = useState<Array<{
+    _id: string;
+    name: string;
+    description?: string;
+    price: number;
+    serviceType?: string;
+    icon?: string;
+  }>>([]);
+  const [serviceTypes, setServiceTypes] = useState<Array<{
+    type: string;
+    label: string;
+    services: Array<{ _id: string; name: string; price: number; description?: string }>;
+  }>>([]);
+  const [selectedServiceType, setSelectedServiceType] = useState<string | null>(null);
+  const [serviceTypeDialogOpen, setServiceTypeDialogOpen] = useState(false);
   const [loadingOptions, setLoadingOptions] = useState(true);
 
   useEffect(() => {
@@ -110,13 +125,14 @@ export function CustomUmrahForm() {
           setBackendHotels(hotelsResult.data as BackendHotel[]);
         }
         
-        // Load form options
-        const [fromCitiesRes, toCitiesRes, airlinesRes, airlineClassesRes, nationalitiesRes] = await Promise.all([
+        // Load form options and additional services
+        const [fromCitiesRes, toCitiesRes, airlinesRes, airlineClassesRes, nationalitiesRes, servicesRes] = await Promise.all([
           fetchFormOptionsByTypeAction(FormOptionType.FromCity),
           fetchFormOptionsByTypeAction(FormOptionType.ToCity),
           fetchFormOptionsByTypeAction(FormOptionType.Airline),
           fetchFormOptionsByTypeAction(FormOptionType.AirlineClass),
           fetchFormOptionsByTypeAction(FormOptionType.Nationality),
+          fetchActiveAdditionalServicesAction(),
         ]);
         
         if (fromCitiesRes?.data) {
@@ -156,8 +172,94 @@ export function CustomUmrahForm() {
             value: opt.value,
           })));
         }
+        
+        // Always show the 5 service types, even if no services exist
+        const typeGroups: Record<string, Array<{ _id: string; name: string; price: number; description?: string }>> = {
+          umrahVisa: [],
+          transport: [],
+          zaiarat: [],
+          meals: [],
+          esim: [],
+        };
+        
+        // Group services by type if they exist
+        if (servicesRes?.data && Array.isArray(servicesRes.data)) {
+          setAdditionalServices(servicesRes.data);
+          
+          servicesRes.data.forEach((service: any) => {
+            // Check both serviceType and icon fields (icon as fallback)
+            const serviceType = service.serviceType || service.icon;
+            // Match serviceType (case-insensitive)
+            if (serviceType) {
+              const normalizedType = String(serviceType).toLowerCase().trim();
+              
+              // Check if it matches one of our 5 types with flexible matching
+              // Umrah Visa
+              if (normalizedType === 'umrahvisa' || normalizedType === 'umrah-visa' || normalizedType === 'visa') {
+                typeGroups.umrahVisa.push({
+                  _id: service._id,
+                  name: service.name,
+                  price: service.price,
+                  description: service.description,
+                });
+              } 
+              // Transport
+              else if (normalizedType === 'transport') {
+                typeGroups.transport.push({
+                  _id: service._id,
+                  name: service.name,
+                  price: service.price,
+                  description: service.description,
+                });
+              } 
+              // Zaiarat - handle common typos: zairat, ziarat, ziyara, ziyarat
+              else if (normalizedType === 'zaiarat' || 
+                       normalizedType === 'zairat' || 
+                       normalizedType === 'ziarat' || 
+                       normalizedType === 'ziyara' || 
+                       normalizedType === 'ziyarat' ||
+                       normalizedType.startsWith('zai') ||
+                       normalizedType.startsWith('ziy')) {
+                typeGroups.zaiarat.push({
+                  _id: service._id,
+                  name: service.name,
+                  price: service.price,
+                  description: service.description,
+                });
+              } 
+              // Meals
+              else if (normalizedType === 'meals' || normalizedType === 'meal') {
+                typeGroups.meals.push({
+                  _id: service._id,
+                  name: service.name,
+                  price: service.price,
+                  description: service.description,
+                });
+              } 
+              // eSIM
+              else if (normalizedType === 'esim' || normalizedType === 'e-sim' || normalizedType === 'sim' || normalizedType === 'esimcard') {
+                typeGroups.esim.push({
+                  _id: service._id,
+                  name: service.name,
+                  price: service.price,
+                  description: service.description,
+                });
+              }
+            }
+          });
+        }
+        
+        // Always create service types array with labels (even if empty)
+        const types = [
+          { type: 'umrahVisa', label: 'Umrah Visa', services: typeGroups.umrahVisa },
+          { type: 'transport', label: 'Transport', services: typeGroups.transport },
+          { type: 'zaiarat', label: 'Zaiarat', services: typeGroups.zaiarat },
+          { type: 'meals', label: 'Meals', services: typeGroups.meals },
+          { type: 'esim', label: 'eSIM', services: typeGroups.esim },
+        ];
+        
+        setServiceTypes(types);
       } catch (error) {
-        console.error("Failed to load data:", error);
         toast({
           title: "Error",
           description: "Failed to load form data",
@@ -442,12 +544,10 @@ export function CustomUmrahForm() {
       });
       formDataObj.append("rooms", formData.rooms.toString());
 
-      // Additional Services
-      formDataObj.append("umrahVisa", formData.umrahVisa.toString());
-      formDataObj.append("transport", formData.transport.toString());
-      formDataObj.append("zaiarat", formData.zaiarat.toString());
-      formDataObj.append("meals", formData.meals.toString());
-      formDataObj.append("esim", formData.esim.toString());
+      // Additional Services - send selected service IDs
+      // Always send the array, even if empty
+      const servicesToSend = Array.isArray(formData.selectedServices) ? formData.selectedServices : [];
+      formDataObj.append("selectedServices", JSON.stringify(servicesToSend));
 
       // Hotels - First hotel is Makkah, additional are Madina
       formDataObj.append("hotelCount", hotelSelections.length.toString());
@@ -489,10 +589,6 @@ export function CustomUmrahForm() {
       console.log("Server response:", result);
 
       if (result?.data) {
-        toast({
-          title: "Success",
-          description: "Thank you for your inquiry! We will contact you soon with the best package options.",
-        });
         // Reset form
         setFormData({
           from: '',
@@ -505,11 +601,7 @@ export function CustomUmrahForm() {
           children: 0,
           childAges: [],
           rooms: 1,
-          umrahVisa: false,
-          transport: false,
-          zaiarat: false,
-          meals: false,
-          esim: false,
+          selectedServices: [],
           name: '',
           email: '',
           phone: '',
@@ -517,6 +609,8 @@ export function CustomUmrahForm() {
         });
         setHotelSelections([{ hotelClass: '', hotel: '', stayDuration: '1', bedType: '' }]);
         setCurrentStep(1);
+        // Redirect to thank you page
+        router.push("/thank-you?type=custom");
       } else {
         console.error("Form submission error:", result?.error);
         let errorMessage = "Failed to submit request. Please try again.";
@@ -564,8 +658,16 @@ export function CustomUmrahForm() {
     }
   };
 
-  const handleSwitchChange = (field: string) => (checked: boolean) => {
-    setFormData({ ...formData, [field]: checked });
+  const handleServiceToggle = (serviceId: string) => {
+    setFormData(prev => {
+      const isSelected = prev.selectedServices.includes(serviceId);
+      return {
+        ...prev,
+        selectedServices: isSelected
+          ? prev.selectedServices.filter(id => id !== serviceId)
+          : [...prev.selectedServices, serviceId]
+      };
+    });
   };
 
   const addHotelSelection = () => {
@@ -1102,108 +1204,75 @@ export function CustomUmrahForm() {
                     <h3 className="text-gray-900">Additional Services</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                      formData.umrahVisa 
-                        ? 'bg-[rgb(30,58,109)] text-white' 
-                        : 'bg-white text-gray-900'
-                    }`}>
-                      <Label htmlFor="umrahVisa" className="cursor-pointer">
-                        <div>
-                          <p className="text-sm">Umrah Visa</p>
-                          <p className={`text-xs ${formData.umrahVisa ? 'text-white/80' : 'text-gray-500'}`}>
-                            Visa processing
-                          </p>
-                        </div>
-                      </Label>
-                      <Switch
-                        id="umrahVisa"
-                        checked={formData.umrahVisa}
-                        onCheckedChange={handleSwitchChange('umrahVisa')}
-                      />
+                  {loadingOptions ? (
+                    <div className="flex justify-center items-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      <span className="text-gray-600">Loading services...</span>
                     </div>
-                    
-                    <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                      formData.transport 
-                        ? 'bg-[rgb(30,58,109)] text-white' 
-                        : 'bg-white text-gray-900'
-                    }`}>
-                      <Label htmlFor="transport" className="cursor-pointer">
-                        <div>
-                          <p className="text-sm">Transport</p>
-                          <p className={`text-xs ${formData.transport ? 'text-white/80' : 'text-gray-500'}`}>
-                            Airport transfers
-                          </p>
-                        </div>
-                      </Label>
-                      <Switch
-                        id="transport"
-                        checked={formData.transport}
-                        onCheckedChange={handleSwitchChange('transport')}
-                      />
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                      {serviceTypes.map((typeGroup) => {
+                        const selectedCount = typeGroup.services.filter((s) =>
+                          formData.selectedServices.includes(s._id)
+                        ).length;
+                        const hasServices = typeGroup.services.length > 0;
+                        return (
+                          <div
+                            key={typeGroup.type}
+                            className={`flex flex-col justify-between p-4 rounded-lg border-2 transition-all duration-300 ${
+                              hasServices ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                            } ${
+                              selectedCount > 0
+                                ? 'bg-[rgb(30,58,109)] text-white border-[rgb(30,58,109)]'
+                                : 'bg-white text-gray-900 border-gray-200 hover:border-[rgb(30,58,109)]'
+                            }`}
+                            onClick={() => {
+                              if (hasServices) {
+                                setSelectedServiceType(typeGroup.type);
+                                setServiceTypeDialogOpen(true);
+                              }
+                            }}
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className={`text-sm font-semibold ${hasServices ? 'cursor-pointer' : ''}`}>
+                                  {typeGroup.label}
+                                </Label>
+                                {hasServices && (
+                                  <div className="text-xs opacity-70">
+                                    {typeGroup.services.length} option{typeGroup.services.length !== 1 ? 's' : ''}
+                                  </div>
+                                )}
+                              </div>
+                              {selectedCount > 0 && (
+                                <p className={`text-xs ${selectedCount > 0 ? 'text-white/80' : 'text-gray-500'}`}>
+                                  {selectedCount} selected
+                                </p>
+                              )}
+                              {!hasServices && (
+                                <p className="text-xs text-gray-500">
+                                  No services available
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    
-                    <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                      formData.zaiarat 
-                        ? 'bg-[rgb(30,58,109)] text-white' 
-                        : 'bg-white text-gray-900'
-                    }`}>
-                      <Label htmlFor="zaiarat" className="cursor-pointer">
-                        <div>
-                          <p className="text-sm">Zaiarat</p>
-                          <p className={`text-xs ${formData.zaiarat ? 'text-white/80' : 'text-gray-500'}`}>
-                            Holy sites tour
-                          </p>
-                        </div>
-                      </Label>
-                      <Switch
-                        id="zaiarat"
-                        checked={formData.zaiarat}
-                        onCheckedChange={handleSwitchChange('zaiarat')}
-                      />
-                    </div>
-                    
-                    <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                      formData.meals 
-                        ? 'bg-[rgb(30,58,109)] text-white' 
-                        : 'bg-white text-gray-900'
-                    }`}>
-                      <Label htmlFor="meals" className="cursor-pointer">
-                        <div>
-                          <p className="text-sm">Meals</p>
-                          <p className={`text-xs ${formData.meals ? 'text-white/80' : 'text-gray-500'}`}>
-                            Breakfast + Dinner
-                          </p>
-                        </div>
-                      </Label>
-                      <Switch
-                        id="meals"
-                        checked={formData.meals}
-                        onCheckedChange={handleSwitchChange('meals')}
-                      />
-                    </div>
-                    
-                    <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                      formData.esim 
-                        ? 'bg-[rgb(30,58,109)] text-white' 
-                        : 'bg-white text-gray-900'
-                    }`}>
-                      <Label htmlFor="esim" className="cursor-pointer">
-                        <div>
-                          <p className="text-sm">eSIM</p>
-                          <p className={`text-xs ${formData.esim ? 'text-white/80' : 'text-gray-500'}`}>
-                            Mobile connectivity
-                          </p>
-                        </div>
-                      </Label>
-                      <Switch
-                        id="esim"
-                        checked={formData.esim}
-                        onCheckedChange={handleSwitchChange('esim')}
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
+
+                {/* Service Type Dialog */}
+                {selectedServiceType && (
+                  <ServiceTypeDialog
+                    open={serviceTypeDialogOpen}
+                    onOpenChange={setServiceTypeDialogOpen}
+                    serviceType={serviceTypes.find(t => t.type === selectedServiceType)?.label || selectedServiceType}
+                    services={serviceTypes.find(t => t.type === selectedServiceType)?.services || []}
+                    selectedServices={formData.selectedServices}
+                    onServiceToggle={handleServiceToggle}
+                  />
+                )}
 
                 {/* Flight Details */}
                 <div className="bg-blue-50 p-4 rounded-xl">

@@ -25,6 +25,11 @@ const hotelSchema = z.object({
   amenities: z.array(z.string().trim()).optional(),
   images: z.array(z.string().trim().url()).optional(),
   availableBedTypes: z.array(z.enum(["single", "double", "twin", "triple", "quad"])).optional(),
+  standardRoomPrice: z.number().min(0, "Price must be non-negative").optional(),
+  deluxeRoomPrice: z.number().min(0, "Price must be non-negative").optional(),
+  familySuitPrice: z.number().min(0, "Price must be non-negative").optional(),
+  transportPrice: z.number().min(0, "Transport price must be non-negative").optional(),
+  mealsPrice: z.number().min(0, "Meals price must be non-negative").optional(),
   contact: z.object({
     phone: z.string()
       .refine((val) => {
@@ -82,6 +87,28 @@ function parseHotelFormData(formData: FormData) {
   const typeStr = str(formData, "type");
   const type = typeStr as HotelType;
 
+  // Parse price fields - handle empty strings and convert to numbers
+  const standardRoomPriceStr = str(formData, "standardRoomPrice");
+  const standardRoomPrice = standardRoomPriceStr && standardRoomPriceStr.trim() !== "" 
+    ? Number(standardRoomPriceStr) 
+    : undefined;
+  const deluxeRoomPriceStr = str(formData, "deluxeRoomPrice");
+  const deluxeRoomPrice = deluxeRoomPriceStr && deluxeRoomPriceStr.trim() !== "" 
+    ? Number(deluxeRoomPriceStr) 
+    : undefined;
+  const familySuitPriceStr = str(formData, "familySuitPrice");
+  const familySuitPrice = familySuitPriceStr && familySuitPriceStr.trim() !== "" 
+    ? Number(familySuitPriceStr) 
+    : undefined;
+  const transportPriceStr = str(formData, "transportPrice");
+  const transportPrice = transportPriceStr && transportPriceStr.trim() !== "" 
+    ? Number(transportPriceStr) 
+    : undefined;
+  const mealsPriceStr = str(formData, "mealsPrice");
+  const mealsPrice = mealsPriceStr && mealsPriceStr.trim() !== "" 
+    ? Number(mealsPriceStr) 
+    : undefined;
+
   return {
     type: type,
     name: str(formData, "name"),
@@ -92,6 +119,11 @@ function parseHotelFormData(formData: FormData) {
     amenities: amenities.length > 0 ? amenities : undefined,
     images: images.length > 0 ? images : undefined,
     availableBedTypes: availableBedTypes.length > 0 ? availableBedTypes : undefined,
+    standardRoomPrice: standardRoomPrice && standardRoomPrice > 0 ? standardRoomPrice : undefined,
+    deluxeRoomPrice: deluxeRoomPrice && deluxeRoomPrice > 0 ? deluxeRoomPrice : undefined,
+    familySuitPrice: familySuitPrice && familySuitPrice > 0 ? familySuitPrice : undefined,
+    transportPrice: transportPrice && transportPrice > 0 ? transportPrice : undefined,
+    mealsPrice: mealsPrice && mealsPrice > 0 ? mealsPrice : undefined,
     contact,
   };
 }

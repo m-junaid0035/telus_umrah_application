@@ -45,7 +45,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Eye, Trash2, Loader2 } from "lucide-react";
+import { Eye, Trash2, Loader2, Download, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -68,6 +68,9 @@ interface IHotelBooking {
   checkOutDate: string;
   adults: number;
   children: number;
+  invoiceGenerated?: boolean;
+  invoiceNumber?: string;
+  invoiceUrl?: string;
   createdAt: string;
 }
 
@@ -120,7 +123,8 @@ function HotelBookingsTable({
             <TableHead>Check-in</TableHead>
             <TableHead>Guests</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="w-[150px] text-right">Actions</TableHead>
+            <TableHead>Invoice</TableHead>
+            <TableHead className="w-[180px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -174,7 +178,30 @@ function HotelBookingsTable({
                   </Select>
                 </TableCell>
                 <TableCell>
+                  {booking.invoiceGenerated ? (
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                      <FileText className="w-3 h-3 mr-1" />
+                      {booking.invoiceNumber || 'Ready'}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-gray-500">
+                      Pending
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
                   <div className="flex justify-end items-center gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => {
+                        window.open(`/api/invoice/${booking._id}?type=hotel`, '_blank');
+                      }}
+                      title="Download Invoice"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -199,7 +226,7 @@ function HotelBookingsTable({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground py-6">
+              <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
                 No bookings found.
               </TableCell>
             </TableRow>

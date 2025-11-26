@@ -48,6 +48,12 @@ export interface IPackageBooking extends Document {
   paymentStatus?: "pending" | "partial" | "paid";
   paymentMethod?: "cash" | "online";
   
+  // Invoice Information
+  invoiceGenerated?: boolean;
+  invoiceSent?: boolean;
+  invoiceUrl?: string;
+  invoiceNumber?: string;
+  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -153,6 +159,24 @@ const packageBookingSchema = new Schema<IPackageBooking>(
     paymentMethod: {
       type: String,
       enum: ["cash", "online"],
+    },
+    invoiceGenerated: {
+      type: Boolean,
+      default: false,
+    },
+    invoiceSent: {
+      type: Boolean,
+      default: false,
+    },
+    invoiceUrl: {
+      type: String,
+      trim: true,
+    },
+    invoiceNumber: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
     },
   },
   {

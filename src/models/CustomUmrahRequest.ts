@@ -24,12 +24,19 @@ export interface ICustomUmrahRequest extends Document {
   childAges: number[];
   rooms: number;
 
-  // Additional Services
-  umrahVisa: boolean;
-  transport: boolean;
-  zaiarat: boolean;
-  meals: boolean;
-  esim: boolean;
+  // Additional Services - now stored as array with service IDs and prices
+  selectedServices: {
+    serviceId: string;
+    serviceName: string;
+    price: number;
+  }[];
+  
+  // Legacy fields for backward compatibility (deprecated)
+  umrahVisa?: boolean;
+  transport?: boolean;
+  zaiarat?: boolean;
+  meals?: boolean;
+  esim?: boolean;
 
   // Hotel Selections
   hotels: {
@@ -120,6 +127,17 @@ const customUmrahRequestSchema = new Schema<ICustomUmrahRequest>(
       required: true,
       min: [1, "At least one room is required"],
     },
+    selectedServices: {
+      type: [
+        {
+          serviceId: { type: String, required: true },
+          serviceName: { type: String, required: true },
+          price: { type: Number, required: true, min: 0 },
+        },
+      ],
+      default: [],
+    },
+    // Legacy fields for backward compatibility (deprecated)
     umrahVisa: {
       type: Boolean,
       default: false,

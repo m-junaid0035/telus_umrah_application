@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { FileText, Mail } from "lucide-react";
+import { DownloadInvoiceButton } from "@/components/DownloadInvoiceButton";
 
 interface PackageBooking {
   _id: string;
@@ -30,6 +32,10 @@ interface PackageBooking {
   totalAmount?: number;
   paidAmount?: number;
   paymentStatus?: string;
+  invoiceGenerated?: boolean;
+  invoiceSent?: boolean;
+  invoiceNumber?: string;
+  invoiceUrl?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -86,6 +92,10 @@ export default async function PackageBookingViewPage({
     totalAmount: bookingData.totalAmount ? Number(bookingData.totalAmount) : undefined,
     paidAmount: bookingData.paidAmount ? Number(bookingData.paidAmount) : undefined,
     paymentStatus: bookingData.paymentStatus ? String(bookingData.paymentStatus) : undefined,
+    invoiceGenerated: bookingData.invoiceGenerated ? Boolean(bookingData.invoiceGenerated) : undefined,
+    invoiceSent: bookingData.invoiceSent ? Boolean(bookingData.invoiceSent) : undefined,
+    invoiceNumber: bookingData.invoiceNumber ? String(bookingData.invoiceNumber) : undefined,
+    invoiceUrl: bookingData.invoiceUrl ? String(bookingData.invoiceUrl) : undefined,
     createdAt: bookingData.createdAt ? String(bookingData.createdAt) : undefined,
     updatedAt: bookingData.updatedAt ? String(bookingData.updatedAt) : undefined,
   };
@@ -282,6 +292,47 @@ export default async function PackageBookingViewPage({
             </div>
           </div>
         )}
+
+        {/* Invoice Information */}
+        <div className="border-b pb-4">
+          <h3 className="text-lg font-semibold mb-3">Invoice Information</h3>
+          <div className="space-y-3">
+            {booking.invoiceGenerated ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                    <FileText className="w-3 h-3 mr-1" />
+                    Invoice Generated
+                  </Badge>
+                  {booking.invoiceSent && (
+                    <Badge variant="outline" className="border-blue-300 text-blue-700">
+                      <Mail className="w-3 h-3 mr-1" />
+                      Sent to Customer
+                    </Badge>
+                  )}
+                </div>
+                {booking.invoiceNumber && (
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Invoice Number</p>
+                    <p className="text-gray-900 dark:text-gray-100 font-medium">{booking.invoiceNumber}</p>
+                  </div>
+                )}
+                <div>
+                  <DownloadInvoiceButton bookingId={booking._id} bookingType="package" />
+                </div>
+              </>
+            ) : (
+              <div>
+                <Badge variant="outline" className="text-gray-500">
+                  Invoice Pending
+                </Badge>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  Invoice will be generated when the booking is confirmed.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Notes */}
         {booking.notes && (

@@ -13,6 +13,11 @@ const sanitizeHotelData = (data: {
   amenities?: string[];
   images?: string[];
   availableBedTypes?: string[];
+  standardRoomPrice?: number;
+  deluxeRoomPrice?: number;
+  familySuitPrice?: number;
+  transportPrice?: number;
+  mealsPrice?: number;
   contact?: {
     phone?: string;
     email?: string;
@@ -28,6 +33,11 @@ const sanitizeHotelData = (data: {
   amenities: Array.isArray(data.amenities) ? data.amenities.filter(a => a.trim()).map(a => a.trim()) : [],
   images: Array.isArray(data.images) ? data.images.filter(img => img.trim()).map(img => img.trim()) : [],
   availableBedTypes: Array.isArray(data.availableBedTypes) ? data.availableBedTypes.filter(b => b.trim()).map(b => b.trim()) : [],
+  standardRoomPrice: data.standardRoomPrice && data.standardRoomPrice > 0 ? data.standardRoomPrice : undefined,
+  deluxeRoomPrice: data.deluxeRoomPrice && data.deluxeRoomPrice > 0 ? data.deluxeRoomPrice : undefined,
+  familySuitPrice: data.familySuitPrice && data.familySuitPrice > 0 ? data.familySuitPrice : undefined,
+  transportPrice: data.transportPrice && data.transportPrice > 0 ? data.transportPrice : undefined,
+  mealsPrice: data.mealsPrice && data.mealsPrice > 0 ? data.mealsPrice : undefined,
   contact: data.contact ? {
     phone: data.contact.phone?.trim(),
     email: data.contact.email?.trim(),
@@ -57,6 +67,11 @@ const serializeHotel = (hotel: any) => {
     amenities: Array.isArray(hotel.amenities) ? hotel.amenities : [],
     images: Array.isArray(hotel.images) ? hotel.images : [],
     availableBedTypes: Array.isArray(hotel.availableBedTypes) ? hotel.availableBedTypes : [],
+    standardRoomPrice: hotel.standardRoomPrice || undefined,
+    deluxeRoomPrice: hotel.deluxeRoomPrice || undefined,
+    familySuitPrice: hotel.familySuitPrice || undefined,
+    transportPrice: hotel.transportPrice || undefined,
+    mealsPrice: hotel.mealsPrice || undefined,
     contact: Object.keys(contact).length > 0 ? contact : undefined,
     createdAt: hotel.createdAt?.toISOString?.() || (hotel.createdAt instanceof Date ? hotel.createdAt.toISOString() : hotel.createdAt),
     updatedAt: hotel.updatedAt?.toISOString?.() || (hotel.updatedAt instanceof Date ? hotel.updatedAt.toISOString() : hotel.updatedAt),
@@ -89,9 +104,19 @@ export const getHotelById = async (id: string) => {
 /** Update hotel by ID */
 export const updateHotel = async (id: string, data: any) => {
   const updatedData = sanitizeHotelData(data);
+  
+  // Filter out undefined values to avoid issues with MongoDB $set
+  const setData: any = {};
+  Object.keys(updatedData).forEach(key => {
+    const value = (updatedData as any)[key];
+    if (value !== undefined) {
+      setData[key] = value;
+    }
+  });
+  
   const hotel = await Hotel.findByIdAndUpdate(
     id,
-    { $set: updatedData },
+    { $set: setData },
     { new: true, runValidators: true }
   ).lean();
   return hotel ? serializeHotel(hotel) : null;

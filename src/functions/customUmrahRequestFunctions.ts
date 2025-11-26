@@ -126,6 +126,10 @@ const sanitizeCustomUmrahRequestData = (data: any) => {
     children,
     childAges: Array.isArray(data.childAges) ? data.childAges.map(Number).filter((age: number) => !isNaN(age) && age >= 0 && age <= 16) : [],
     rooms,
+    selectedServices: Array.isArray(data.selectedServices) && data.selectedServices.length > 0
+      ? data.selectedServices.filter((s: any) => s && s.serviceId && s.serviceName && typeof s.price === 'number')
+      : [],
+    // Legacy fields for backward compatibility
     umrahVisa: Boolean(data.umrahVisa),
     transport: Boolean(data.transport),
     zaiarat: Boolean(data.zaiarat),
@@ -171,6 +175,16 @@ export const serializeCustomUmrahRequest = (request: any) => {
     children: request.children,
     childAges: Array.isArray(request.childAges) ? request.childAges : [],
     rooms: request.rooms,
+    selectedServices: Array.isArray(request.selectedServices)
+      ? request.selectedServices.length > 0
+        ? request.selectedServices.map((s: any) => ({
+            serviceId: String(s.serviceId),
+            serviceName: String(s.serviceName),
+            price: Number(s.price || 0),
+          }))
+        : []
+      : [],
+    // Legacy fields for backward compatibility
     umrahVisa: request.umrahVisa,
     transport: request.transport,
     zaiarat: request.zaiarat,
@@ -220,13 +234,29 @@ export const createCustomUmrahRequest = async (data: any) => {
       email: requestData.email,
       hotelsCount: requestData.hotels?.length || 0,
       hotels: requestData.hotels,
+      selectedServicesCount: Array.isArray(requestData.selectedServices) ? requestData.selectedServices.length : 0,
+      selectedServices: requestData.selectedServices,
+      selectedServicesType: typeof requestData.selectedServices,
+      selectedServicesIsArray: Array.isArray(requestData.selectedServices),
     });
     
     // Create and save request
     let request;
     try {
-      request = await new CustomUmrahRequest(requestData).save();
+      // Ensure selectedServices is always an array, even if empty
+      const dataToSave = {
+        ...requestData,
+        selectedServices: Array.isArray(requestData.selectedServices) ? requestData.selectedServices : [],
+      };
+      console.log("Data being saved to MongoDB:", {
+        selectedServices: dataToSave.selectedServices,
+        selectedServicesLength: dataToSave.selectedServices.length,
+        selectedServicesType: typeof dataToSave.selectedServices,
+        selectedServicesIsArray: Array.isArray(dataToSave.selectedServices),
+      });
+      request = await new CustomUmrahRequest(dataToSave).save();
       console.log("Request saved successfully with ID:", request._id);
+      console.log("Saved request selectedServices:", request.selectedServices);
     } catch (saveError: any) {
       console.error("MongoDB save error:", saveError);
       // Check for specific MongoDB errors

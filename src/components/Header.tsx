@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
+import { useLanguage } from '@/contexts/LanguageContext';
 import telusUmrahLogo from '@/assets/telus-umrah-blue.png';
 import telusUmrahLogoWhite from '@/assets/telus-umrah-white.png';
 import makkahIcon from '@/assets/makkah-icon.png';
@@ -28,11 +29,11 @@ export function Header() {
   const [hotelsOpen, setHotelsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('EN');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<'login' | 'signup'>('login');
   const { user, logout, isAuthenticated } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,23 +45,23 @@ export function Header() {
   }, []);
 
   const navItems = [
-    { name: 'Home', path: '/' },
+    { name: t.header.home, path: '/' },
   ];
 
   const aboutItems = [
-    { name: 'About Us', path: '/about', icon: Info },
-    { name: 'FAQ', path: '/faq', icon: HelpCircle },
+    { name: t.header.aboutUs, path: '/about', icon: Info },
+    { name: t.header.faq, path: '/faq', icon: HelpCircle },
   ];
 
   const umrahPackageItems = [
-    { name: 'Browse Packages', path: '/umrah-packages', icon: Package },
-    { name: 'Customize Umrah', path: '/customize-umrah', icon: Sparkles },
+    { name: t.header.browsePackages, path: '/umrah-packages', icon: Package },
+    { name: t.header.customizeUmrah, path: '/customize-umrah', icon: Sparkles },
   ];
 
   const hotelItems = [
-    { name: 'Makkah Hotels', path: '/makkah-hotels' },
-    { name: 'Madina Hotels', path: '/madina-hotels' },
-    { name: 'Hotel List', path: '/hotels' },
+    { name: t.header.makkahHotels, path: '/makkah-hotels' },
+    { name: t.header.madinaHotels, path: '/madina-hotels' },
+    { name: t.header.hotelList, path: '/hotels' },
   ];
 
   const languages = [
@@ -97,7 +98,7 @@ export function Header() {
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <Phone className="w-3 h-3" />
-                <span>Toll Free: 080033333</span>
+                <span>{t.header.tollFree}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3 h-3" />
@@ -113,19 +114,19 @@ export function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center gap-1.5 hover:text-blue-200 transition-colors cursor-pointer focus:outline-none">
                   <Globe className="w-3.5 h-3.5" />
-                  <span>{selectedLanguage}</span>
+                  <span>{language}</span>
                   <ChevronDown className="w-3 h-3" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-48 bg-white border border-gray-200 shadow-xl rounded-lg">
                   {languages.map((lang) => (
                     <DropdownMenuItem
                       key={lang.code}
-                      onClick={() => setSelectedLanguage(lang.code)}
+                      onClick={() => setLanguage(lang.code as typeof language)}
                       className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
                     >
                       <span className="text-lg">{lang.flag}</span>
                       <span className="text-sm text-gray-700">{lang.name}</span>
-                      {selectedLanguage === lang.code && (
+                      {language === lang.code && (
                         <span className="ml-auto text-blue-600">•</span>
                       )}
                     </DropdownMenuItem>
@@ -159,7 +160,7 @@ export function Header() {
               </DropdownMenu>
 
               <div className="h-4 w-px bg-white/30" />
-              <span className="text-blue-200">24/7 Customer Support</span>
+              <span className="text-blue-200">{t.header.customerSupport}</span>
             </div>
           </div>
         </div>
@@ -233,7 +234,7 @@ export function Header() {
                     : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
                 }`}>
                   
-                  <span>Umrah Packages</span>
+                  <span>{t.header.umrahPackages}</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${umrahPackagesOpen ? 'rotate-180' : ''}`} />
                   {(currentPage === '/umrah-packages' || currentPage === '/customize-umrah' || currentPage === '/custom-umrah') && (
                     <motion.div
@@ -291,7 +292,7 @@ export function Header() {
                     ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
                     : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
                 }`}>
-                  <span>Hotels</span>
+                  <span>{t.header.hotels}</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${hotelsOpen ? 'rotate-180' : ''}`} />
                   {(currentPage === '/makkah-hotels' || currentPage === '/madina-hotels') && (
                     <motion.div
@@ -347,7 +348,7 @@ export function Header() {
                     ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
                     : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
                 }`}>
-                  <span>About</span>
+                  <span>{t.header.about}</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${aboutOpen ? 'rotate-180' : ''}`} />
                   {(currentPage === '/about' || currentPage === '/faq') && (
                     <motion.div
@@ -454,13 +455,13 @@ export function Header() {
                       <Link href="/my-bookings">
                         <DropdownMenuItem className="cursor-pointer">
                           <BookmarkPlus className="w-4 h-4 mr-2" />
-                          My Bookings
+                          {t.header.myBookings}
                         </DropdownMenuItem>
                       </Link>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 focus:text-red-600">
                         <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
+                        {t.header.signOut}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -483,7 +484,7 @@ export function Header() {
                         data-register-trigger
                         className={`px-4 py-2 rounded-lg transition-all cursor-pointer text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl`}
                       >
-                        Register Now
+                        {t.header.registerNow}
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem
@@ -494,7 +495,7 @@ export function Header() {
                           className="cursor-pointer flex items-center"
                         >
                           <LogIn className="w-4 h-4 mr-2 text-blue-600" />
-                          <span>Login</span>
+                          <span>{t.header.login}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
@@ -504,7 +505,7 @@ export function Header() {
                           className="cursor-pointer flex items-center"
                         >
                           <UserPlus className="w-4 h-4 mr-2 text-green-600" />
-                          <span>Sign Up</span>
+                          <span>{t.header.signUp}</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -556,7 +557,7 @@ export function Header() {
 
                 {/* Mobile Umrah Packages */}
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="text-xs text-gray-500 px-4 py-2">Umrah Packages</div>
+                  <div className="text-xs text-gray-500 px-4 py-2">{t.header.umrahPackages}</div>
                   {umrahPackageItems.map((item) => {
                     const IconComponent = item.icon;
                     return (
@@ -581,7 +582,7 @@ export function Header() {
 
                 {/* Mobile Hotels */}
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="text-xs text-gray-500 px-4 py-2">Hotels</div>
+                  <div className="text-xs text-gray-500 px-4 py-2">{t.header.hotels}</div>
                   {hotelItems.map((item) => {
                     return (
                       <Link
@@ -602,7 +603,7 @@ export function Header() {
 
                 {/* Mobile About */}
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="text-xs text-gray-500 px-4 py-2">About</div>
+                  <div className="text-xs text-gray-500 px-4 py-2">{t.header.about}</div>
                   {aboutItems.map((item) => {
                     const IconComponent = item.icon;
                     return (
@@ -636,7 +637,7 @@ export function Header() {
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Contact
+                    {t.header.contact}
                   </Link>
                 </div>
 
@@ -646,7 +647,7 @@ export function Header() {
                       variant="outline" 
                       className="w-full border-blue-600 text-blue-600"
                     >
-                      Get Quote
+                      {t.header.getQuote}
                     </Button>
                   </Link>
                   
@@ -667,7 +668,7 @@ export function Header() {
                       <Link href="/my-bookings" className="w-full">
                         <Button variant="outline" className="w-full justify-start">
                           <BookmarkPlus className="w-4 h-4 mr-2" />
-                          My Bookings
+                          {t.header.myBookings}
                         </Button>
                       </Link>
                       <Button 
@@ -679,14 +680,14 @@ export function Header() {
                         className="w-full justify-start text-red-600 border-red-600 hover:bg-red-50"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
+                        {t.header.signOut}
                       </Button>
                     </div>
                   ) : (
                     <div className="flex gap-2">
                       <DropdownMenu>
                         <DropdownMenuTrigger className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center shadow font-medium">
-                          Register Now
+                          {t.header.registerNow}
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-48">
                           <DropdownMenuItem
@@ -698,7 +699,7 @@ export function Header() {
                             className="flex items-center cursor-pointer"
                           >
                             <LogIn className="w-4 h-4 mr-2 text-blue-600" />
-                            <span>Login</span>
+                            <span>{t.header.login}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
@@ -709,7 +710,7 @@ export function Header() {
                             className="flex items-center cursor-pointer"
                           >
                             <UserPlus className="w-4 h-4 mr-2 text-green-600" />
-                            <span>Sign Up</span>
+                            <span>{t.header.signUp}</span>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -725,20 +726,20 @@ export function Header() {
                       <DropdownMenuTrigger className="flex-1 flex items-center justify-between gap-2 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none">
                         <div className="flex items-center gap-2">
                           <Globe className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-gray-700">Language</span>
+                          <span className="text-sm text-gray-700">{t.header.language}</span>
                         </div>
-                        <span className="text-sm text-gray-900">{selectedLanguage}</span>
+                        <span className="text-sm text-gray-900">{language}</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-48 bg-white border border-gray-200 shadow-xl rounded-lg">
                         {languages.map((lang) => (
                           <DropdownMenuItem
                             key={lang.code}
-                            onClick={() => setSelectedLanguage(lang.code)}
+                            onClick={() => setLanguage(lang.code as typeof language)}
                             className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
                           >
                             <span className="text-lg">{lang.flag}</span>
                             <span className="text-sm text-gray-700">{lang.name}</span>
-                            {selectedLanguage === lang.code && (
+                            {language === lang.code && (
                               <span className="ml-auto text-blue-600">•</span>
                             )}
                           </DropdownMenuItem>
@@ -751,7 +752,7 @@ export function Header() {
                       <DropdownMenuTrigger className="flex-1 flex items-center justify-between gap-2 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none">
                         <div className="flex items-center gap-2">
                           <DollarSign className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-gray-700">Currency</span>
+                          <span className="text-sm text-gray-700">{t.header.currency}</span>
                         </div>
                         <span className="text-sm text-gray-900">{selectedCurrency}</span>
                       </DropdownMenuTrigger>

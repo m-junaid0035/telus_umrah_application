@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ interface PackageBookingDialogProps {
 }
 
 export function PackageBookingDialog({ packageId, packageName, trigger, user }: PackageBookingDialogProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "online" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,10 +87,6 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
       const result = await createPackageBookingAction({}, formDataObj);
 
       if (result?.data) {
-        toast({
-          title: "Success",
-          description: "Your booking request has been submitted! We will contact you soon.",
-        });
         setOpen(false);
         // Reset form
         setPaymentMethod(null);
@@ -110,6 +108,8 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
           esim: false,
           notes: "",
         });
+        // Redirect to thank you page
+        router.push("/thank-you?type=package");
       } else {
         toast({
           title: "Error",

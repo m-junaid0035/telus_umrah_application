@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchUserPackageBookingsAction, fetchUserHotelBookingsAction, fetchUserCustomUmrahRequestsAction } from "@/actions/userBookingActions";
-import { Loader2, Package, Hotel, Calendar, Users, ArrowLeft, RefreshCw, Plane } from "lucide-react";
+import { Loader2, Package, Hotel, Calendar, Users, ArrowLeft, RefreshCw, Plane, FileText, Mail, Download } from "lucide-react";
 import Link from "next/link";
 
 interface PackageBooking {
@@ -25,6 +25,16 @@ interface PackageBooking {
   checkOutDate?: string;
   paymentMethod?: string;
   paymentStatus?: string;
+  totalAmount?: number;
+  invoiceGenerated?: boolean;
+  invoiceSent?: boolean;
+  invoiceUrl?: string;
+  invoiceNumber?: string;
+  umrahVisa?: boolean;
+  transport?: boolean;
+  zaiarat?: boolean;
+  meals?: boolean;
+  esim?: boolean;
   createdAt: string;
 }
 
@@ -38,8 +48,16 @@ interface HotelBooking {
   rooms: number;
   checkInDate: string;
   checkOutDate: string;
+  bedType?: string;
   paymentMethod?: string;
   paymentStatus?: string;
+  totalAmount?: number;
+  meals?: boolean;
+  transport?: boolean;
+  invoiceGenerated?: boolean;
+  invoiceSent?: boolean;
+  invoiceUrl?: string;
+  invoiceNumber?: string;
   createdAt: string;
 }
 
@@ -99,6 +117,13 @@ export default function MyBookingsPage() {
       ]);
 
       if (packageRes?.data && Array.isArray(packageRes.data)) {
+        console.log("Package bookings loaded:", packageRes.data.length);
+        console.log("Sample package booking:", packageRes.data[0]);
+        console.log("Invoice fields in booking:", {
+          invoiceGenerated: packageRes.data[0]?.invoiceGenerated,
+          invoiceNumber: packageRes.data[0]?.invoiceNumber,
+          invoiceUrl: packageRes.data[0]?.invoiceUrl,
+        });
         setPackageBookings(packageRes.data);
       } else if (packageRes?.error) {
         console.error("Package bookings error:", packageRes.error);
@@ -107,6 +132,13 @@ export default function MyBookingsPage() {
         setPackageBookings([]);
       }
       if (hotelRes?.data && Array.isArray(hotelRes.data)) {
+        console.log("Hotel bookings loaded:", hotelRes.data.length);
+        console.log("Sample hotel booking:", hotelRes.data[0]);
+        console.log("Invoice fields in booking:", {
+          invoiceGenerated: hotelRes.data[0]?.invoiceGenerated,
+          invoiceNumber: hotelRes.data[0]?.invoiceNumber,
+          invoiceUrl: hotelRes.data[0]?.invoiceUrl,
+        });
         setHotelBookings(hotelRes.data);
       } else if (hotelRes?.error) {
         console.error("Hotel bookings error:", hotelRes.error);
@@ -229,7 +261,23 @@ export default function MyBookingsPage() {
           <TabsContent value="packages" className="space-y-4">
             {packageBookings.length > 0 ? (
               packageBookings.map((booking) => (
-                <Card key={booking._id} className="hover:shadow-md transition-shadow">
+                <Card 
+                  key={booking._id}
+                  className={`hover:shadow-md transition-shadow ${
+                    booking.invoiceGenerated && booking.invoiceSent
+                      ? "ring-2 ring-green-200 bg-green-50/30"
+                      : booking.invoiceGenerated
+                      ? "ring-2 ring-blue-200 bg-blue-50/30"
+                      : ""
+                  }`} 
+                  className={`hover:shadow-md transition-shadow ${
+                    booking.invoiceGenerated && booking.invoiceSent
+                      ? "ring-2 ring-green-200 bg-green-50/30"
+                      : booking.invoiceGenerated
+                      ? "ring-2 ring-blue-200 bg-blue-50/30"
+                      : ""
+                  }`}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -269,6 +317,12 @@ export default function MyBookingsPage() {
                         <div>
                           <p className="text-sm text-gray-500">Check-in</p>
                           <p className="font-medium">{formatDate(booking.checkInDate)}</p>
+                          {booking.checkOutDate && (
+                            <>
+                              <p className="text-sm text-gray-500 mt-1">Check-out</p>
+                              <p className="font-medium">{formatDate(booking.checkOutDate)}</p>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div>
@@ -281,12 +335,59 @@ export default function MyBookingsPage() {
                             {booking.paymentStatus}
                           </Badge>
                         )}
+                        {booking.totalAmount && (
+                          <p className="text-sm font-semibold text-gray-700 mt-1">
+                            Total: PKR {booking.totalAmount.toLocaleString()}
+                          </p>
+                        )}
+                        {booking.invoiceGenerated && (
+                          <div className="mt-2 flex items-center gap-2 flex-wrap">
+                            <Badge className="bg-green-100 text-green-800 border-green-300">
+                              <FileText className="w-3 h-3 mr-1" />
+                              Invoice Ready
+                            </Badge>
+                            {booking.invoiceSent && (
+                              <Badge variant="outline" className="border-blue-300 text-blue-700">
+                                <Mail className="w-3 h-3 mr-1" />
+                                Sent
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        {booking.invoiceNumber && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Invoice: {booking.invoiceNumber}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t">
+                    {(booking.umrahVisa || booking.transport || booking.zaiarat || booking.meals || booking.esim) && (
+                      <div className="mt-2 pt-2 border-t">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Additional Services:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {booking.umrahVisa && <Badge variant="outline">Umrah Visa</Badge>}
+                          {booking.transport && <Badge variant="outline">Transport</Badge>}
+                          {booking.zaiarat && <Badge variant="outline">Zaiarat Tours</Badge>}
+                          {booking.meals && <Badge variant="outline">Meals</Badge>}
+                          {booking.esim && <Badge variant="outline">eSIM</Badge>}
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-4 pt-4 border-t flex items-center justify-between">
                       <p className="text-xs text-gray-500">
                         Booked on: {formatDate(booking.createdAt)}
                       </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          window.open(`/api/invoice/${booking._id}?type=package`, '_blank');
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download Invoice
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -307,7 +408,16 @@ export default function MyBookingsPage() {
           <TabsContent value="hotels" className="space-y-4">
             {hotelBookings.length > 0 ? (
               hotelBookings.map((booking) => (
-                <Card key={booking._id} className="hover:shadow-md transition-shadow">
+                <Card 
+                  key={booking._id} 
+                  className={`hover:shadow-md transition-shadow ${
+                    booking.invoiceGenerated && booking.invoiceSent
+                      ? "ring-2 ring-green-200 bg-green-50/30"
+                      : booking.invoiceGenerated
+                      ? "ring-2 ring-blue-200 bg-blue-50/30"
+                      : ""
+                  }`}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -340,6 +450,11 @@ export default function MyBookingsPage() {
                         <div>
                           <p className="text-sm text-gray-500">Rooms</p>
                           <p className="font-medium">{booking.rooms}</p>
+                          {booking.bedType && (
+                            <p className="text-xs text-gray-500 mt-1 capitalize">
+                              Bed: {booking.bedType}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -361,12 +476,56 @@ export default function MyBookingsPage() {
                             {booking.paymentStatus}
                           </Badge>
                         )}
+                        {booking.totalAmount && (
+                          <p className="text-sm font-semibold text-gray-700 mt-1">
+                            Total: PKR {booking.totalAmount.toLocaleString()}
+                          </p>
+                        )}
+                        {booking.invoiceGenerated && (
+                          <div className="mt-2 flex items-center gap-2 flex-wrap">
+                            <Badge className="bg-green-100 text-green-800 border-green-300">
+                              <FileText className="w-3 h-3 mr-1" />
+                              Invoice Ready
+                            </Badge>
+                            {booking.invoiceSent && (
+                              <Badge variant="outline" className="border-blue-300 text-blue-700">
+                                <Mail className="w-3 h-3 mr-1" />
+                                Sent
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        {booking.invoiceNumber && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Invoice: {booking.invoiceNumber}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t">
+                    {(booking.meals || booking.transport) && (
+                      <div className="mt-2 pt-2 border-t">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Additional Services:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {booking.meals && <Badge variant="outline">Meals</Badge>}
+                          {booking.transport && <Badge variant="outline">Transport</Badge>}
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-4 pt-4 border-t flex items-center justify-between">
                       <p className="text-xs text-gray-500">
                         Booked on: {formatDate(booking.createdAt)}
                       </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          window.open(`/api/invoice/${booking._id}?type=hotel`, '_blank');
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download Invoice
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

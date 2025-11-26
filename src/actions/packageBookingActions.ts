@@ -104,6 +104,98 @@ export async function createPackageBookingAction(
 
   try {
     const booking = await createPackageBooking(result.data);
+    
+    // Generate invoice for ALL bookings
+    if (booking?._id) {
+      try {
+        const { generateInvoiceNumber, generateInvoicePDF } = await import('@/lib/generateInvoice');
+        const { UmrahPackage } = await import('@/models/UmrahPackage');
+        const { sendInvoiceEmail } = await import('@/lib/sendInvoiceEmail');
+        
+        // Get package details
+        await connectToDatabase(); // Ensure DB connection
+        const pkg = await UmrahPackage.findById(result.data.packageId).lean();
+        const itemName = pkg?.name || 'Umrah Package';
+        
+        // Generate invoice number
+        const invoiceNumber = generateInvoiceNumber(booking._id.toString(), 'package');
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const invoiceUrl = `${baseUrl}/api/invoice/${booking._id}?type=package`;
+        
+        // Prepare invoice data - handle dates properly
+        const checkInDate = result.data.checkInDate 
+          ? (result.data.checkInDate instanceof Date ? result.data.checkInDate : new Date(result.data.checkInDate))
+          : undefined;
+        const checkOutDate = result.data.checkOutDate 
+          ? (result.data.checkOutDate instanceof Date ? result.data.checkOutDate : new Date(result.data.checkOutDate))
+          : undefined;
+        
+        const invoiceData = {
+          invoiceNumber,
+          bookingId: booking._id.toString(),
+          bookingType: 'package' as const,
+          customerName: result.data.customerName,
+          customerEmail: result.data.customerEmail,
+          customerPhone: result.data.customerPhone,
+          customerNationality: result.data.customerNationality,
+          bookingDate: booking.createdAt ? new Date(booking.createdAt) : new Date(),
+          checkInDate,
+          checkOutDate,
+          itemName,
+          totalAmount: result.data.totalAmount || 0,
+          paymentMethod: result.data.paymentMethod || 'cash',
+          travelers: result.data.travelers,
+          rooms: result.data.rooms,
+          additionalServices: [
+            ...(result.data.umrahVisa ? ['Umrah Visa'] : []),
+            ...(result.data.transport ? ['Transport'] : []),
+            ...(result.data.zaiarat ? ['Zaiarat Tours'] : []),
+            ...(result.data.meals ? ['Meals'] : []),
+            ...(result.data.esim ? ['eSIM'] : []),
+          ],
+        };
+        
+        // Update booking with invoice info
+        // PDF will be generated on-demand when user clicks download (avoids font errors during booking)
+        await updatePackageBooking(booking._id.toString(), {
+          invoiceGenerated: true,
+          invoiceNumber,
+          invoiceUrl,
+        });
+        
+        console.log(`Invoice generated for package booking ${booking._id}: ${invoiceNumber}`);
+        
+        // Send invoice email to ALL bookings (with PDF attached)
+        try {
+          console.log(`Attempting to send invoice email to ${result.data.customerEmail}...`);
+          const emailResult = await sendInvoiceEmail({
+            to: result.data.customerEmail,
+            customerName: result.data.customerName,
+            invoiceNumber,
+            bookingType: 'package',
+            invoiceUrl,
+            bookingId: booking._id.toString(),
+          });
+          
+          // Update booking with invoice sent status if email was sent successfully
+          if (emailResult.success) {
+            await updatePackageBooking(booking._id.toString(), {
+              invoiceSent: true,
+            });
+            console.log(`✅ Invoice email sent successfully to ${result.data.customerEmail}`);
+          } else {
+            console.error('❌ Failed to send invoice email:', emailResult.error);
+          }
+        } catch (emailError: any) {
+          console.error('❌ Error sending invoice email:', emailError);
+          // Don't fail the booking if email fails
+        }
+      } catch (invoiceError: any) {
+        console.error('Error generating/sending invoice:', invoiceError);
+        // Don't fail the booking if invoice generation fails
+      }
+    }
+    
     return { data: booking };
   } catch (error: any) {
     return { error: { message: [error?.message || "Failed to create booking"] } };

@@ -20,11 +20,17 @@ interface CustomUmrahRequest {
   children: number;
   childAges: number[];
   rooms: number;
-  umrahVisa: boolean;
-  transport: boolean;
-  zaiarat: boolean;
-  meals: boolean;
-  esim: boolean;
+  selectedServices?: {
+    serviceId: string;
+    serviceName: string;
+    price: number;
+  }[];
+  // Legacy fields for backward compatibility
+  umrahVisa?: boolean;
+  transport?: boolean;
+  zaiarat?: boolean;
+  meals?: boolean;
+  esim?: boolean;
   hotels: {
     hotelClass: string;
     hotel: string;
@@ -34,6 +40,7 @@ interface CustomUmrahRequest {
   }[];
   status: string;
   notes?: string;
+  paymentMethod?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -64,6 +71,10 @@ export default async function CustomUmrahRequestViewPage({
   if (!result || result.error || !result.data) return notFound();
 
   const requestData = result.data;
+  
+  // Debug: Check selectedServices structure
+  const selectedServicesData = requestData.selectedServices;
+  
   const request: CustomUmrahRequest = {
     _id: String(requestData._id),
     name: String(requestData.name || ""),
@@ -80,14 +91,25 @@ export default async function CustomUmrahRequestViewPage({
     children: Number(requestData.children || 0),
     childAges: Array.isArray(requestData.childAges) ? requestData.childAges.map(Number) : [],
     rooms: Number(requestData.rooms || 0),
-    umrahVisa: Boolean(requestData.umrahVisa),
-    transport: Boolean(requestData.transport),
-    zaiarat: Boolean(requestData.zaiarat),
-    meals: Boolean(requestData.meals),
-    esim: Boolean(requestData.esim),
+    selectedServices: Array.isArray(selectedServicesData) && selectedServicesData.length > 0
+      ? selectedServicesData
+          .filter((s: any) => s && (s.serviceId || s._id || s.serviceName || s.name))
+          .map((s: any) => ({
+            serviceId: String(s.serviceId || s._id || ""),
+            serviceName: String(s.serviceName || s.name || "Unknown Service"),
+            price: Number(s.price || 0),
+          }))
+      : undefined,
+    // Legacy fields for backward compatibility
+    umrahVisa: requestData.umrahVisa !== undefined ? Boolean(requestData.umrahVisa) : undefined,
+    transport: requestData.transport !== undefined ? Boolean(requestData.transport) : undefined,
+    zaiarat: requestData.zaiarat !== undefined ? Boolean(requestData.zaiarat) : undefined,
+    meals: requestData.meals !== undefined ? Boolean(requestData.meals) : undefined,
+    esim: requestData.esim !== undefined ? Boolean(requestData.esim) : undefined,
     hotels: Array.isArray(requestData.hotels) ? requestData.hotels : [],
     status: String(requestData.status || "pending"),
     notes: requestData.notes ? String(requestData.notes) : undefined,
+    paymentMethod: requestData.paymentMethod ? String(requestData.paymentMethod) : undefined,
     createdAt: requestData.createdAt ? String(requestData.createdAt) : undefined,
     updatedAt: requestData.updatedAt ? String(requestData.updatedAt) : undefined,
   };
@@ -206,33 +228,69 @@ export default async function CustomUmrahRequestViewPage({
         {/* Additional Services */}
         <div className="border-b pb-4">
           <h3 className="text-lg font-semibold mb-3">Additional Services</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            {request.umrahVisa && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
-                Umrah Visa
-              </span>
-            )}
-            {request.transport && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
-                Transport
-              </span>
-            )}
-            {request.zaiarat && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
-                Zaiarat
-              </span>
-            )}
-            {request.meals && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
-                Meals
-              </span>
-            )}
-            {request.esim && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
-                eSIM
-              </span>
-            )}
-          </div>
+          {request.selectedServices && Array.isArray(request.selectedServices) && request.selectedServices.length > 0 ? (
+            <div className="space-y-2">
+              {request.selectedServices.map((service, index) => (
+                <div
+                  key={service.serviceId || index}
+                  className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                >
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
+                      {service.serviceName || `Service ${index + 1}`}
+                    </p>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-semibold text-green-700 dark:text-green-300">
+                      PKR {Number(service.price || 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Total Services Price:
+                  </p>
+                  <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                    PKR {request.selectedServices.reduce((sum, s) => sum + Number(s.price || 0), 0).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Fallback to legacy boolean fields for backward compatibility
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {request.umrahVisa && (
+                <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
+                  Umrah Visa
+                </span>
+              )}
+              {request.transport && (
+                <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
+                  Transport
+                </span>
+              )}
+              {request.zaiarat && (
+                <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
+                  Zaiarat
+                </span>
+              )}
+              {request.meals && (
+                <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
+                  Meals
+                </span>
+              )}
+              {request.esim && (
+                <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
+                  eSIM
+                </span>
+              )}
+              {!request.umrahVisa && !request.transport && !request.zaiarat && !request.meals && !request.esim && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">No additional services selected</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Hotels */}
@@ -263,6 +321,16 @@ export default async function CustomUmrahRequestViewPage({
             ))}
           </div>
         </div>
+
+        {/* Payment Method */}
+        {request.paymentMethod && (
+          <div className="border-b pb-4">
+            <h3 className="text-lg font-semibold mb-3">Payment Method</h3>
+            <Badge variant="outline" className="capitalize">
+              {request.paymentMethod}
+            </Badge>
+          </div>
+        )}
 
         {/* Notes */}
         {request.notes && (
