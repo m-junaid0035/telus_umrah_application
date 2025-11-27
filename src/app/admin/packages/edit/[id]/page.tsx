@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Select from "react-select";
+import Select, { StylesConfig } from "react-select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,61 @@ interface IPolicy {
   heading: string;
 }
 
+type ReactSelectOption = { value: string; label: string };
+
+const multiSelectStyles: StylesConfig<ReactSelectOption, true> = {
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: "#fff",
+    color: "#0f172a",
+    borderColor: state.isFocused ? "#2563eb" : "rgba(15, 23, 42, 0.25)",
+    borderRadius: "0.75rem",
+    minHeight: "46px",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(37,99,235,0.12)" : "none",
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: "#fff",
+    color: "#0f172a",
+    zIndex: 30,
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? "#e0f2fe" : "#fff",
+    color: "#0f172a",
+  }),
+  multiValue: (base) => ({
+    ...base,
+    backgroundColor: "#e2e8f0",
+    color: "#0f172a",
+    borderRadius: 9999,
+  }),
+  multiValueLabel: (base) => ({
+    ...base,
+    color: "#0f172a",
+  }),
+  multiValueRemove: (base) => ({
+    ...base,
+    color: "#0f172a",
+    ":hover": {
+      backgroundColor: "#cbd5f5",
+      color: "#0f172a",
+    },
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: "#475569",
+  }),
+  input: (base) => ({
+    ...base,
+    color: "#0f172a",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: "#0f172a",
+  }),
+};
+
 export default function EditUmrahPackageForm() {
   const { id } = useParams();
   const router = useRouter();
@@ -87,11 +142,11 @@ export default function EditUmrahPackageForm() {
   const [policies, setPolicies] = useState<IPolicy[]>([]);
   const [pkgData, setPkgData] = useState<any>(null);
 
-  const [selectedFeatures, setSelectedFeatures] = useState<{ value: string; label: string }[]>([]);
-  const [selectedItineraries, setSelectedItineraries] = useState<{ value: string; label: string }[]>([]);
-  const [selectedIncludes, setSelectedIncludes] = useState<{ value: string; label: string }[]>([]);
-  const [selectedExcludes, setSelectedExcludes] = useState<{ value: string; label: string }[]>([]);
-  const [selectedPolicies, setSelectedPolicies] = useState<{ value: string; label: string }[]>([]);
+  const [selectedFeatures, setSelectedFeatures] = useState<ReactSelectOption[]>([]);
+  const [selectedItineraries, setSelectedItineraries] = useState<ReactSelectOption[]>([]);
+  const [selectedIncludes, setSelectedIncludes] = useState<ReactSelectOption[]>([]);
+  const [selectedExcludes, setSelectedExcludes] = useState<ReactSelectOption[]>([]);
+  const [selectedPolicies, setSelectedPolicies] = useState<ReactSelectOption[]>([]);
 
   const errorFor = (field: string) =>
     formState.error && typeof formState.error === "object"
@@ -306,50 +361,55 @@ export default function EditUmrahPackageForm() {
             <div>
               <Label>Features</Label>
               <Select
+                styles={multiSelectStyles}
                 isMulti
                 options={features.map((f) => ({ value: f._id, label: f.feature_text }))}
                 value={selectedFeatures}
-                onChange={(newVal) => setSelectedFeatures([...newVal] as { value: string; label: string }[])}
+                onChange={(newVal) => setSelectedFeatures([...(newVal as ReactSelectOption[])])}
               />
             </div>
 
             <div>
               <Label>Itinerary</Label>
               <Select
+                styles={multiSelectStyles}
                 isMulti
                 options={itineraries.map((i) => ({ value: i._id, label: i.title }))}
                 value={selectedItineraries}
-                onChange={(newVal) => setSelectedItineraries([...newVal] as { value: string; label: string }[])}
+                onChange={(newVal) => setSelectedItineraries([...(newVal as ReactSelectOption[])])}
               />
             </div>
 
             <div>
               <Label>Includes</Label>
               <Select
+                styles={multiSelectStyles}
                 isMulti
                 options={includes.map((i) => ({ value: i._id, label: i.include_text }))}
                 value={selectedIncludes}
-                onChange={(newVal) => setSelectedIncludes([...newVal] as { value: string; label: string }[])}
+                onChange={(newVal) => setSelectedIncludes([...(newVal as ReactSelectOption[])])}
               />
             </div>
 
             <div>
               <Label>Excludes</Label>
               <Select
+                styles={multiSelectStyles}
                 isMulti
                 options={excludes.map((e) => ({ value: e._id, label: e.exclude_text }))}
                 value={selectedExcludes}
-                onChange={(newVal) => setSelectedExcludes([...newVal] as { value: string; label: string }[])}
+                onChange={(newVal) => setSelectedExcludes([...(newVal as ReactSelectOption[])])}
               />
             </div>
 
             <div>
               <Label>Policies</Label>
               <Select
+                styles={multiSelectStyles}
                 isMulti
                 options={policies.map((p) => ({ value: p._id, label: p.heading }))}
                 value={selectedPolicies}
-                onChange={(newVal) => setSelectedPolicies([...newVal] as { value: string; label: string }[])}
+                onChange={(newVal) => setSelectedPolicies([...(newVal as ReactSelectOption[])])}
               />
             </div>
 
