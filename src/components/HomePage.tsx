@@ -35,6 +35,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
 
+
 // Import airline logos
 import sereneAirLogo from '@/assets/serene-air-logo.png';
 import gulfAirLogo from '@/assets/gulf-air-logo.png';
@@ -499,7 +500,7 @@ export function HomePage() {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {loadingPackages ? (
               <div className="col-span-full text-center py-16">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
@@ -510,204 +511,138 @@ export function HomePage() {
                 <p className="text-gray-500 text-lg">No packages available</p>
               </div>
             ) : (
-              packages.map((pkg, index) => {
-                const badgeColors: Record<string, string> = {
-                  'Budget Friendly': 'bg-green-500',
-                  'Most Popular': 'bg-blue-500',
-                  'Best Value': 'bg-purple-500',
-                  'VIP Experience': 'bg-gradient-to-r from-amber-500 to-orange-600',
-                };
-                const badgeColor = badgeColors[pkg.badge || ''] || 'bg-blue-500';
-                const makkahHotel = pkg.hotels?.makkah;
-                const madinahHotel = pkg.hotels?.madinah;
-                const features = pkg.features || [];
-
-                return (
-                  <motion.div
-                    key={pkg._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Card className={`overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col ${pkg.popular ? 'ring-2 ring-blue-500' : ''
-                      }`}>
-                      <CardContent className="p-0 flex flex-col flex-1">
-                        {/* Header Section */}
-                        <div className={`${badgeColor} p-4 text-white`}>
-                          <div className="flex items-start justify-between flex-wrap gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                {pkg.badge && (
-                                  <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
-                                    {pkg.badge}
-                                  </Badge>
-                                )}
-                                {pkg.popular && (
-                                  <Badge className="bg-yellow-500 text-white flex items-center gap-1 text-xs">
-                                    <Star className="w-3 h-3 fill-white" />
-                                    <span>Popular</span>
-                                  </Badge>
-                                )}
-                              </div>
-                              <h3 className="font-bold text-xl mb-2">{pkg.name}</h3>
-                              <div className="flex items-center gap-3 text-white/90 flex-wrap text-xs">
-                                {pkg.duration && (
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-3.5 h-3.5" />
-                                    <span>{pkg.duration} Days</span>
-                                  </div>
-                                )}
-                                {pkg.departureCity && (
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="w-3.5 h-3.5" />
-                                    <span>{pkg.departureCity}</span>
-                                  </div>
-                                )}
-                                {pkg.airline && (
-                                  <div className="flex items-center gap-1.5">
-                                    <img
-                                      src={getAirlineLogo(pkg.airline).toString()}
-                                      alt={pkg.airline}
-                                      className="w-4 h-4 object-contain bg-white rounded p-0.5"
-                                    />
-                                    <span className="truncate max-w-[120px]">{pkg.airline}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-white/80 text-xs mb-0.5">Starting from</p>
-                              <p className="text-2xl font-bold">
-                                PKR {pkg.price?.toLocaleString() || 'N/A'}
-                              </p>
-                              <p className="text-white/80 text-xs">per person</p>
-                            </div>
+              packages.map((pkg, index) => (
+                <motion.div
+                  key={pkg._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`package-card ${pkg.popular ? 'ring-2 ring-blue-500' : ''}`}
+                >
+                  <div className="package-card-header">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {pkg.badge && (
+                            <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
+                              {pkg.badge}
+                            </Badge>
+                          )}
+                          {pkg.popular && (
+                            <Badge className="bg-yellow-400 text-blue-900 flex items-center gap-1 text-xs font-semibold">
+                              <Sparkles className="w-3 h-3" />
+                              <span>POPULAR CHOICE</span>
+                            </Badge>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-2xl mb-2">{pkg.name}</h3>
+                        <div className="flex items-center gap-4 text-white/90 flex-wrap text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4" />
+                            <span>{pkg.duration} Days</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="w-4 h-4" />
+                            <span>From {pkg.departureCity}</span>
                           </div>
                         </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-white/80 text-sm mb-0.5">Starts from</p>
+                        <p className="text-3xl font-extrabold">
+                          PKR {pkg.price.toLocaleString()}
+                        </p>
+                        <p className="text-white/80 text-xs">per person</p>
+                      </div>
+                    </div>
+                  </div>
 
-                        {/* Content */}
-                        <div className="p-4">
-                          {/* Rating */}
-                          {(pkg.rating || pkg.reviews) && (
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="flex items-center">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-3.5 h-3.5 ${i < Math.floor(pkg.rating || 0)
-                                        ? 'fill-yellow-400 text-yellow-400'
-                                        : 'text-gray-300'
-                                      }`}
-                                  />
-                                ))}
-                              </div>
-                              <span className="text-xs text-gray-600">
-                                {pkg.rating || 0} ({pkg.reviews || 0} reviews)
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Hotels */}
-                          {(makkahHotel || madinahHotel) && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                              {makkahHotel && (
-                                <Link
-                                  href={`/makkah-hotels/makkah/${makkahHotel.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
-                                  className="block"
-                                >
-                                  <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
-                                    <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                                      <div className="flex items-center gap-1.5">
-                                        <img src={makkahIcon.src} alt="Makkah" className="w-4 h-4" />
-                                        <span className="text-xs font-semibold text-gray-900">Makkah Hotel</span>
-                                      </div>
-                                      <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                    </div>
-                                    <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{makkahHotel.name || 'N/A'}</p>
-                                    {makkahHotel.star && (
-                                      <div className="flex">
-                                        {[...Array(makkahHotel.star)].map((_, i) => (
-                                          <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                                        ))}
-                                      </div>
-                                    )}
+                  <div className="package-card-content">
+                    <div className="space-y-4">
+                      {/* Hotels */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {pkg.hotels?.makkah && (
+                          <Link href={`/makkah-hotels/makkah/${pkg.hotels.makkah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`} className="block hotel-card">
+                              <div className="flex items-center gap-3 mb-2">
+                                <img src={makkahIcon.src} alt="Makkah" className="w-8 h-8" />
+                                <div>
+                                  <span className="font-semibold text-gray-900">Makkah Hotel</span>
+                                  <div className="flex">
+                                    {[...Array(pkg.hotels.makkah.star || 0)].map((_, i) => (
+                                      <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                                    ))}
                                   </div>
-                                </Link>
-                              )}
-                              {madinahHotel && (
-                                <Link
-                                  href={`/madina-hotels/madinah/${madinahHotel.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
-                                  className="block"
-                                >
-                                  <div className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer">
-                                    <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                                      <div className="flex items-center gap-1.5">
-                                        <img src={madinaIcon.src} alt="Madina" className="w-4 h-4" />
-                                        <span className="text-xs font-semibold text-gray-900">Madinah Hotel</span>
-                                      </div>
-                                      <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                    </div>
-                                    <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{madinahHotel.name || 'N/A'}</p>
-                                    {madinahHotel.distance && (
-                                      <p className="text-xs text-gray-500 mb-0.5">{madinahHotel.distance}</p>
-                                    )}
-                                    {madinahHotel.star && (
-                                      <div className="flex">
-                                        {[...Array(madinahHotel.star)].map((_, i) => (
-                                          <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                </Link>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Features */}
-                          {features.length > 0 && (
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
-                              {features.slice(0, 8).map((feature: any, idx: number) => (
-                                <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
-                                  <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
-                                  <span className="truncate text-xs">{feature.feature_text || feature}</span>
                                 </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Footer */}
-                          <div className="flex items-center justify-between pt-3 border-t">
-                            {pkg.travelers && (
-                              <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                                <Users className="w-3.5 h-3.5" />
-                                <span>{pkg.travelers}</span>
                               </div>
-                            )}
-                            <div className="flex gap-2 ml-auto">
-                              <Link href={`/umrah-packages/${pkg._id}`}>
-                                <Button variant="outline" size="sm" className="text-xs h-8">
-                                  View Details
-                                </Button>
-                              </Link>
-                              <Link href="/umrah-packages">
-                                <Button
-                                  size="sm"
-                                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-xs h-8"
-                                >
-                                  Book Now
-                                  <Plane className="w-3.5 h-3.5 ml-1.5" />
-                                </Button>
-                              </Link>
-                            </div>
+                              <p className="text-sm text-gray-700 line-clamp-1">{pkg.hotels.makkah.name}</p>
+                          </Link>
+                        )}
+                        {pkg.hotels?.madinah && (
+                           <Link href={`/madina-hotels/madinah/${pkg.hotels.madinah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`} className="block hotel-card">
+                              <div className="flex items-center gap-3 mb-2">
+                                <img src={madinaIcon.src} alt="Madinah" className="w-8 h-8" />
+                                <div>
+                                  <span className="font-semibold text-gray-900">Madinah Hotel</span>
+                                  <div className="flex">
+                                    {[...Array(pkg.hotels.madinah.star || 0)].map((_, i) => (
+                                      <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-700 line-clamp-1">{pkg.hotels.madinah.name}</p>
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* Features */}
+                      {pkg.features && pkg.features.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-gray-800 mb-2 text-sm">Package Highlights</h4>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                            {pkg.features.slice(0, 4).map((feature: any, idx: number) => (
+                              <div key={idx} className="feature-item">
+                                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                <span className="truncate">{feature.feature_text}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="package-card-footer mt-auto">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={getAirlineLogo(pkg.airline).toString()} 
+                          alt={pkg.airline}
+                          className="w-8 h-8 object-contain bg-white rounded-full p-1 shadow-sm"
+                        />
+                        <div>
+                          <p className="text-xs text-gray-500">Airline</p>
+                          <p className="font-semibold text-sm text-gray-800">{pkg.airline}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link href={`/umrah-packages/${pkg._id}`}>
+                          <Button variant="outline" className="h-9">
+                            View Details
+                          </Button>
+                        </Link>
+                        <Link href="/umrah-packages">
+                          <Button className="bg-blue-600 hover:bg-blue-700 text-white h-9">
+                            Book Now
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
             )}
           </div>
 
@@ -1170,7 +1105,7 @@ export function HomePage() {
                     <p className="text-gray-700 mb-4 text-sm leading-relaxed">"{testimonial.comment}"</p>
                     <div className="flex items-center gap-2">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xs">
-                        {testimonial.name.split(' ').map(n => n[0]).join('')}
+                        {testimonial.name?.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
                         <div className="text-gray-900 text-sm">{testimonial.name}</div>
@@ -1243,7 +1178,7 @@ export function HomePage() {
                     <p className="text-gray-700 mb-4 text-sm leading-relaxed">"{testimonial.comment}"</p>
                     <div className="flex items-center gap-2">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xs">
-                        {testimonial.name.split(' ').map(n => n[0]).join('')}
+                        {testimonial.name?.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
                         <div className="text-gray-900 text-sm">{testimonial.name}</div>
