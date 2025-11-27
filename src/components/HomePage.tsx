@@ -530,9 +530,9 @@ export function HomePage() {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className={`overflow-hidden hover:shadow-xl transition-shadow ${pkg.popular ? 'ring-2 ring-blue-500' : ''
+                    <Card className={`overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col ${pkg.popular ? 'ring-2 ring-blue-500' : ''
                       }`}>
-                      <CardContent className="p-0">
+                      <CardContent className="p-0 flex flex-col flex-1">
                         {/* Header Section */}
                         <div className={`${badgeColor} p-4 text-white`}>
                           <div className="flex items-start justify-between flex-wrap gap-3">
@@ -625,9 +625,6 @@ export function HomePage() {
                                       <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
                                     </div>
                                     <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{makkahHotel.name || 'N/A'}</p>
-                                    {makkahHotel.distance && (
-                                      <p className="text-xs text-gray-500 mb-0.5">{makkahHotel.distance}</p>
-                                    )}
                                     {makkahHotel.star && (
                                       <div className="flex">
                                         {[...Array(makkahHotel.star)].map((_, i) => (

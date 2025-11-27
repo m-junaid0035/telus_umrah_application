@@ -441,9 +441,6 @@ export function UmrahPackagesPage() {
                                     <ArrowRight className="w-3 h-3 text-gray-400" />
                                   </div>
                                   <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.makkah.name}</p>
-                                  {pkg.hotels.makkah.distance && (
-                                    <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.makkah.distance}</p>
-                                  )}
                                   <div className="flex">
                                     {[...Array(pkg.hotels.makkah.star || 0)].map((_, i) => (
                                       <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
@@ -466,9 +463,6 @@ export function UmrahPackagesPage() {
                                     <ArrowRight className="w-3 h-3 text-gray-400" />
                                   </div>
                                   <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">{pkg.hotels.madinah.name}</p>
-                                  {pkg.hotels.madinah.distance && (
-                                    <p className="text-xs text-gray-500 mb-0.5">{pkg.hotels.madinah.distance}</p>
-                                  )}
                                   <div className="flex">
                                     {[...Array(pkg.hotels.madinah.star || 0)].map((_, i) => (
                                       <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />

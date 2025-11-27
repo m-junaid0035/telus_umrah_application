@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Target, Users, Award, Globe, Quote } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import ceoImage from '@/assets/ceo.png';
+import ceoImage from '@/assets/ceo.jpeg';
 
 const stats = [
   { number: '10M+', label: 'Happy Travelers' },
