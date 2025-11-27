@@ -17,9 +17,7 @@ const additionalServiceSchema = z.object({
   name: z.string().trim().min(1, "Service name is required"),
   description: z.string().trim().optional(),
   price: z.number().min(0, "Price must be non-negative"),
-  serviceType: z.enum(["umrahVisa", "transport", "zaiarat", "meals", "esim"], {
-    errorMap: () => ({ message: "Service type must be one of: umrahVisa, transport, zaiarat, meals, esim" })
-  }),
+  serviceType: z.enum(["umrahVisa", "transport", "zaiarat", "meals", "esim"]),
   isActive: z.boolean().optional(),
   icon: z.string().trim().optional(),
 });
@@ -42,8 +40,9 @@ function parseAdditionalServiceFormData(formData: FormData) {
   if (!serviceType || !["umrahVisa", "transport", "zaiarat", "meals", "esim"].includes(serviceType)) {
     throw new Error("Service type is required and must be one of: umrahVisa, transport, zaiarat, meals, esim");
   }
-  // Set icon based on serviceType if not provided
+
   const icon = str(formData, "icon") || serviceType || undefined;
+
   return {
     name: str(formData, "name"),
     description: str(formData, "description") || undefined,
@@ -139,4 +138,3 @@ export async function fetchAdditionalServiceByIdAction(id: string) {
     return { error: { message: [error?.message || "Failed to fetch additional service"] } };
   }
 }
-

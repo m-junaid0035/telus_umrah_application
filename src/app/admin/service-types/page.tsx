@@ -39,7 +39,8 @@ interface IServiceType {
   description?: string;
   displayOrder: number;
   isActive: boolean;
-  createdAt: string;
+  createdAt: string | null; // allow null to match fetched data
+  updatedAt?: string | null; // optional for consistency
 }
 
 export default function ServiceTypesPage() {
@@ -211,4 +212,3 @@ export default function ServiceTypesPage() {
     </Card>
   );
 }
-

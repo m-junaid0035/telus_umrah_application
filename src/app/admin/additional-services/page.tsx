@@ -47,7 +47,8 @@ interface IAdditionalService {
   serviceType: string;
   isActive: boolean;
   icon?: string;
-  createdAt: string;
+  createdAt: string | null; // allow null to match fetched data
+  updatedAt?: string | null; // optional if needed
 }
 
 function AdditionalServicesTable({
@@ -316,4 +317,3 @@ export default function AdditionalServicesPage() {
     </Card>
   );
 }
-

@@ -41,8 +41,12 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean;
-} & Pick<React.ComponentProps<typeof Button>, "size"> &
-  (React.ComponentProps<"a"> | (React.ComponentProps<"button"> & { href?: never }));
+  size?: "icon" | "default";
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  href?: string;
+  className?: string;
+  children?: React.ReactNode;
+};
 
 function PaginationLink({
   className,
@@ -50,6 +54,7 @@ function PaginationLink({
   size = "icon",
   onClick,
   href,
+  children,
   ...props
 }: PaginationLinkProps) {
   const baseClassName = cn(
@@ -60,37 +65,42 @@ function PaginationLink({
     className,
   );
 
-  // If onClick is provided, use a button; otherwise use an anchor
-  if (onClick || !href) {
+  if (href) {
+    // Render as anchor
     return (
-      <button
-        type="button"
+      <a
         aria-current={isActive ? "page" : undefined}
         data-slot="pagination-link"
         data-active={isActive}
         className={baseClassName}
-        onClick={onClick}
-        {...(props as React.ComponentProps<"button">)}
-      />
+        href={href}
+        {...props}
+      >
+        {children}
+      </a>
     );
   }
 
+  // Render as button
   return (
-    <a
+    <button
+      type="button"
       aria-current={isActive ? "page" : undefined}
       data-slot="pagination-link"
       data-active={isActive}
       className={baseClassName}
-      href={href}
-      {...(props as React.ComponentProps<"a">)}
-    />
+      onClick={onClick}
+      {...props}
+    >
+      {children}
+    </button>
   );
 }
 
 function PaginationPrevious({
   className,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) {
+}: PaginationLinkProps) {
   return (
     <PaginationLink
       aria-label="Go to previous page"
@@ -107,7 +117,7 @@ function PaginationPrevious({
 function PaginationNext({
   className,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) {
+}: PaginationLinkProps) {
   return (
     <PaginationLink
       aria-label="Go to next page"
@@ -129,10 +139,10 @@ function PaginationEllipsis({
     <span
       aria-hidden
       data-slot="pagination-ellipsis"
-      className={cn("flex size-9 items-center justify-center", className)}
+      className={cn("flex h-9 w-9 items-center justify-center", className)}
       {...props}
     >
-      <MoreHorizontalIcon className="size-4" />
+      <MoreHorizontalIcon className="h-4 w-4" />
       <span className="sr-only">More pages</span>
     </span>
   );

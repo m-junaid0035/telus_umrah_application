@@ -270,13 +270,13 @@ export default function MyBookingsPage() {
                       ? "ring-2 ring-blue-200 bg-blue-50/30"
                       : ""
                   }`} 
-                  className={`hover:shadow-md transition-shadow ${
-                    booking.invoiceGenerated && booking.invoiceSent
-                      ? "ring-2 ring-green-200 bg-green-50/30"
-                      : booking.invoiceGenerated
-                      ? "ring-2 ring-blue-200 bg-blue-50/30"
-                      : ""
-                  }`}
+                  // className={`hover:shadow-md transition-shadow ${
+                  //   booking.invoiceGenerated && booking.invoiceSent
+                  //     ? "ring-2 ring-green-200 bg-green-50/30"
+                  //     : booking.invoiceGenerated
+                  //     ? "ring-2 ring-blue-200 bg-blue-50/30"
+                  //     : ""
+                  // }`}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">

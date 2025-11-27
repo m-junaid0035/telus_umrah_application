@@ -99,15 +99,15 @@ function PackageBookingsTable({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100";
+        return "bg-yellow-100 text-black dark:bg-yellow-800 dark:text-yellow-100";
       case "confirmed":
-        return "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100";
+        return "bg-green-100 text-black dark:bg-green-800 dark:text-green-100";
       case "cancelled":
-        return "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100";
+        return "bg-red-100 text-black dark:bg-red-800 dark:text-red-100";
       case "completed":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100";
+        return "bg-blue-100 text-black dark:bg-blue-800 dark:text-blue-100";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
+        return "bg-gray-100 text-black dark:bg-gray-800 dark:text-gray-100";
     }
   };
 
@@ -157,16 +157,16 @@ function PackageBookingsTable({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pending">
-                        <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+                        <Badge className="bg-yellow-100 text-black">Pending</Badge>
                       </SelectItem>
                       <SelectItem value="confirmed">
-                        <Badge className="bg-green-100 text-green-800">Confirmed</Badge>
+                        <Badge className="bg-green-100 text-black">Confirmed</Badge>
                       </SelectItem>
                       <SelectItem value="cancelled">
-                        <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
+                        <Badge className="bg-red-100 text-black">Cancelled</Badge>
                       </SelectItem>
                       <SelectItem value="completed">
-                        <Badge className="bg-blue-100 text-blue-800">Completed</Badge>
+                        <Badge className="bg-blue-100 text-black">Completed</Badge>
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -426,4 +426,3 @@ export default function PackageBookingsPage() {
     </Card>
   );
 }
-

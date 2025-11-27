@@ -4,14 +4,14 @@ import { connectToDatabase } from "@/lib/db";
 import { ServiceType, IServiceType } from "@/models/ServiceType";
 
 // Serialize service type for client usage
-const serializeServiceType = (type: IServiceType) => ({
+const serializeServiceType = (type: any) => ({
   _id: type._id.toString(),
   name: type.name,
   description: type.description,
   displayOrder: type.displayOrder,
   isActive: type.isActive,
-  createdAt: type.createdAt?.toISOString() || null,
-  updatedAt: type.updatedAt?.toISOString() || null,
+  createdAt: type.createdAt ? new Date(type.createdAt).toISOString() : null,
+  updatedAt: type.updatedAt ? new Date(type.updatedAt).toISOString() : null,
 });
 
 // Create a new service type
@@ -30,7 +30,7 @@ export const createServiceType = async (data: {
 export const getAllServiceTypes = async () => {
   await connectToDatabase();
   const types = await ServiceType.find().sort({ displayOrder: 1, createdAt: -1 }).lean();
-  return types.map((type) => serializeServiceType(type as IServiceType));
+  return types.map(serializeServiceType);
 };
 
 // Get active service types only
@@ -39,7 +39,7 @@ export const getActiveServiceTypes = async () => {
   const types = await ServiceType.find({ isActive: true })
     .sort({ displayOrder: 1, createdAt: -1 })
     .lean();
-  return types.map((type) => serializeServiceType(type as IServiceType));
+  return types.map(serializeServiceType);
 };
 
 // Get service type by ID
@@ -47,7 +47,7 @@ export const getServiceTypeById = async (id: string) => {
   await connectToDatabase();
   const type = await ServiceType.findById(id).lean();
   if (!type) return null;
-  return serializeServiceType(type as IServiceType);
+  return serializeServiceType(type);
 };
 
 // Update service type
@@ -67,7 +67,7 @@ export const updateServiceType = async (
     { new: true, runValidators: true }
   ).lean();
   if (!type) return null;
-  return serializeServiceType(type as IServiceType);
+  return serializeServiceType(type);
 };
 
 // Delete service type
@@ -75,6 +75,5 @@ export const deleteServiceType = async (id: string) => {
   await connectToDatabase();
   const type = await ServiceType.findByIdAndDelete(id).lean();
   if (!type) return null;
-  return serializeServiceType(type as IServiceType);
+  return serializeServiceType(type);
 };
-
