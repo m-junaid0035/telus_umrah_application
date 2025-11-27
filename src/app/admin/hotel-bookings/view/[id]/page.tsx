@@ -39,24 +39,24 @@ interface HotelBooking {
 const getStatusColor = (status: string) => {
   switch (status) {
     case "pending":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100";
+      return "bg-yellow-100 text-yellow-900 dark:bg-yellow-100 dark:text-yellow-900";
     case "confirmed":
-      return "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100";
+      return "bg-green-100 text-green-900 dark:bg-green-100 dark:text-green-900";
     case "cancelled":
-      return "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100";
+      return "bg-red-100 text-red-900 dark:bg-red-100 dark:text-red-900";
     case "completed":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100";
+      return "bg-blue-100 text-blue-900 dark:bg-blue-100 dark:text-blue-900";
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
+      return "bg-gray-100 text-gray-900 dark:bg-gray-100 dark:text-gray-900";
   }
 };
 
 export default async function HotelBookingViewPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
+  const { id } = params;
   const result = await fetchHotelBookingByIdAction(id);
 
   if (!result || result.error || !result.data) return notFound();
@@ -93,13 +93,14 @@ export default async function HotelBookingViewPage({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg dark:bg-gray-800">
+    <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg dark:bg-gray-800 text-black dark:text-black">
+
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h2 className="text-2xl font-bold text-black dark:text-black">
             Hotel Booking Details
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-black/70 dark:text-black/70 mt-1">
             Booking ID: {booking._id}
           </p>
         </div>
@@ -109,100 +110,119 @@ export default async function HotelBookingViewPage({
       </div>
 
       <div className="space-y-6">
+
         {/* Status Badge */}
         <div>
-          <Badge className={getStatusColor(booking.status)}>
+          <Badge className={`${getStatusColor(booking.status)} text-black`}>
             {booking.status.toUpperCase()}
           </Badge>
         </div>
 
         {/* Hotel Information */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3">Hotel Information</h3>
+        <div className="border-b pb-4 border-black/20">
+          <h3 className="text-lg font-semibold mb-3 text-black">Hotel Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Hotel Name</p>
-              <p className="text-gray-900 dark:text-gray-100 font-medium">
+              <p className="text-sm text-black/70">Hotel Name</p>
+              <p className="font-medium text-black">
                 {booking.hotelName || booking.hotelId || "N/A"}
               </p>
             </div>
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Hotel ID</p>
-              <p className="text-gray-900 dark:text-gray-100">{booking.hotelId}</p>
+              <p className="text-sm text-black/70">Hotel ID</p>
+              <p className="text-black">{booking.hotelId}</p>
             </div>
+
           </div>
         </div>
 
         {/* Customer Information */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3">Customer Information</h3>
+        <div className="border-b pb-4 border-black/20">
+          <h3 className="text-lg font-semibold mb-3 text-black">Customer Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>
-              <p className="text-gray-900 dark:text-gray-100 font-medium">{booking.customerName}</p>
+              <p className="text-sm text-black/70">Name</p>
+              <p className="font-medium text-black">{booking.customerName}</p>
             </div>
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-              <p className="text-gray-900 dark:text-gray-100">{booking.customerEmail}</p>
+              <p className="text-sm text-black/70">Email</p>
+              <p className="text-black">{booking.customerEmail}</p>
             </div>
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
-              <p className="text-gray-900 dark:text-gray-100">{booking.customerPhone}</p>
+              <p className="text-sm text-black/70">Phone</p>
+              <p className="text-black">{booking.customerPhone}</p>
             </div>
+
             {booking.customerNationality && (
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Nationality</p>
-                <p className="text-gray-900 dark:text-gray-100">{booking.customerNationality}</p>
+                <p className="text-sm text-black/70">Nationality</p>
+                <p className="text-black">{booking.customerNationality}</p>
               </div>
             )}
+
           </div>
         </div>
 
         {/* Booking Details */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3">Booking Details</h3>
+        <div className="border-b pb-4 border-black/20">
+          <h3 className="text-lg font-semibold mb-3 text-black">Booking Details</h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Check-in Date</p>
-              <p className="text-gray-900 dark:text-gray-100">
+              <p className="text-sm text-black/70">Check-in Date</p>
+              <p className="text-black">
                 {new Date(booking.checkInDate).toLocaleDateString()}
               </p>
             </div>
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Check-out Date</p>
-              <p className="text-gray-900 dark:text-gray-100">
+              <p className="text-sm text-black/70">Check-out Date</p>
+              <p className="text-black">
                 {new Date(booking.checkOutDate).toLocaleDateString()}
               </p>
             </div>
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Rooms</p>
-              <p className="text-gray-900 dark:text-gray-100">{booking.rooms}</p>
+              <p className="text-sm text-black/70">Rooms</p>
+              <p className="text-black">{booking.rooms}</p>
             </div>
+
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Adults</p>
-              <p className="text-gray-900 dark:text-gray-100">{booking.adults}</p>
+              <p className="text-sm text-black/70">Adults</p>
+              <p className="text-black">{booking.adults}</p>
             </div>
+
             {booking.children > 0 && (
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Children</p>
-                <p className="text-gray-900 dark:text-gray-100">{booking.children}</p>
+                <p className="text-sm text-black/70">Children</p>
+                <p className="text-black">{booking.children}</p>
               </div>
             )}
+
             {booking.bedType && (
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Bed Type</p>
-                <p className="text-gray-900 dark:text-gray-100 capitalize">{booking.bedType}</p>
+                <p className="text-sm text-black/70">Bed Type</p>
+                <p className="capitalize text-black">{booking.bedType}</p>
               </div>
             )}
+
           </div>
+
           {booking.childAges && booking.childAges.length > 0 && (
             <div className="mt-3">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Child Ages</p>
+              <p className="text-sm text-black/70 mb-2">Child Ages</p>
+
               <div className="flex flex-wrap gap-2">
                 {booking.childAges.map((age, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 rounded-full text-sm"
+                    className="px-3 py-1 bg-blue-100 text-black rounded-full text-sm"
                   >
                     Child {index + 1}: {age} years
                   </span>
@@ -210,20 +230,23 @@ export default async function HotelBookingViewPage({
               </div>
             </div>
           )}
+
         </div>
 
         {/* Additional Services */}
         {(booking.meals || booking.transport) && (
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold mb-3">Additional Services</h3>
+          <div className="border-b pb-4 border-black/20">
+            <h3 className="text-lg font-semibold mb-3 text-black">Additional Services</h3>
+
             <div className="flex flex-wrap gap-2">
               {booking.meals && (
-                <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
+                <span className="px-3 py-1 bg-green-100 text-black rounded text-sm">
                   Meals
                 </span>
               )}
+
               {booking.transport && (
-                <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded text-sm">
+                <span className="px-3 py-1 bg-green-100 text-black rounded text-sm">
                   Transport
                 </span>
               )}
@@ -233,79 +256,82 @@ export default async function HotelBookingViewPage({
 
         {/* Payment Information */}
         {(booking.totalAmount || booking.paidAmount !== undefined || booking.paymentStatus) && (
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold mb-3">Payment Information</h3>
+          <div className="border-b pb-4 border-black/20">
+            <h3 className="text-lg font-semibold mb-3 text-black">Payment Information</h3>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
               {booking.totalAmount && (
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
-                  <p className="text-gray-900 dark:text-gray-100 font-medium">
+                  <p className="text-sm text-black/70">Total Amount</p>
+                  <p className="font-medium text-black">
                     PKR {booking.totalAmount.toLocaleString()}
                   </p>
                 </div>
               )}
+
               {booking.paidAmount !== undefined && (
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Paid Amount</p>
-                  <p className="text-gray-900 dark:text-gray-100 font-medium">
+                  <p className="text-sm text-black/70">Paid Amount</p>
+                  <p className="font-medium text-black">
                     PKR {booking.paidAmount.toLocaleString()}
                   </p>
                 </div>
               )}
+
               {booking.paymentStatus && (
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Payment Status</p>
-                  <Badge
-                    className={
-                      booking.paymentStatus === "paid"
-                        ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                        : booking.paymentStatus === "partial"
-                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                        : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                    }
-                  >
+                  <p className="text-sm text-black/70">Payment Status</p>
+
+                  <Badge className="bg-gray-200 text-black">
                     {booking.paymentStatus}
                   </Badge>
                 </div>
               )}
+
             </div>
           </div>
         )}
 
         {/* Invoice Information */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3">Invoice Information</h3>
+        <div className="border-b pb-4 border-black/20">
+          <h3 className="text-lg font-semibold mb-3 text-black">Invoice Information</h3>
+
           <div className="space-y-3">
             {booking.invoiceGenerated ? (
               <>
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                  <Badge className="bg-green-200 text-black">
                     <FileText className="w-3 h-3 mr-1" />
                     Invoice Generated
                   </Badge>
+
                   {booking.invoiceSent && (
-                    <Badge variant="outline" className="border-blue-300 text-blue-700">
+                    <Badge className="border border-black text-black">
                       <Mail className="w-3 h-3 mr-1" />
                       Sent to Customer
                     </Badge>
                   )}
                 </div>
+
                 {booking.invoiceNumber && (
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Invoice Number</p>
-                    <p className="text-gray-900 dark:text-gray-100 font-medium">{booking.invoiceNumber}</p>
+                    <p className="text-sm text-black/70">Invoice Number</p>
+                    <p className="font-medium text-black">{booking.invoiceNumber}</p>
                   </div>
                 )}
+
                 <div>
                   <DownloadInvoiceButton bookingId={booking._id} bookingType="hotel" />
                 </div>
               </>
             ) : (
               <div>
-                <Badge variant="outline" className="text-gray-500">
+                <Badge className="border border-black text-black">
                   Invoice Pending
                 </Badge>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+
+                <p className="text-sm text-black/70 mt-2">
                   Invoice will be generated when the booking is confirmed.
                 </p>
               </div>
@@ -316,32 +342,35 @@ export default async function HotelBookingViewPage({
         {/* Notes */}
         {booking.notes && (
           <div>
-            <h3 className="text-lg font-semibold mb-3">Notes</h3>
-            <p className="text-gray-900 dark:text-gray-100">{booking.notes}</p>
+            <h3 className="text-lg font-semibold mb-3 text-black">Notes</h3>
+            <p className="text-black">{booking.notes}</p>
           </div>
         )}
 
         {/* Timestamps */}
-        <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="border-t pt-4 border-black/20 grid grid-cols-1 md:grid-cols-2 gap-4">
+
           {booking.createdAt && (
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Created At</p>
-              <p className="text-gray-900 dark:text-gray-100">
+              <p className="text-sm text-black/70">Created At</p>
+              <p className="text-black">
                 {new Date(booking.createdAt).toLocaleString()}
               </p>
             </div>
           )}
+
           {booking.updatedAt && (
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
-              <p className="text-gray-900 dark:text-gray-100">
+              <p className="text-sm text-black/70">Last Updated</p>
+              <p className="text-black">
                 {new Date(booking.updatedAt).toLocaleString()}
               </p>
             </div>
           )}
+
         </div>
+
       </div>
     </div>
   );
 }
-

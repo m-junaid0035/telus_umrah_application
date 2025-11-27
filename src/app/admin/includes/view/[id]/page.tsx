@@ -26,7 +26,7 @@ export default async function IncludeViewPage({
     <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded-lg dark:bg-gray-800">
       {/* Header with Back Button */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 className="text-2xl font-bold text-black">
           View Include
         </h2>
         <Link href="/admin/includes">
@@ -37,8 +37,8 @@ export default async function IncludeViewPage({
       <div className="space-y-4">
         {/* Include Text */}
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Include Text</p>
-          <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
+          <p className="text-sm text-black">Include Text</p>
+          <p className="text-lg font-medium text-black">
             {include.include_text || "N/A"}
           </p>
         </div>
@@ -46,8 +46,8 @@ export default async function IncludeViewPage({
         {/* Created At */}
         {include.createdAt && (
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Created At</p>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-black">Created At</p>
+            <p className="text-black">
               {new Date(include.createdAt).toLocaleString()}
             </p>
           </div>
@@ -56,8 +56,8 @@ export default async function IncludeViewPage({
         {/* Updated At */}
         {include.updatedAt && (
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-black">Last Updated</p>
+            <p className="text-black">
               {new Date(include.updatedAt).toLocaleString()}
             </p>
           </div>

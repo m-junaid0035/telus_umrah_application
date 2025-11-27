@@ -217,7 +217,7 @@ export default function EditHotelForm() {
                 id="description"
                 name="description"
                 rows={4}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700 text-black dark:text-black"
                 placeholder="Enter hotel description..."
                 defaultValue={hotel.description || ""}
               />
@@ -489,7 +489,7 @@ export default function EditHotelForm() {
                   id="contact[address]"
                   name="contact[address]"
                   rows={2}
-                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700 text-black dark:text-black"
                   placeholder="Full address of the hotel"
                   defaultValue={hotel.contact?.address || ""}
                 />

@@ -276,7 +276,7 @@ export default function CreateHotelForm() {
                 value={formValues.description}
                 onChange={(e) => setFormValues({ ...formValues, description: e.target.value })}
                 aria-invalid={errorFor("description") ? "true" : "false"}
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700 text-black dark:text-black"
                 placeholder="Enter hotel description..."
               />
               {errorFor("description") && (
@@ -569,7 +569,7 @@ export default function CreateHotelForm() {
                   value={formValues.contactAddress}
                   onChange={(e) => setFormValues({ ...formValues, contactAddress: e.target.value })}
                   aria-invalid={errorFor("contact.address") ? "true" : "false"}
-                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                  className="border-none shadow-sm bg-gray-50 dark:bg-gray-700 text-black dark:text-black"
                   placeholder="Full address of the hotel"
                 />
                 {errorFor("contact.address") && (

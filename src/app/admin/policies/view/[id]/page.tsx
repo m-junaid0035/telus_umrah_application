@@ -24,10 +24,10 @@ export default async function PolicyViewPage({
   const policy: Policy = result.data;
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded-lg dark:bg-gray-800">
+    <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded-lg">
       {/* Header with Back Button */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 className="text-2xl font-bold text-black">
           View Policy
         </h2>
         <Link href="/admin/policies">
@@ -38,16 +38,16 @@ export default async function PolicyViewPage({
       <div className="space-y-4">
         {/* Heading */}
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Heading</p>
-          <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
+          <p className="text-sm text-black">Heading</p>
+          <p className="text-lg font-medium text-black">
             {policy.heading || "N/A"}
           </p>
         </div>
 
         {/* Description */}
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Description</p>
-          <p className="text-gray-700 dark:text-gray-300">
+          <p className="text-sm text-black">Description</p>
+          <p className="text-black">
             {policy.description || "N/A"}
           </p>
         </div>
@@ -55,8 +55,8 @@ export default async function PolicyViewPage({
         {/* Created At */}
         {policy.createdAt && (
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Created At</p>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-black">Created At</p>
+            <p className="text-black">
               {new Date(policy.createdAt).toLocaleString()}
             </p>
           </div>
@@ -65,8 +65,8 @@ export default async function PolicyViewPage({
         {/* Updated At */}
         {policy.updatedAt && (
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-black">Last Updated</p>
+            <p className="text-black">
               {new Date(policy.updatedAt).toLocaleString()}
             </p>
           </div>
