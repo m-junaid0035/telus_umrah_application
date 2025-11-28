@@ -39,6 +39,14 @@ const airlineLogoMap: Record<string, any> = {
   'Serene Air': sereneAirLogo,
 };
 
+const serviceTypeIconMap: Record<string, React.ElementType> = {
+  umrahVisa: Award,
+  transport: Plane,
+  zaiarat: MapPin,
+  meals: Hotel, // Using Hotel as a placeholder for food/meals
+  esim: Wifi,
+};
+
 const steps = [
   { number: 1, title: 'Services & Flight', description: 'Select services and flight details' },
   { number: 2, title: 'Travelers & Hotels', description: 'Travelers and hotel preferences' },
@@ -1198,81 +1206,98 @@ export function CustomUmrahForm() {
                 className="space-y-6"
               >
                 {/* Additional Services */}
-                <div className="bg-orange-50 p-4 rounded-xl">
-                  <div className="flex items-center gap-2 mb-4">
-                    <CheckCircle className="w-5 h-5 text-orange-600" />
-                    <h3 className="text-gray-900">Additional Services</h3>
+                <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-orange-100 p-2 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">Additional Services</h3>
                   </div>
-                  
+
                   {loadingOptions ? (
                     <div className="flex justify-center items-center py-8">
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                      <span className="text-gray-600">Loading services...</span>
+                      <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                      <span className="ml-3 text-gray-600">Loading available services...</span>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                      {serviceTypes.map((typeGroup) => {
-                        const selectedCount = typeGroup.services.filter((s) =>
-                          formData.selectedServices.includes(s._id)
-                        ).length;
-                        const hasServices = typeGroup.services.length > 0;
-                        return (
-                          <div
-                            key={typeGroup.type}
-                            className={`flex flex-col justify-between p-4 rounded-lg border-2 transition-all duration-300 ${
-                              hasServices ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-                            } ${
-                              selectedCount > 0
-                                ? 'bg-[rgb(30,58,109)] text-white border-[rgb(30,58,109)]'
-                                : 'bg-white text-gray-900 border-gray-200 hover:border-[rgb(30,58,109)]'
-                            }`}
-                            onClick={() => {
-                              if (hasServices) {
-                                setSelectedServiceType(typeGroup.type);
-                                setServiceTypeDialogOpen(true);
-                              }
-                            }}
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Label className={`text-sm font-semibold ${hasServices ? 'cursor-pointer' : ''}`}>
-                                  {typeGroup.label}
-                                </Label>
-                                {hasServices && (
-                                  <div className="text-xs opacity-70">
-                                    {typeGroup.services.length} option{typeGroup.services.length !== 1 ? 's' : ''}
-                                  </div>
-                                )}
-                              </div>
+                    <div>
+                      <div className="flex flex-wrap gap-3">
+                        {serviceTypes.map((typeGroup) => {
+                          const Icon = serviceTypeIconMap[typeGroup.type] || Headphones;
+                          const isSelected = selectedServiceType === typeGroup.type;
+                          const hasServices = typeGroup.services.length > 0;
+                          const selectedCount = typeGroup.services.filter(s => formData.selectedServices.includes(s._id)).length;
+
+                          return (
+                            <motion.button
+                              key={typeGroup.type}
+                              type="button"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              disabled={!hasServices}
+                              onClick={() => {
+                                if (hasServices) {
+                                  setSelectedServiceType(isSelected ? null : typeGroup.type);
+                                }
+                              }}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all duration-200 text-sm font-medium ${
+                                isSelected
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                                  : 'bg-white border-gray-300 text-gray-700 hover:border-blue-500'
+                              } ${!hasServices ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                              <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-blue-600'}`} />
+                              <span>{typeGroup.label}</span>
                               {selectedCount > 0 && (
-                                <p className={`text-xs ${selectedCount > 0 ? 'text-white/80' : 'text-gray-500'}`}>
-                                  {selectedCount} selected
-                                </p>
+                                <span className="text-xs bg-white/20 text-white rounded-full px-2">{selectedCount}</span>
                               )}
-                              {!hasServices && (
-                                <p className="text-xs text-gray-500">
-                                  No services available
-                                </p>
-                              )}
-                            </div>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+
+                      {selectedServiceType && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                          animate={{ opacity: 1, height: 'auto', marginTop: '16px' }}
+                          exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                          className="border-t border-gray-200 pt-4"
+                        >
+                          <div className="flex flex-wrap gap-3">
+                            {(serviceTypes.find(t => t.type === selectedServiceType)?.services || []).map((service) => {
+                              const isSelected = formData.selectedServices.includes(service._id);
+                              return (
+                                <motion.div
+                                  key={service._id}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => handleServiceToggle(service._id)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all duration-200 text-sm font-medium ${
+                                      isSelected
+                                        ? 'bg-green-600 border-green-600 text-white shadow-md'
+                                        : 'bg-white border-gray-300 text-gray-700 hover:border-green-500'
+                                    }`}
+                                  >
+                                    {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    <span>{service.name}</span>
+                                    {service.price > 0 && (
+                                      <span className={`text-xs opacity-80 ${isSelected ? 'text-green-100' : 'text-gray-500'}`}>
+                                        (+PKR {service.price})
+                                      </span>
+                                    )}
+                                  </button>
+                                </motion.div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        </motion.div>
+                      )}
                     </div>
                   )}
                 </div>
-
-                {/* Service Type Dialog */}
-                {selectedServiceType && (
-                  <ServiceTypeDialog
-                    open={serviceTypeDialogOpen}
-                    onOpenChange={setServiceTypeDialogOpen}
-                    serviceType={serviceTypes.find(t => t.type === selectedServiceType)?.label || selectedServiceType}
-                    services={serviceTypes.find(t => t.type === selectedServiceType)?.services || []}
-                    selectedServices={formData.selectedServices}
-                    onServiceToggle={handleServiceToggle}
-                  />
-                )}
 
                 {/* Flight Details */}
                 <div className="bg-blue-50 p-4 rounded-xl">
