@@ -432,8 +432,8 @@ export function UmrahPackagesPage() {
                       {pkg.features && pkg.features.length > 0 && (
                         <div>
                           <h4 className="font-semibold text-gray-800 mb-2 text-sm">Package Highlights</h4>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                            {pkg.features.slice(0, 4).map((feature, idx) => (
+                          <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+                            {pkg.features.slice(0, 6).map((feature, idx) => (
                               <div key={feature._id || idx} className="feature-item">
                                 <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                                 <span className="truncate">{feature.feature_text}</span>
