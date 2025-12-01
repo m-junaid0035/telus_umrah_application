@@ -54,6 +54,7 @@ const steps = [
 ];
 
 interface HotelSelection {
+  city: 'Makkah' | 'Madina';
   hotelClass: string;
   hotel: string;
   stayDuration: string;
@@ -65,6 +66,7 @@ interface BackendHotel {
   name: string;
   star: number;
   type: 'Makkah' | 'Madina';
+  availableBedTypes?: string[];
 }
 
 export function CustomUmrahForm() {
@@ -88,9 +90,7 @@ export function CustomUmrahForm() {
     nationality: '',
   });
 
-  const [hotelSelections, setHotelSelections] = useState<HotelSelection[]>([
-    { hotelClass: '', hotel: '', stayDuration: '1', bedType: '' }
-  ]);
+  const [hotelSelections, setHotelSelections] = useState<HotelSelection[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [backendHotels, setBackendHotels] = useState<BackendHotel[]>([]);
   const [loadingHotels, setLoadingHotels] = useState(true);
@@ -557,10 +557,10 @@ export function CustomUmrahForm() {
       const servicesToSend = Array.isArray(formData.selectedServices) ? formData.selectedServices : [];
       formDataObj.append("selectedServices", JSON.stringify(servicesToSend));
 
-      // Hotels - First hotel is Makkah, additional are Madina
+      // Hotels - City is now part of hotel selection
       formDataObj.append("hotelCount", hotelSelections.length.toString());
       hotelSelections.forEach((hotel, index) => {
-        const city = index === 0 ? "Makkah" : "Madina";
+        const city = hotel.city;
         console.log(`Adding hotel ${index + 1}:`, { 
           hotelClass: hotel.hotelClass,
           hotel: hotel.hotel,
@@ -615,7 +615,7 @@ export function CustomUmrahForm() {
           phone: '',
           nationality: '',
         });
-        setHotelSelections([{ hotelClass: '', hotel: '', stayDuration: '1', bedType: '' }]);
+        setHotelSelections([]);
         setCurrentStep(1);
         // Redirect to thank you page
         router.push("/thank-you?type=custom");
@@ -678,33 +678,36 @@ export function CustomUmrahForm() {
     });
   };
 
-  const addHotelSelection = () => {
-    setHotelSelections([...hotelSelections, { hotelClass: '', hotel: '', stayDuration: '1', bedType: '' }]);
+  const addHotelSelection = (city: 'Makkah' | 'Madina') => {
+    setHotelSelections(prev => [...prev, { city, hotelClass: '', hotel: '', stayDuration: '1', bedType: '' }]);
   };
 
   const removeHotelSelection = (index: number) => {
-    if (hotelSelections.length > 1) {
-      setHotelSelections(hotelSelections.filter((_, i) => i !== index));
-    }
+    setHotelSelections(hotelSelections.filter((_, i) => i !== index));
   };
 
   const updateHotelSelection = (index: number, field: keyof HotelSelection, value: string) => {
     const updated = [...hotelSelections];
     updated[index] = { ...updated[index], [field]: value };
-    // If hotel class changes, reset hotel name
+    // If hotel class changes, reset hotel name and bed type
     if (field === 'hotelClass') {
       updated[index].hotel = '';
+      updated[index].bedType = '';
+    }
+    // If hotel name changes, reset bed type
+    if (field === 'hotel') {
+      updated[index].bedType = '';
     }
     setHotelSelections(updated);
   };
 
-  const getFilteredHotels = (starRating: string, index: number) => {
-    if (!starRating || !backendHotels || backendHotels.length === 0) return [];
+  const getFilteredHotels = (starRating: string, city: 'Makkah' | 'Madina') => {
+    if (!starRating || !backendHotels || backendHotels.length === 0 || !city) return [];
     const starNum = parseInt(starRating.replace('-star', ''));
     if (isNaN(starNum) || starNum < 1 || starNum > 5) return [];
     
     // First hotel is Makkah, rest are Madina
-    const cityType = index === 0 ? 'Makkah' : 'Madina';
+    const cityType = city;
     
     let filtered = backendHotels.filter(hotel => {
       if (!hotel || !hotel.star || !hotel.type || !hotel.name) return false;
@@ -1669,24 +1672,45 @@ export function CustomUmrahForm() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Hotel className="w-5 h-5 text-green-600" />
-                      <h3 className="text-gray-900">Makkah Hotel Details</h3>
+                      <h3 className="text-gray-900">Hotel Details</h3>
                     </div>
-                    <Button
-                      type="button"
-                      onClick={addHotelSelection}
-                      variant="outline"
-                      size="sm"
-                      className="bg-green-100 border-green-300 text-green-700 hover:bg-green-200"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Hotel for Madina
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        onClick={() => addHotelSelection('Makkah')}
+                        variant="outline"
+                        size="sm"
+                        className="bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Makkah Hotel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => addHotelSelection('Madina')}
+                        variant="outline"
+                        size="sm"
+                        className="bg-green-100 border-green-300 text-green-700 hover:bg-green-200"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Madina Hotel
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="space-y-6">
-                    {hotelSelections.map((selection, index) => (
-                      <div key={index} className="bg-white p-4 rounded-lg border-2 border-green-200 relative">
-                        {hotelSelections.length > 1 && (
+                    {hotelSelections.length === 0 && (
+                      <div className="text-center py-8 bg-white rounded-lg border-2 border-dashed">
+                        <Hotel className="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No hotels added</h3>
+                        <p className="mt-1 text-sm text-gray-500">Select 'Add Makkah Hotel' or 'Add Madina Hotel' to get started.</p>
+                      </div>
+                    )}
+                    {hotelSelections.map((selection, index) => {
+                      const hotelNumber = hotelSelections.slice(0, index + 1).filter(h => h.city === selection.city).length;
+
+                      return (
+                        <div key={index} className="bg-white p-4 rounded-lg border-2 border-green-200 relative">
                           <Button
                             type="button"
                             onClick={() => removeHotelSelection(index)}
@@ -1696,175 +1720,177 @@ export function CustomUmrahForm() {
                           >
                             <X className="w-4 h-4" />
                           </Button>
-                        )}
-                        
-                        {index === 0 && (
-                          <h4 className="text-sm text-gray-700 mb-3 font-semibold">Makkah Hotel Details</h4>
-                        )}
-                        {index > 0 && (
-                          <h4 className="text-sm text-gray-700 mb-3 font-semibold">Madina Hotel {index} Details</h4>
-                        )}
-                        
-                        {(formErrors[`hotel_${index}`] || formErrors[`hotel_${index}_duration`]) && (
-                          <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded">
-                            {formErrors[`hotel_${index}`] && (
-                              <p className="text-sm text-red-600">{formErrors[`hotel_${index}`]}</p>
-                            )}
-                            {formErrors[`hotel_${index}_duration`] && (
-                              <p className="text-sm text-red-600">{formErrors[`hotel_${index}_duration`]}</p>
-                            )}
-                          </div>
-                        )}
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-sm mb-2 flex items-center gap-1">
-                              <Star className="w-4 h-4" /> Hotel Class
-                            </Label>
-                            <Select 
-                              value={selection.hotelClass} 
-                              onValueChange={(value) => {
-                                updateHotelSelection(index, 'hotelClass', value);
-                                // Clear hotel error when hotel class is selected
-                                if (formErrors[`hotel_${index}`]) {
-                                  const newErrors = { ...formErrors };
-                                  delete newErrors[`hotel_${index}`];
-                                  setFormErrors(newErrors);
-                                }
-                              }}
-                            >
-                              <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.hotelClass ? 'border-red-500' : ''}`}>
-                                <SelectValue placeholder="Select rating first" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="3-star">3 Star</SelectItem>
-                                <SelectItem value="4-star">4 Star</SelectItem>
-                                <SelectItem value="5-star">5 Star</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
                           
-                          <div>
-                            <Label className="text-sm mb-2">Hotel Name</Label>
-                            <Select 
-                              value={selection.hotel ? `${index}:${selection.hotel}` : undefined} 
-                              onValueChange={(value) => {
-                                // Extract hotel name from value format "selectionIndex:hotelName"
-                                // Split only on the first colon to handle hotel names with colons
-                                const colonIndex = value.indexOf(':');
-                                const hotelName = colonIndex > -1 ? value.substring(colonIndex + 1) : value;
-                                updateHotelSelection(index, 'hotel', hotelName);
-                                // Clear hotel error when hotel is selected
-                                if (formErrors[`hotel_${index}`]) {
-                                  const newErrors = { ...formErrors };
-                                  delete newErrors[`hotel_${index}`];
-                                  setFormErrors(newErrors);
-                                }
-                              }}
-                              disabled={!selection.hotelClass}
-                            >
-                              <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.hotel ? 'border-red-500' : ''}`}>
-                                <SelectValue placeholder={selection.hotelClass ? "Select hotel" : "Select class first"} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {loadingHotels ? (
-                                  <div className="px-2 py-1.5 text-sm text-gray-500">Loading hotels...</div>
-                                ) : getFilteredHotels(selection.hotelClass, index).length === 0 ? (
-                                  <div className="px-2 py-1.5 text-sm text-gray-500">No hotels available for this class in {index === 0 ? 'Makkah' : 'Madina'}</div>
-                                ) : (
-                                  getFilteredHotels(selection.hotelClass, index).map((hotel, hotelIndex) => {
-                                    // Create a truly unique key using selection index, hotel index, and hotel identifier
-                                    // This ensures uniqueness even if hotel names or IDs are duplicated
-                                    const hotelId = String(hotel._id || `hotel-${hotelIndex}`);
-                                    const uniqueKey = `sel-${index}-hotel-${hotelIndex}-${hotelId.replace(/[^a-zA-Z0-9]/g, '-')}`;
-                                    // Make value unique by including selection index to avoid conflicts between selections
-                                    // Format: "selectionIndex:hotelName" - we'll extract hotel name in onValueChange
-                                    const uniqueValue = `${index}:${hotel.name || hotelId}`;
-                                    return (
-                                      <SelectItem key={uniqueKey} value={uniqueValue}>
-                                        {hotel.name}
-                                      </SelectItem>
-                                    );
-                                  })
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          <h4 className="text-sm text-gray-700 mb-3 font-semibold">{selection.city} Hotel {hotelNumber}</h4>
                           
-                          <div>
-                            <Label className="text-sm mb-2">Stay Duration (Nights)</Label>
-                            <div className="flex items-center gap-3 bg-white rounded-lg border p-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8 rounded-full"
-                                onClick={() => {
-                                  const currentValue = parseInt(selection.stayDuration || '1') || 1;
-                                  if (currentValue > 1) {
-                                    updateHotelSelection(index, 'stayDuration', String(currentValue - 1));
+                          {(formErrors[`hotel_${index}`] || formErrors[`hotel_${index}_duration`]) && (
+                            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded">
+                              {formErrors[`hotel_${index}`] && (
+                                <p className="text-sm text-red-600">{formErrors[`hotel_${index}`]}</p>
+                              )}
+                              {formErrors[`hotel_${index}_duration`] && (
+                                <p className="text-sm text-red-600">{formErrors[`hotel_${index}_duration`]}</p>
+                              )}
+                            </div>
+                          )}
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-sm mb-2 flex items-center gap-1">
+                                <Star className="w-4 h-4" /> Hotel Class
+                              </Label>
+                              <Select 
+                                value={selection.hotelClass} 
+                                onValueChange={(value) => {
+                                  updateHotelSelection(index, 'hotelClass', value);
+                                  // Clear hotel error when hotel class is selected
+                                  if (formErrors[`hotel_${index}`]) {
+                                    const newErrors = { ...formErrors };
+                                    delete newErrors[`hotel_${index}`];
+                                    setFormErrors(newErrors);
                                   }
                                 }}
-                                disabled={parseInt(selection.stayDuration || '1') <= 1}
                               >
-                                <Minus className="w-4 h-4" />
-                              </Button>
-                              
-                              <div className="flex-1 text-center">
-                                <span className="text-gray-900">
-                                  {selection.stayDuration || '1'} Night{parseInt(selection.stayDuration || '1') !== 1 ? 's' : ''}
-                                </span>
+                                <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.hotelClass ? 'border-red-500' : ''}`}>
+                                  <SelectValue placeholder="Select rating first" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="3-star">3 Star</SelectItem>
+                                  <SelectItem value="4-star">4 Star</SelectItem>
+                                  <SelectItem value="5-star">5 Star</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <Label className="text-sm mb-2">Hotel Name</Label>
+                              <Select 
+                                value={selection.hotel ? `${index}:${selection.hotel}` : undefined} 
+                                onValueChange={(value) => {
+                                  // Extract hotel name from value format "selectionIndex:hotelName"
+                                  // Split only on the first colon to handle hotel names with colons
+                                  const colonIndex = value.indexOf(':');
+                                  const hotelName = colonIndex > -1 ? value.substring(colonIndex + 1) : value;
+                                  updateHotelSelection(index, 'hotel', hotelName);
+                                  // Clear hotel error when hotel is selected
+                                  if (formErrors[`hotel_${index}`]) {
+                                    const newErrors = { ...formErrors };
+                                    delete newErrors[`hotel_${index}`];
+                                    setFormErrors(newErrors);
+                                  }
+                                }}
+                                disabled={!selection.hotelClass}
+                              >
+                                <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.hotel ? 'border-red-500' : ''}`}>
+                                  <SelectValue placeholder={selection.hotelClass ? "Select hotel" : "Select class first"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {loadingHotels ? (
+                                    <div className="px-2 py-1.5 text-sm text-gray-500">Loading hotels...</div>
+                                  ) : getFilteredHotels(selection.hotelClass, selection.city).length === 0 ? (
+                                    <div className="px-2 py-1.5 text-sm text-gray-500">No hotels available for this class in {selection.city}</div>
+                                  ) : (
+                                    getFilteredHotels(selection.hotelClass, selection.city).map((hotel, hotelIndex) => {
+                                      // Create a truly unique key using selection index, hotel index, and hotel identifier
+                                      // This ensures uniqueness even if hotel names or IDs are duplicated
+                                      const hotelId = String(hotel._id || `hotel-${hotelIndex}`);
+                                      const uniqueKey = `sel-${index}-hotel-${hotelIndex}-${hotelId.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                                      // Make value unique by including selection index to avoid conflicts between selections
+                                      // Format: "selectionIndex:hotelName" - we'll extract hotel name in onValueChange
+                                      const uniqueValue = `${index}:${hotel.name || hotelId}`;
+                                      return (
+                                        <SelectItem key={uniqueKey} value={uniqueValue}>
+                                          {hotel.name}
+                                        </SelectItem>
+                                      );
+                                    })
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <Label className="text-sm mb-2">Stay Duration (Nights)</Label>
+                              <div className="flex items-center gap-3 bg-white rounded-lg border p-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-full"
+                                  onClick={() => {
+                                    const currentValue = parseInt(selection.stayDuration || '1') || 1;
+                                    if (currentValue > 1) {
+                                      updateHotelSelection(index, 'stayDuration', String(currentValue - 1));
+                                    }
+                                  }}
+                                  disabled={parseInt(selection.stayDuration || '1') <= 1}
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </Button>
+                                
+                                <div className="flex-1 text-center">
+                                  <span className="text-gray-900">
+                                    {selection.stayDuration || '1'} Night{parseInt(selection.stayDuration || '1') !== 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                                
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-full"
+                                  onClick={() => {
+                                    const currentValue = parseInt(selection.stayDuration || '1') || 1;
+                                    if (currentValue >= 1 && currentValue < 90) {
+                                      updateHotelSelection(index, 'stayDuration', String(currentValue + 1));
+                                    }
+                                  }}
+                                  disabled={parseInt(selection.stayDuration || '1') >= 90}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
                               </div>
-                              
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8 rounded-full"
-                                onClick={() => {
-                                  const currentValue = parseInt(selection.stayDuration || '1') || 1;
-                                  if (currentValue >= 1 && currentValue < 90) {
-                                    updateHotelSelection(index, 'stayDuration', String(currentValue + 1));
+                            </div>
+                            
+                            <div>
+                              <Label className="text-sm mb-2 flex items-center gap-1">
+                                <Bed className="w-4 h-4" /> Bed Type
+                              </Label>
+                              <Select
+                                value={selection.bedType}
+                                onValueChange={(value) => {
+                                  updateHotelSelection(index, 'bedType', value);
+                                  // Clear hotel error when bed type is selected
+                                  if (formErrors[`hotel_${index}`]) {
+                                    const newErrors = { ...formErrors };
+                                    delete newErrors[`hotel_${index}`];
+                                    setFormErrors(newErrors);
                                   }
                                 }}
-                                disabled={parseInt(selection.stayDuration || '1') >= 90}
+                                disabled={!selection.hotel}
                               >
-                                <Plus className="w-4 h-4" />
-                              </Button>
+                                <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.bedType ? 'border-red-500' : ''}`}>
+                                  <SelectValue placeholder="Select bed type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {(backendHotels.find(h => h.name === selection.hotel)?.availableBedTypes || []).length > 0 ? (
+                                    backendHotels.find(h => h.name === selection.hotel)?.availableBedTypes?.map(bedType => (
+                                      <SelectItem key={bedType} value={bedType}>
+                                        {bedType.charAt(0).toUpperCase() + bedType.slice(1)}
+                                      </SelectItem>
+                                    ))
+                                  ) : (
+                                    <SelectItem value="no-options" disabled>
+                                      {selection.hotel ? 'No bed types available' : 'Select a hotel first'}
+                                    </SelectItem>
+                                  )}
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
-                          
-                          <div>
-                            <Label className="text-sm mb-2 flex items-center gap-1">
-                              <Bed className="w-4 h-4" /> Bed Type
-                            </Label>
-                            <Select 
-                              value={selection.bedType} 
-                              onValueChange={(value) => {
-                                updateHotelSelection(index, 'bedType', value);
-                                // Clear hotel error when bed type is selected
-                                if (formErrors[`hotel_${index}`]) {
-                                  const newErrors = { ...formErrors };
-                                  delete newErrors[`hotel_${index}`];
-                                  setFormErrors(newErrors);
-                                }
-                              }}
-                            >
-                              <SelectTrigger className={`bg-white ${formErrors[`hotel_${index}`] && !selection.bedType ? 'border-red-500' : ''}`}>
-                                <SelectValue placeholder="Select bed type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="single">Single Bed</SelectItem>
-                                <SelectItem value="double">Double Bed</SelectItem>
-                                <SelectItem value="twin">Twin Beds</SelectItem>
-                                <SelectItem value="triple">Triple Beds</SelectItem>
-                                <SelectItem value="quad">Quad Room</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </motion.div>
