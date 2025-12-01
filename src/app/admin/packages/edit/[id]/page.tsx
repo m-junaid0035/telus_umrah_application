@@ -34,6 +34,7 @@ import { fetchAllItinerariesAction } from "@/actions/itinerariesActions";
 import { fetchAllIncludesAction } from "@/actions/includeActions";
 import { fetchAllExcludesAction } from "@/actions/excludeActions";
 import { fetchAllPoliciesAction } from "@/actions/policyActions";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 interface FieldErrors {
   [key: string]: string[];
@@ -147,6 +148,7 @@ export default function EditUmrahPackageForm() {
   const [selectedIncludes, setSelectedIncludes] = useState<ReactSelectOption[]>([]);
   const [selectedExcludes, setSelectedExcludes] = useState<ReactSelectOption[]>([]);
   const [selectedPolicies, setSelectedPolicies] = useState<ReactSelectOption[]>([]);
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   const errorFor = (field: string) =>
     formState.error && typeof formState.error === "object"
@@ -177,6 +179,7 @@ export default function EditUmrahPackageForm() {
         if (pkgRes?.data) {
           const pkg = pkgRes.data;
           setPkgData(pkg);
+          setImageUrl(pkg.image || "");
 
           setSelectedFeatures(pkg.features.map((f: any) => ({ value: f._id || f, label: f.feature_text || "" })));
           setSelectedItineraries(pkg.itinerary.map((i: any) => ({ value: i._id || i, label: i.title || "" })));
@@ -215,6 +218,7 @@ export default function EditUmrahPackageForm() {
     setFormState({ error: {} });
 
     const formData = new FormData(e.currentTarget);
+    formData.set("image", imageUrl);
     selectedFeatures.forEach((f) => formData.append("features", f.value));
     selectedItineraries.forEach((i) => formData.append("itinerary", i.value));
     selectedIncludes.forEach((i) => formData.append("includes", i.value));
@@ -284,8 +288,13 @@ export default function EditUmrahPackageForm() {
             </div>
 
             <div>
-              <Label htmlFor="image">Image URL</Label>
-              <Input id="image" name="image" type="url" defaultValue={pkgData.image} />
+              <ImageUpload
+                value={imageUrl}
+                onChange={setImageUrl}
+                folder="packages"
+                label="Package Image"
+                error={errorFor("image") || undefined}
+              />
             </div>
 
             <div>

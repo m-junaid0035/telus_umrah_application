@@ -2,6 +2,7 @@ import { fetchUmrahPackageByIdAction } from "@/actions/packageActions";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PackageImageView } from "@/components/admin/PackageImageView";
 
 interface IHotel {
   _id: string;
@@ -154,7 +155,7 @@ export default async function PackageViewPage({
         {pkg.image && (
           <div className="border-b pb-4">
             <h3 className="text-lg font-semibold mb-3 text-black">Package Image</h3>
-            <img
+            <PackageImageView
               src={pkg.image}
               alt={pkg.name}
               className="rounded-lg max-h-96 w-full object-cover border"

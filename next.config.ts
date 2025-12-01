@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    remotePatterns: [],
+    unoptimized: false,
+  },
   /* config options here */
 };
 

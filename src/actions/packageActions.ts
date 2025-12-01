@@ -20,7 +20,16 @@ const umrahPackageSchema = z.object({
   badge: z.string().trim().optional(),
   airline: z.string().trim().min(2, "Airline is required"),
   departureCity: z.string().trim().min(2, "Departure City is required"),
-  image: z.string().trim().url().optional(),
+  image: z.string().trim().refine(
+    (val) => {
+      if (!val || val === "") return true; // Empty is allowed
+      // Accept full URLs (http://, https://) or relative paths starting with /
+      return val.startsWith("http://") || val.startsWith("https://") || val.startsWith("/");
+    },
+    {
+      message: "Image must be a valid URL or relative path starting with /",
+    }
+  ).optional(),
   popular: z.boolean().optional(),
   hotels: z.object({
     makkah: z.string().trim().min(1, "Makkah hotel is required"),
@@ -50,6 +59,7 @@ function str(formData: FormData, key: string) {
 }
 
 function parseUmrahPackageFormData(formData: FormData) {
+  const imageStr = str(formData, "image");
   return {
     name: str(formData, "name"),
     price: Number(formData.get("price") || 0),
@@ -57,7 +67,7 @@ function parseUmrahPackageFormData(formData: FormData) {
     badge: str(formData, "badge"),
     airline: str(formData, "airline"),
     departureCity: str(formData, "departureCity"),
-    image: str(formData, "image"),
+    image: imageStr || undefined,
     popular: formData.get("popular") !== null,
     hotels: {
       makkah: str(formData, "hotels[makkah]"),

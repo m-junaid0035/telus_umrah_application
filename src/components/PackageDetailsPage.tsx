@@ -520,6 +520,11 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
           src={pkg.image}
           alt={pkg.name}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            console.error("Failed to load package image:", pkg.image);
+            // Set a fallback or hide the image
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         

@@ -23,7 +23,18 @@ const hotelSchema = z.object({
   description: z.string().trim().optional(),
   distance: z.string().trim().optional(),
   amenities: z.array(z.string().trim()).optional(),
-  images: z.array(z.string().trim().url()).optional(),
+  images: z.array(
+    z.string().trim().refine(
+      (val) => {
+        if (!val || val === "") return false; // Empty strings not allowed in array
+        // Accept full URLs (http://, https://) or relative paths starting with /
+        return val.startsWith("http://") || val.startsWith("https://") || val.startsWith("/");
+      },
+      {
+        message: "Each image must be a valid URL or relative path starting with /",
+      }
+    )
+  ).optional(),
   availableBedTypes: z.array(z.enum(["single", "double", "twin", "triple", "quad"])).optional(),
   standardRoomPrice: z.number().min(0, "Price must be non-negative").optional(),
   deluxeRoomPrice: z.number().min(0, "Price must be non-negative").optional(),
