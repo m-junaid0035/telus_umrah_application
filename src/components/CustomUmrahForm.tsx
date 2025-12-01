@@ -17,6 +17,8 @@ import { fetchActiveAdditionalServicesAction } from '@/actions/additionalService
 import { ServiceTypeDialog } from '@/components/ServiceTypeDialog';
 import { FormOptionType } from '@/models/FormOption';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from './AuthContext';
+import { LoginDialog } from './LoginDialog';
 
 // Import airline logos
 import sereneAirLogo from '@/assets/serene-air-logo.png';
@@ -91,6 +93,8 @@ export function CustomUmrahForm() {
   });
 
   const [hotelSelections, setHotelSelections] = useState<HotelSelection[]>([]);
+  const { isAuthenticated, user } = useAuth();
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [backendHotels, setBackendHotels] = useState<BackendHotel[]>([]);
   const [loadingHotels, setLoadingHotels] = useState(true);
@@ -120,6 +124,16 @@ export function CustomUmrahForm() {
   const [selectedServiceType, setSelectedServiceType] = useState<string | null>(null);
   const [serviceTypeDialogOpen, setServiceTypeDialogOpen] = useState(false);
   const [loadingOptions, setLoadingOptions] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        email: prev.email || user.email || '',
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -283,6 +297,16 @@ export function CustomUmrahForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to submit your request.",
+        variant: "destructive",
+      });
+      setIsLoginDialogOpen(true);
+      return;
+    }
     
     // Validate all fields before submission
     const validation = validateAllFields();
@@ -2057,6 +2081,7 @@ export function CustomUmrahForm() {
           </form>
         </div>
       </div>
+      <LoginDialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen} />
     </motion.div>
   );
 }
