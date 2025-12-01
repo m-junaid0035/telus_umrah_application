@@ -19,7 +19,7 @@ const hotelSchema = z.object({
   type: z.nativeEnum(HotelType),
   name: z.string().trim().min(2, "Hotel name is required"),
   location: z.string().trim().min(2, "Hotel location is required"),
-  star: z.number().int().min(3).max(5, "Star rating must be between 3 and 5"),
+  star: z.number().int().min(1).max(5, "Star rating must be between 1 and 5"),
   description: z.string().trim().optional(),
   distance: z.string().trim().optional(),
   amenities: z.array(z.string().trim()).optional(),

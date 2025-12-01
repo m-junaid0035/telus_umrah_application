@@ -196,16 +196,20 @@ export default function EditHotelForm() {
             {/* Star Rating */}
             <div className="space-y-2">
               <Label htmlFor="star">Star Rating</Label>
-              <Input
+              <select
                 id="star"
                 name="star"
-                type="number"
-                min={1}
-                max={5}
                 required
-                className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
+                className="w-full rounded-md border-none shadow-sm bg-gray-50 dark:bg-gray-700 p-2"
                 defaultValue={hotel.star}
-              />
+              >
+                <option value="">Select Star Rating</option>
+                <option value="1">1 Star</option>
+                <option value="2">2 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="5">5 Stars</option>
+              </select>
               {errorFor("star") && (
                 <p className="text-sm text-red-500">{errorFor("star")}</p>
               )}
