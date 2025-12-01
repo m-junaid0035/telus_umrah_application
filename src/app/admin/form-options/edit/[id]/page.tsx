@@ -26,6 +26,7 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { FormOptionType } from "@/models/FormOption";
 import Link from "next/link";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export default function EditFormOptionPage() {
   const { id } = useParams();
@@ -45,7 +46,6 @@ export default function EditFormOptionPage() {
   const [formData, setFormData] = useState({
     type: "" as FormOptionType | "",
     name: "",
-    value: "",
     displayOrder: 0,
     isActive: true,
     logo: "",
@@ -59,7 +59,6 @@ export default function EditFormOptionPage() {
         setFormData({
           type: res.data.type,
           name: res.data.name,
-          value: res.data.value,
           displayOrder: res.data.displayOrder || 0,
           isActive: res.data.isActive !== false,
           logo: res.data.logo || "",
@@ -200,7 +199,7 @@ export default function EditFormOptionPage() {
 
               <div>
                 <Label htmlFor="name">
-                  Display Name <span className="text-red-500">*</span>
+                  Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
@@ -217,27 +216,12 @@ export default function EditFormOptionPage() {
                     {getErrorMessage("name") || "Name is required"}
                   </p>
                 )}
-              </div>
-
-              <div>
-                <Label htmlFor="value">
-                  Value <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="value"
-                  name="value"
-                  value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                  placeholder="e.g., karachi-pakistan"
-                  required
-                  className={errorFor("value") ? "border-red-500" : ""}
-                  aria-invalid={errorFor("value")}
+                {/* Auto-generated value from name */}
+                <input 
+                  type="hidden" 
+                  name="value" 
+                  value={formData.name.toLowerCase().replace(/\s+/g, "-")} 
                 />
-                {errorFor("value") && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {getErrorMessage("value") || "Value is required"}
-                  </p>
-                )}
               </div>
 
               <div>
@@ -257,19 +241,23 @@ export default function EditFormOptionPage() {
                 </p>
               </div>
 
-              <div>
-                <Label htmlFor="logo">Logo URL (Optional)</Label>
-                <Input
-                  id="logo"
-                  name="logo"
-                  value={formData.logo}
-                  onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                  placeholder="https://example.com/logo.png"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  URL to logo image (mainly for airlines)
-                </p>
-              </div>
+              {formData.type === FormOptionType.Airline && (
+                <div>
+                  <ImageUpload
+                    value={formData.logo}
+                    onChange={(url) => setFormData({ ...formData, logo: url })}
+                    folder="airlines"
+                    label="Logo (Optional)"
+                  />
+                  <input type="hidden" name="logo" value={formData.logo} />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Upload airline logo image
+                  </p>
+                </div>
+              )}
+              {formData.type !== FormOptionType.Airline && (
+                <input type="hidden" name="logo" value={formData.logo || ""} />
+              )}
 
               <div className="md:col-span-2 flex items-center space-x-2">
                 <Switch
