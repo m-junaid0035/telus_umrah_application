@@ -343,7 +343,7 @@ export function UmrahPackagesPage() {
                 <h3 className="text-gray-900 mb-2">Loading packages...</h3>
               </div>
             ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {filteredPackages.map((pkg, index) => (
                 <motion.div
                   key={pkg._id}
@@ -353,9 +353,9 @@ export function UmrahPackagesPage() {
                   className={`package-card ${pkg.popular ? 'ring-2 ring-blue-500' : ''}`}
                 >
                   <div className="package-card-header">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-3">
+                      <div className="flex-1 w-full sm:w-auto">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           {pkg.badge && (
                             <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-xs">
                               {pkg.badge}
@@ -368,7 +368,7 @@ export function UmrahPackagesPage() {
                             </Badge>
                           )}
                         </div>
-                        <h3 className="font-bold text-2xl mb-2">{pkg.name}</h3>
+                        <h3 className="font-bold text-xl sm:text-2xl mb-2">{pkg.name}</h3>
                         <div className="flex items-center gap-4 text-white/90 flex-wrap text-sm">
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-4 h-4" />
@@ -380,9 +380,9 @@ export function UmrahPackagesPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
+                      <div className="text-left sm:text-right flex-shrink-0 w-full sm:w-auto">
                         <p className="text-white/80 text-sm mb-0.5">Starts from</p>
-                        <p className="text-3xl font-extrabold">
+                        <p className="text-2xl sm:text-3xl font-extrabold">
                           PKR {pkg.price.toLocaleString()}
                         </p>
                         <p className="text-white/80 text-xs">per person</p>
@@ -446,21 +446,16 @@ export function UmrahPackagesPage() {
                   </div>
                   
                   <div className="package-card-footer">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
                       <div className="flex items-center gap-2">
-                        <img 
-                          src={getAirlineLogo(pkg.airline).toString()} 
-                          alt={pkg.airline}
-                          className="w-8 h-8 object-contain bg-white rounded-full p-1 shadow-sm"
-                        />
                         <div>
                           <p className="text-xs text-gray-500">Airline</p>
                           <p className="font-semibold text-sm text-gray-800">{pkg.airline}</p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Link href={`/umrah-packages/${pkg._id}`}>
-                          <Button variant="outline" className="h-9">
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <Link href={`/umrah-packages/${pkg._id}`} className="w-full sm:w-auto">
+                          <Button variant="outline" className="h-9 w-full sm:w-auto">
                             View Details
                           </Button>
                         </Link>
@@ -470,7 +465,7 @@ export function UmrahPackagesPage() {
                             packageName={pkg.name}
                             user={user}
                             trigger={
-                              <Button className="bg-blue-600 hover:bg-blue-700 text-white h-9">
+                              <Button className="bg-blue-600 hover:bg-blue-700 text-white h-9 w-full sm:w-auto">
                                 Book Now
                                 <ArrowRight className="w-4 h-4 ml-2" />
                               </Button>
@@ -478,7 +473,7 @@ export function UmrahPackagesPage() {
                           />
                         ) : (
                           <Button 
-                            className="bg-blue-600 hover:bg-blue-700 text-white h-9"
+                            className="bg-blue-600 hover:bg-blue-700 text-white h-9 w-full sm:w-auto"
                             onClick={() => setShowLoginDialog(true)}
                           >
                             Book Now
