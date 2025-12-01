@@ -211,8 +211,8 @@ export function TermsPage() {
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <p><strong>Telus Umrah</strong></p>
                   <p>UG-14, Lucky Center, 7-8 Jail Road</p>
-                  <p>PO. Box 717 GPO, Lahore, 54000 Pakistan</p>
-                  <p>Phone: (+92) 42 37595151</p>
+                  <p>Lahore, 54000 Pakistan</p>
+                  <p>Toll Free: 0800 33333</p>
                   <p>Email: support@telusumrah.com</p>
                 </div>
               </div>

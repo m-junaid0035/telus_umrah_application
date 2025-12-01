@@ -962,16 +962,12 @@ export function HomePage() {
 
                         {/* Content Overlay */}
                         <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                          <div className="flex items-center gap-1 text-xs text-blue-300 mb-1">
-                            <MapPin className="w-3 h-3" />
-                            <span>{hotel.type}</span>
-                          </div>
-                          <h3 className="mb-1 text-sm line-clamp-1">{hotel.name}</h3>
-                          {hotel.distance && (
-                            <p className="text-blue-300 text-xs mb-0.5">{hotel.distance}</p>
-                          )}
+                          <h3 className="mb-1 text-sm font-semibold line-clamp-1">{hotel.name}</h3>
                           {hotel.location && (
-                            <p className="text-white text-xs">{hotel.location}</p>
+                            <div className="flex items-center gap-1 text-xs text-gray-200">
+                                <MapPin className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{hotel.location}</span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1188,61 +1184,85 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
+      {/* CTA Section - Redesigned */}
+      <section className="relative py-20 bg-gray-800 text-white overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2620&q=80"
+            alt="Abstract background"
+            className="w-full h-full object-cover opacity-20"
+          />
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-white mb-3 text-2xl md:text-3xl">Ready to Start Your Journey?</h2>
-            <p className="text-white/80 text-sm md:text-base mb-6 max-w-xl mx-auto">
-              Join thousands of satisfied travelers with Telus Umrah
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column: Text Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+                Ready to Start Your Sacred Journey?
+              </h2>
+              <p className="text-lg text-gray-300 mb-8 max-w-lg">
+                Let us handle the details while you focus on your spiritual experience. Get a personalized Umrah package tailored just for you.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/customize-umrah">
+                  <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg py-7 px-8 rounded-full shadow-lg transform hover:scale-105 transition-transform">
+                    Create My Package
+                  </Button>
+                </Link>
                 <Link href="/umrah-packages">
-                  <Button className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-5 rounded-lg shadow-lg text-sm h-auto">
-                    <span>Book Your Trip</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-white text-black hover:bg-white hover:text-black font-semibold text-lg py-7 px-8 rounded-full shadow-lg transform hover:scale-105 transition-transform">
+                    View Packages
                   </Button>
                 </Link>
-              </motion.div>
-
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Link href="/contact">
-                  <Button variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-5 rounded-lg text-sm h-auto">
-                    Contact Us
-                  </Button>
-                </Link>
-              </motion.div>
-            </div>
-
-
-            <div className="flex flex-wrap gap-4 justify-center items-center text-white/70 text-xs">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle className="w-3.5 h-3.5 text-green-300" />
-                <span>Best Price</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle className="w-3.5 h-3.5 text-green-300" />
-                <span>Instant Confirmation</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle className="w-3.5 h-3.5 text-green-300" />
-                <span>24/7 Support</span>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+
+            {/* Right Column: Features */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20"
+            >
+              <h3 className="text-2xl font-semibold mb-6 text-white">Why Book With Us?</h3>
+              <ul className="space-y-5">
+                <li className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-blue-300" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white">Trusted & Secure</h4>
+                    <p className="text-gray-300 text-sm">IATA-certified with secure online payments.</p>
+                  </div>
+                </li>
+                <li className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-green-300" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white">Personalized Experience</h4>
+                    <p className="text-gray-300 text-sm">Packages tailored to your needs and budget.</p>
+                  </div>
+                </li>
+                <li className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
+                    <HeadphonesIcon className="w-6 h-6 text-amber-300" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white">24/7 Expert Support</h4>
+                    <p className="text-gray-300 text-sm">Our team is always here to assist you.</p>
+                  </div>
+                </li>
+              </ul>
+            </motion.div>
+          </div>
         </div>
       </section>
     </div>

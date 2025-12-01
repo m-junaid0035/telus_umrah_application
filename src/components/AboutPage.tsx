@@ -37,6 +37,24 @@ const values = [
   },
 ];
 
+const team = [
+  {
+    name: 'Ikram ul Haq',
+    designation: 'CEO & Founder',
+    image: ceoImage.src,
+  },
+  {
+    name: 'Jane Smith',
+    designation: 'Chief Technology Officer',
+    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80',
+  },
+  {
+    name: 'Peter Jones',
+    designation: 'Head of Operations',
+    image: 'https.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80',
+  },
+];
+
 export function AboutPage() {
   return (
     <div className="min-h-screen">
@@ -164,116 +182,43 @@ export function AboutPage() {
           </div>
         </div>
       </section>
-
-      {/* Message from Founder */}
-      <section className="py-24 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
-        {/* Decorative Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl" />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      {/* Team Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-6 shadow-lg">
-              <Quote className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-gray-900 mb-4">Message from the Founder</h2>
+            <h2 className="text-gray-900 text-4xl mb-4">Meet Our Team</h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              A personal note from the visionary behind Telus Umrah
+              The passionate individuals behind our success
             </p>
           </motion.div>
 
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative"
-            >
-              {/* Main Card */}
-              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative">
-                {/* Decorative Corner Accent */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-600/10 to-transparent rounded-bl-full" />
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-                  {/* Image Column - Full Height */}
-                  <div className="relative w-full h-full min-h-[500px] lg:min-h-full overflow-hidden group">
-                    <motion.img
-                      src={ceoImage.src}
-                      alt="Ikram ul Haq - CEO & Founder"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      initial={{ scale: 1.1 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1 }}
-                    />
-                    
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    
-                    {/* Decorative Frame */}
-                    <div className="absolute inset-6 border-2 border-white/20 rounded-2xl pointer-events-none" />
-                    
-                    {/* Name Badge */}
-                    <div className="absolute bottom-8 left-8 right-8">
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                          <h3 className="text-white text-3xl mb-1">Ikram ul Haq</h3>
-                          <p className="text-white/90 text-lg mb-1">CEO & Founder</p>
-                          <p className="text-white/80 text-sm mb-3">Telus Umrah</p>
-                          <div className="flex items-center gap-2">
-                            <div className="h-1 w-16 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full" />
-                            <div className="h-1 w-8 bg-white/40 rounded-full" />
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </div>
-
-                  {/* Content Column */}
-                  <div className="p-8 lg:p-12 xl:p-14 flex flex-col justify-center bg-gradient-to-br from-white to-gray-50/50">
-                    {/* Quote Icon */}
-                    <div className="mb-6">
-                      <Quote className="w-12 h-12 text-blue-600/20" />
-                    </div>
-
-                    {/* Message */}
-                    <div className="space-y-5 text-gray-600 leading-relaxed">
-                      <p className="text-xl text-gray-900">
-                        Dear Valued Traveler,
-                      </p>
-                      <p className="text-base">
-                        When I founded Telus Umrah in 2015, my vision was simple yet ambitious: to create a travel platform that treats every journey as a personal adventure and every customer as family.
-                      </p>
-                      <p className="text-base">
-                        Having experienced the frustrations of complicated booking processes and unreliable service myself, I was determined to build something different. Today, I'm proud to say that we've helped millions of travelers explore the world with confidence and ease.
-                      </p>
-                      <p className="text-base">
-                        Our commitment goes beyond just booking flights and hotels. We're here to turn your travel dreams into reality, whether it's a business trip, family vacation, or a once-in-a-lifetime adventure.
-                      </p>
-                      <p className="text-base">
-                        Thank you for trusting us with your journey. We promise to continue innovating and delivering the exceptional service you deserve.
-                      </p>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+            {team.map((member, index) => (
+              <motion.div
+                key={member.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+                className="text-center"
+              >
+                <div className="relative w-48 h-48 mx-auto mb-6">
+                  <ImageWithFallback
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-full rounded-full object-cover shadow-xl"
+                  />
+                  <div className="absolute inset-0 rounded-full border-4 border-white shadow-inner" />
                 </div>
-              </div>
-
-              {/* Decorative Shadow Element */}
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-gradient-to-r from-transparent via-blue-600/10 to-transparent blur-xl rounded-full" />
-            </motion.div>
+                <h3 className="text-xl text-gray-900 mb-1">{member.name}</h3>
+                <p className="text-blue-600 font-semibold">{member.designation}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
