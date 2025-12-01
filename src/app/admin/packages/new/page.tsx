@@ -30,6 +30,7 @@ import { fetchAllItinerariesAction } from "@/actions/itinerariesActions";
 import { fetchAllIncludesAction } from "@/actions/includeActions";
 import { fetchAllExcludesAction } from "@/actions/excludeActions";
 import { fetchAllPoliciesAction } from "@/actions/policyActions";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 // Types
 export interface IHotel {
@@ -285,6 +286,11 @@ export default function CreateUmrahPackageForm() {
 
     const formData = new FormData(e.currentTarget);
 
+    // Add image URL from state (ImageUpload component doesn't use form input)
+    if (formValues.image) {
+      formData.set("image", formValues.image);
+    }
+
     // Append manually for react-select values
     selectedFeatures.forEach((f) => formData.append("features", f.value));
     selectedItineraries.forEach((i) => formData.append("itinerary", i.value));
@@ -414,30 +420,26 @@ export default function CreateUmrahPackageForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="badge">Badge</Label>
-                <Input 
-                  id="badge" 
-                  name="badge" 
-                  value={formValues.badge}
-                  onChange={(e) => setFormValues({ ...formValues, badge: e.target.value })}
-                  aria-invalid={errorFor("badge") ? "true" : "false"}
-                />
-                {errorFor("badge") && <p className="text-sm text-red-500">{errorFor("badge")}</p>}
-              </div>
-              <div>
-                <Label htmlFor="image">Image URL</Label>
-                <Input 
-                  id="image" 
-                  name="image" 
-                  type="url" 
-                  value={formValues.image}
-                  onChange={(e) => setFormValues({ ...formValues, image: e.target.value })}
-                  aria-invalid={errorFor("image") ? "true" : "false"}
-                />
-                {errorFor("image") && <p className="text-sm text-red-500">{errorFor("image")}</p>}
-              </div>
+            <div>
+              <Label htmlFor="badge">Badge</Label>
+              <Input 
+                id="badge" 
+                name="badge" 
+                value={formValues.badge}
+                onChange={(e) => setFormValues({ ...formValues, badge: e.target.value })}
+                aria-invalid={errorFor("badge") ? "true" : "false"}
+              />
+              {errorFor("badge") && <p className="text-sm text-red-500">{errorFor("badge")}</p>}
+            </div>
+
+            <div>
+              <ImageUpload
+                value={formValues.image}
+                onChange={(url) => setFormValues({ ...formValues, image: url })}
+                folder="packages"
+                label="Package Image"
+                error={errorFor("image") || undefined}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

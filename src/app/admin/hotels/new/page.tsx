@@ -27,6 +27,7 @@ import { createHotelAction } from "@/actions/hotelActions";
 import { HotelType } from "@/types/hotel";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X } from "lucide-react";
+import { MultipleImageUpload } from "@/components/admin/MultipleImageUpload";
 
 interface FieldErrors {
   [key: string]: string[];
@@ -54,7 +55,7 @@ export default function CreateHotelForm() {
   const router = useRouter();
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [amenities, setAmenities] = useState<string[]>([""]);
-  const [images, setImages] = useState<string[]>([""]);
+  const [images, setImages] = useState<string[]>([]);
   const [selectedBedTypes, setSelectedBedTypes] = useState<string[]>([]);
   
   // Form field values for data preservation
@@ -438,46 +439,13 @@ export default function CreateHotelForm() {
             </div>
 
             {/* Images */}
-            <div className="space-y-2">
-              <Label>Image URLs</Label>
-              {images.map((image, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    type="url"
-                    value={image}
-                    onChange={(e) => {
-                      const newImages = [...images];
-                      newImages[index] = e.target.value;
-                      setImages(newImages);
-                    }}
-                    className="border-none shadow-sm bg-gray-50 dark:bg-gray-700"
-                    placeholder="Enter image URL"
-                  />
-                  {images.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setImages(images.filter((_, i) => i !== index));
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setImages([...images, ""])}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Image URL
-              </Button>
-            </div>
+            <MultipleImageUpload
+              values={images}
+              onChange={setImages}
+              folder="hotels"
+              label="Hotel Images"
+              maxImages={10}
+            />
 
             {/* Available Bed Types */}
             <div className="space-y-2">
