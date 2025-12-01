@@ -16,6 +16,8 @@ export const getHotelStatistics = async () => {
   const madinaHotels = await Hotel.countDocuments({ type: HotelType.Madina });
   
   // Hotels by star rating
+  const star1Hotels = await Hotel.countDocuments({ star: 1 });
+  const star2Hotels = await Hotel.countDocuments({ star: 2 });
   const star3Hotels = await Hotel.countDocuments({ star: 3 });
   const star4Hotels = await Hotel.countDocuments({ star: 4 });
   const star5Hotels = await Hotel.countDocuments({ star: 5 });
@@ -50,6 +52,8 @@ export const getHotelStatistics = async () => {
     totalHotels,
     makkahHotels,
     madinaHotels,
+    star1Hotels,
+    star2Hotels,
     star3Hotels,
     star4Hotels,
     star5Hotels,

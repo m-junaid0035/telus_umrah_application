@@ -161,6 +161,26 @@ const services = [
     // Replace the image URL below with your custom image
     image: 'https://images.unsplash.com/photo-1564769625905-50e93615e769?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
+  {
+    name: 'Zaiarat Tours',
+    description: 'Visit holy places with our guided tours',
+    image: 'https://pearlsofinspirationblog.wordpress.com/wp-content/uploads/2016/09/63838420.jpg?w=1024&h=768'
+  },
+  {
+    name: 'Meal',
+    description: 'Delicious and hygienic meal plans',
+    image: 'https://www.islamiclandmarks.com/wp-content/uploads/2024/02/pakistani_restaurants_in_makkah_saudi_arabia.jpg'
+  },
+  {
+    name: 'E-Sim',
+    description: 'Stay connected with our E-Sim services',
+    image: 'https://cdn.digitalindiacorporation.in/wp-content/uploads/2024/07/mobile.png'
+  },
+  {
+    name: 'Transport',
+    description: 'Comfortable and reliable transportation',
+    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  }
 ];
 
 // Hero carousel images
@@ -737,9 +757,9 @@ export function HomePage() {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.05 }}
                     whileHover={{ y: -10, scale: 1.03 }}
-                    className="flex-shrink-0 w-[240px] sm:w-[280px] md:w-[320px]"
+                    className="flex-shrink-0 w-[200px] sm:w-[220px] md:w-[240px]"
                   >
-                    <div className="relative h-[280px] md:h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer group">
+                    <div className="relative h-[220px] md:h-[260px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer group">
                       {/* Background Image */}
                       <ImageWithFallback
                         src={service.image}
@@ -751,7 +771,7 @@ export function HomePage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
                       {/* Content */}
-                      <div className="absolute inset-0 flex flex-col justify-end p-6">
+                      <div className="absolute inset-0 flex flex-col justify-end p-4">
                         <motion.div
                           initial={{ y: 20, opacity: 0 }}
                           whileInView={{ y: 0, opacity: 1 }}
@@ -759,19 +779,19 @@ export function HomePage() {
                           transition={{ delay: index * 0.1 }}
                         >
                           {/* Service Name */}
-                          <h3 className="text-white text-xl md:text-2xl mb-2">
+                          <h3 className="text-white text-lg md:text-xl mb-1">
                             {service.name}
                           </h3>
 
                           {/* Description */}
-                          <p className="text-white/80 text-sm md:text-base">
+                          <p className="text-white/80 text-xs md:text-sm">
                             {service.description}
                           </p>
                         </motion.div>
                       </div>
 
-                      {/* Hover Border Effect */}
-                      <div className="absolute inset-0 border-2 border-blue-500/0 group-hover:border-blue-500/50 transition-colors rounded-2xl pointer-events-none" />
+                      {/* Hover Border Effect with Glow */}
+                      <div className="absolute inset-0 border-2 border-blue-500/0 group-hover:border-blue-500/50 transition-colors rounded-2xl pointer-events-none group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
                     </div>
                   </motion.div>
                 ))}

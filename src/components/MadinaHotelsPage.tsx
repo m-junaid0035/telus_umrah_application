@@ -142,7 +142,7 @@ export function MadinaHotelsPage() {
   const [hotels, setHotels] = useState<BackendHotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 5 | 4 | 3>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 5 | 4 | 3 | 2 | 1>('all');
 
   useEffect(() => {
     const loadHotels = async () => {
@@ -197,6 +197,8 @@ export function MadinaHotelsPage() {
                 { value: 5 as const, label: '5 Star Hotels' },
                 { value: 4 as const, label: '4 Star Hotels' },
                 { value: 3 as const, label: '3 Star Hotels' },
+                { value: 2 as const, label: '2 Star Hotels' },
+                { value: 1 as const, label: '1 Star Hotel' },
               ].map((category) => (
                 <button
                   key={category.value}

@@ -1779,6 +1779,8 @@ export function CustomUmrahForm() {
                                   <SelectValue placeholder="Select rating first" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                  <SelectItem value="1-star">1 Star</SelectItem>
+                                  <SelectItem value="2-star">2 Star</SelectItem>
                                   <SelectItem value="3-star">3 Star</SelectItem>
                                   <SelectItem value="4-star">4 Star</SelectItem>
                                   <SelectItem value="5-star">5 Star</SelectItem>

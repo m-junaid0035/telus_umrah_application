@@ -44,6 +44,8 @@ interface HotelStatistics {
   totalHotels: number;
   makkahHotels: number;
   madinaHotels: number;
+  star1Hotels: number;
+  star2Hotels: number;
   star3Hotels: number;
   star4Hotels: number;
   star5Hotels: number;
@@ -66,6 +68,11 @@ export default function AdminPage() {
     totalPackageBookings: 0,
     totalHotelBookings: 0,
     totalCustomRequests: 0,
+    star1Hotels: 0,
+    star2Hotels: 0,
+    star3Hotels: 0,
+    star4Hotels: 0,
+    star5Hotels: 0,
   });
 
   // Load stats first (fast - only counts)
@@ -80,6 +87,11 @@ export default function AdminPage() {
             totalPackageBookings: dashboardStatsRes.data.totalPackageBookings,
             totalHotelBookings: dashboardStatsRes.data.totalHotelBookings,
             totalCustomRequests: dashboardStatsRes.data.totalCustomRequests,
+            star1Hotels: dashboardStatsRes.data.star1Hotels,
+            star2Hotels: dashboardStatsRes.data.star2Hotels,
+            star3Hotels: dashboardStatsRes.data.star3Hotels,
+            star4Hotels: dashboardStatsRes.data.star4Hotels,
+            star5Hotels: dashboardStatsRes.data.star5Hotels,
           });
         }
       } catch (error) {
@@ -257,9 +269,9 @@ export default function AdminPage() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Growth Chart */}
-        <Card>
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>User Growth (Last 6 Months)</CardTitle>
             <CardDescription>New user registrations over time</CardDescription>
@@ -299,6 +311,69 @@ export default function AdminPage() {
               </div>
             ) : (
               <p className="text-gray-500 text-center py-8">No data available</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Hotel Stats Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Hotel Star Distribution</CardTitle>
+            <CardDescription>Number of hotels by star rating</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {statsLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="flex text-yellow-400">
+                      <Star className="h-5 w-5" /><Star className="h-5 w-5" /><Star className="h-5 w-5" /><Star className="h-5 w-5" /><Star className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">5 Star</p>
+                  </div>
+                  <div className="text-xl font-bold text-purple-600">{stats.star5Hotels || 0}</div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="flex text-yellow-400">
+                      <Star className="h-5 w-5" /><Star className="h-5 w-5" /><Star className="h-5 w-5" /><Star className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">4 Star</p>
+                  </div>
+                  <div className="text-xl font-bold text-purple-600">{stats.star4Hotels || 0}</div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="flex text-yellow-400">
+                      <Star className="h-5 w-5" /><Star className="h-5 w-5" /><Star className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">3 Star</p>
+                  </div>
+                  <div className="text-xl font-bold text-purple-600">{stats.star3Hotels || 0}</div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="flex text-yellow-400">
+                      <Star className="h-5 w-5" /><Star className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">2 Star</p>
+                  </div>
+                  <div className="text-xl font-bold text-purple-600">{stats.star2Hotels || 0}</div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="flex text-yellow-400">
+                      <Star className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">1 Star</p>
+                  </div>
+                  <div className="text-xl font-bold text-purple-600">{stats.star1Hotels || 0}</div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

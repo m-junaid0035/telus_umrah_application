@@ -7,6 +7,7 @@ import { Hotel } from "@/models/Hotel";
 import { PackageBooking } from "@/models/PackageBooking";
 import { HotelBooking } from "@/models/HotelBooking";
 import { CustomUmrahRequest } from "@/models/CustomUmrahRequest";
+import { getHotelStatistics } from "./hotelStatistics";
 
 /**
  * Get lightweight dashboard statistics (only counts, no full data)
@@ -22,6 +23,7 @@ export const getDashboardStats = async () => {
     totalPackageBookings,
     totalHotelBookings,
     totalCustomRequests,
+    hotelStats,
   ] = await Promise.all([
     User.countDocuments(),
     UmrahPackage.countDocuments(),
@@ -29,6 +31,7 @@ export const getDashboardStats = async () => {
     PackageBooking.countDocuments(),
     HotelBooking.countDocuments(),
     CustomUmrahRequest.countDocuments(),
+    getHotelStatistics(),
   ]);
 
   return {
@@ -38,6 +41,7 @@ export const getDashboardStats = async () => {
     totalPackageBookings,
     totalHotelBookings,
     totalCustomRequests,
+    ...hotelStats,
   };
 };
 
