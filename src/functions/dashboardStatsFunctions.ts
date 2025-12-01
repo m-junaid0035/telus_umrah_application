@@ -37,7 +37,6 @@ export const getDashboardStats = async () => {
   return {
     totalUsers,
     totalPackages,
-    totalHotels,
     totalPackageBookings,
     totalHotelBookings,
     totalCustomRequests,
