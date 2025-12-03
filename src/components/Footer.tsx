@@ -85,6 +85,10 @@ export function Footer() {
             <a href="/privacy-policy" className="hover:text-white">
               Privacy Policy
             </a>
+            <span>|</span>
+            <a href="/faq" className="hover:text-white">
+              FAQ
+            </a>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">

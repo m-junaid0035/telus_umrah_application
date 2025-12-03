@@ -394,7 +394,7 @@ export function HomePage() {
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:via-amber-600 hover:to-amber-700 text-white px-8 py-6 text-base shadow-2xl group min-w-[240px]">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-base shadow-2xl group min-w-[240px]">
                     <Settings className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
                     Customize Your Umrah
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -407,10 +407,7 @@ export function HomePage() {
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button
-                    variant="outline"
-                    className="bg-white/95 backdrop-blur-sm border-2 border-white text-gray-900 hover:bg-white hover:border-white px-8 py-6 text-base shadow-xl min-w-[240px] group"
-                  >
+                  <Button className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-6 text-base shadow-2xl min-w-[240px] group">
                     <Sparkles className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
                     Explore Packages
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -419,68 +416,7 @@ export function HomePage() {
               </Link>
             </motion.div>
 
-            {/* Trust Indicators */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex flex-wrap justify-center items-center gap-6 lg:gap-8 bg-black/30 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 border-2 border-white flex items-center justify-center text-gray-900 text-xs shadow-lg"
-                    >
-                      {String.fromCharCode(64 + i)}
-                    </div>
-                  ))}
-                </div>
-                <div className="text-left">
-                  <div className="text-white">2M+</div>
-                  <div className="text-xs text-white/80">Happy Pilgrims</div>
-                </div>
-              </div>
-
-              <div className="h-10 w-px bg-white/30 hidden sm:block" />
-
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                  ))}
-                </div>
-                <div className="text-left">
-                  <div className="text-white">4.9/5</div>
-                  <div className="text-xs text-white/80">Rating</div>
-                </div>
-              </div>
-
-              <div className="h-10 w-px bg-white/30 hidden sm:block" />
-
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <div className="text-white text-sm">Secure Booking</div>
-                  <div className="text-xs text-white/80">Best Price Guarantee</div>
-                </div>
-              </div>
-
-              <div className="h-10 w-px bg-white/30 hidden lg:block" />
-
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Clock className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <div className="text-white text-sm">24/7 Support</div>
-                  <div className="text-xs text-white/80">Always Available</div>
-                </div>
-              </div>
-            </motion.div>
+            {/* Trust indicators removed as requested */}
           </div>
         </div>
 
@@ -503,7 +439,7 @@ export function HomePage() {
       </section>
 
       {/* Latest Umrah Packages Section */}
-      <section id="premade-umrah-packages" className="py-12 bg-gradient-to-br from-emerald-50/50 via-white to-blue-50/30">
+      <section id="premade-umrah-packages" className="py-8 bg-gradient-to-br from-emerald-50/50 via-white to-blue-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -698,7 +634,7 @@ export function HomePage() {
 
 
       {/* Services Section - Improved Design */}
-      <section className="py-16 bg-gradient-to-br from-slate-50 via-white to-slate-50 overflow-hidden">
+      <section className="py-12 bg-gradient-to-br from-slate-50 via-white to-slate-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -795,7 +731,7 @@ export function HomePage() {
       </section>
 
       {/* Airlines Carousel Section */}
-      <section className="py-10 bg-white border-y border-gray-100 overflow-hidden">
+      <section className="py-8 bg-white border-y border-gray-100 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -863,7 +799,7 @@ export function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 bg-gradient-to-br from-blue-50/30 via-white to-indigo-50/30">
+      <section className="py-8 bg-gradient-to-br from-blue-50/30 via-white to-indigo-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -901,7 +837,7 @@ export function HomePage() {
       </section>
 
       {/* Popular Hotels */}
-      <section className="py-12 bg-gradient-to-br from-gray-50 to-slate-100/50">
+      <section className="py-8 bg-gradient-to-br from-gray-50 to-slate-100/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1003,7 +939,7 @@ export function HomePage() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-12 bg-white overflow-hidden">
+      <section className="py-8 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1187,7 +1123,7 @@ export function HomePage() {
       </section>
 
       {/* CTA Section - Redesigned */}
-      <section className="relative py-20 bg-gray-800 text-white overflow-hidden">
+      <section className="relative py-12 bg-gray-800 text-white overflow-hidden">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2620&q=80"

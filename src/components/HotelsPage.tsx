@@ -62,7 +62,7 @@ export function HotelsPage() {
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCity, setSelectedCity] = useState(cityParam === 'Makkah' || cityParam === 'Madina' ? cityParam : 'all');
+  const [selectedCity, setSelectedCity] = useState('all');
   const [selectedStars, setSelectedStars] = useState<number[]>([]);
   const [usePriceFilter, setUsePriceFilter] = useState(false);
   const [customMinPrice, setCustomMinPrice] = useState('');
@@ -102,6 +102,13 @@ export function HotelsPage() {
     };
     loadHotels();
   }, []);
+
+  // Update city filter when URL parameter changes
+  useEffect(() => {
+    const newCity = cityParam === 'Makkah' || cityParam === 'Madina' ? cityParam : 'all';
+    setSelectedCity(newCity);
+    setCurrentPage(1); // Reset to first page when city changes
+  }, [cityParam]);
 
   // Filter and sort hotels
   useEffect(() => {
