@@ -85,7 +85,7 @@ export function CustomUmrahForm() {
     children: 0,
     childAges: [] as number[],
     rooms: 1,
-    selectedServices: [] as string[], // Array of service IDs
+    selectedServices: {} as Record<string, number>, // Object tracking service counts
     name: '',
     email: '',
     phone: '',
@@ -576,9 +576,14 @@ export function CustomUmrahForm() {
       });
       formDataObj.append("rooms", formData.rooms.toString());
 
-      // Additional Services - send selected service IDs
-      // Always send the array, even if empty
-      const servicesToSend = Array.isArray(formData.selectedServices) ? formData.selectedServices : [];
+      // Additional Services - send selected services with their counts
+      // Convert object { serviceId: count } to array of IDs (repeating IDs based on count)
+      const servicesToSend: string[] = [];
+      Object.entries(formData.selectedServices as Record<string, number>).forEach(([serviceId, count]) => {
+        for (let i = 0; i < count; i++) {
+          servicesToSend.push(serviceId);
+        }
+      });
       formDataObj.append("selectedServices", JSON.stringify(servicesToSend));
 
       // Hotels - City is now part of hotel selection
@@ -633,7 +638,7 @@ export function CustomUmrahForm() {
           children: 0,
           childAges: [],
           rooms: 1,
-          selectedServices: [],
+          selectedServices: {},
           name: '',
           email: '',
           phone: '',
@@ -692,12 +697,19 @@ export function CustomUmrahForm() {
 
   const handleServiceToggle = (serviceId: string) => {
     setFormData(prev => {
-      const isSelected = prev.selectedServices.includes(serviceId);
+      const newSelectedServices = { ...(prev.selectedServices as Record<string, number>) };
+      const currentCount = newSelectedServices[serviceId] || 0;
+
+      // Toggle on/off: if currently selected -> remove, otherwise set to 1
+      if (currentCount > 0) {
+        delete newSelectedServices[serviceId];
+      } else {
+        newSelectedServices[serviceId] = 1;
+      }
+
       return {
         ...prev,
-        selectedServices: isSelected
-          ? prev.selectedServices.filter(id => id !== serviceId)
-          : [...prev.selectedServices, serviceId]
+        selectedServices: newSelectedServices,
       };
     });
   };
@@ -1253,7 +1265,9 @@ export function CustomUmrahForm() {
                           const Icon = serviceTypeIconMap[typeGroup.type] || Headphones;
                           const isSelected = selectedServiceType === typeGroup.type;
                           const hasServices = typeGroup.services.length > 0;
-                          const selectedCount = typeGroup.services.filter(s => formData.selectedServices.includes(s._id)).length;
+                          const selectedCount = typeGroup.services.reduce((sum, s) => {
+                            return sum + ((formData.selectedServices as Record<string, number>)[s._id] || 0);
+                          }, 0);
 
                           return (
                             <motion.button
@@ -1268,12 +1282,12 @@ export function CustomUmrahForm() {
                                 }
                               }}
                               className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all duration-200 text-sm font-medium ${
-                                isSelected
+                                (isSelected || selectedCount > 0)
                                   ? 'bg-blue-600 border-blue-600 text-white shadow-md'
                                   : 'bg-white border-gray-300 text-gray-700 hover:border-blue-500'
                               } ${!hasServices ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                              <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-blue-600'}`} />
+                              <Icon className={`w-4 h-4 ${(isSelected || selectedCount > 0) ? 'text-white' : 'text-blue-600'}`} />
                               <span>{typeGroup.label}</span>
                               {selectedCount > 0 && (
                                 <span className="text-xs bg-white/20 text-white rounded-full px-2">{selectedCount}</span>
@@ -1292,28 +1306,37 @@ export function CustomUmrahForm() {
                         >
                           <div className="flex flex-wrap gap-3">
                             {(serviceTypes.find(t => t.type === selectedServiceType)?.services || []).map((service) => {
-                              const isSelected = formData.selectedServices.includes(service._id);
+                              const count = (formData.selectedServices as Record<string, number>)[service._id] || 0;
+                              const isSelected = count > 0;
                               return (
                                 <motion.div
                                   key={service._id}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
+                                  whileHover={{ scale: 1.03 }}
+                                  whileTap={{ scale: 0.97 }}
                                 >
                                   <button
                                     type="button"
                                     onClick={() => handleServiceToggle(service._id)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all duration-200 text-sm font-medium ${
+                                    className={`flex items-center justify-between gap-3 px-4 py-2 rounded-full border-2 min-w-[200px] transition-all duration-200 text-sm font-medium ${
                                       isSelected
                                         ? 'bg-green-600 border-green-600 text-white shadow-md'
                                         : 'bg-white border-gray-300 text-gray-700 hover:border-green-500'
                                     }`}
                                   >
-                                    {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                    <span>{service.name}</span>
+                                    <div className="flex items-center gap-3">
+                                      {isSelected ? (
+                                        <div className="flex items-center justify-center w-7 h-7 bg-white text-green-600 rounded-full font-semibold text-sm">
+                                          {count}
+                                        </div>
+                                      ) : (
+                                        <Plus className="w-4 h-4" />
+                                      )}
+                                      <span className="truncate max-w-[140px] text-left">{service.name}</span>
+                                    </div>
                                     {service.price > 0 && (
-                                      <span className={`text-xs opacity-80 ${isSelected ? 'text-green-100' : 'text-gray-500'}`}>
-                                        (+PKR {service.price})
-                                      </span>
+                                      <div className={`text-xs ${isSelected ? 'text-green-100' : 'text-gray-500'}`}>
+                                        +PKR {service.price}
+                                      </div>
                                     )}
                                   </button>
                                 </motion.div>
