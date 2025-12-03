@@ -697,119 +697,101 @@ export function HomePage() {
       {/* Stats Section */}
 
 
-      {/* Services Section */}
-      <section className="py-12 bg-gradient-to-br from-slate-50 to-gray-100/50 overflow-hidden">
+      {/* Services Section - Improved Design */}
+      <section className="py-16 bg-gradient-to-br from-slate-50 via-white to-slate-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-8"
+            className="mb-12 text-center"
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center justify-center gap-2 mb-3">
               <div className="h-1 w-12 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full"></div>
-              <span className="text-sm text-blue-700 uppercase tracking-wider">What We Offer</span>
+              <span className="text-sm text-blue-700 uppercase tracking-wider font-semibold">What We Offer</span>
+              <div className="h-1 w-12 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full"></div>
             </div>
-            <h2 className="text-gray-900 text-2xl md:text-3xl">Our Services</h2>
+            <h2 className="text-gray-900 text-3xl md:text-4xl font-bold mb-2">Our Premium Services</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">Everything you need for a seamless and spiritual journey</p>
           </motion.div>
 
-          {/* Horizontal Carousel with Navigation Arrows */}
-          <div className="relative py-4">
-            {/* Left Arrow */}
-            <motion.button
-              onClick={scrollLeft}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: canScrollLeft ? 1 : 0 }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-900 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-0 disabled:cursor-not-allowed"
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </motion.button>
+          {/* Services Grid - 4 columns on desktop, 2 on mobile */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {services.map((service, index) => (
+              <motion.div
+                key={service.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08 }}
+                whileHover={{ y: -6 }}
+                className="group h-full"
+              >
+                <div className="relative h-[200px] md:h-[240px] rounded-xl md:rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white">
+                  {/* Background Image with Zoom Effect */}
+                  <ImageWithFallback
+                    src={service.image}
+                    alt={service.name}
+                    className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700 ease-out"
+                  />
 
-            {/* Right Arrow */}
-            <motion.button
-              onClick={scrollRight}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: canScrollRight ? 1 : 0 }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-900 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-0 disabled:cursor-not-allowed"
-              disabled={!canScrollRight}
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </motion.button>
+                  {/* Enhanced Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 group-hover:from-black/90 group-hover:via-black/50 transition-all duration-300" />
 
-            {/* Scroll Container */}
-            <div
-              ref={scrollContainerRef}
-              className="overflow-x-auto scrollbar-hide overflow-y-visible px-12"
-            >
-              <div className="flex gap-6 pb-8 px-1 pt-2">
-                {services.map((service, index) => (
-                  <motion.div
-                    key={service.name}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ y: -10, scale: 1.03 }}
-                    className="flex-shrink-0 w-[200px] sm:w-[220px] md:w-[240px]"
-                  >
-                    <div className="relative h-[220px] md:h-[260px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer group">
-                      {/* Background Image */}
-                      <ImageWithFallback
-                        src={service.image}
-                        alt={service.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
+                  {/* Accent Line */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-
-                      {/* Content */}
-                      <div className="absolute inset-0 flex flex-col justify-end p-4">
-                        <motion.div
-                          initial={{ y: 20, opacity: 0 }}
-                          whileInView={{ y: 0, opacity: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: index * 0.1 }}
-                        >
-                          {/* Service Name */}
-                          <h3 className="text-white text-lg md:text-xl mb-1">
-                            {service.name}
-                          </h3>
-
-                          {/* Description */}
-                          <p className="text-white/80 text-xs md:text-sm">
-                            {service.description}
-                          </p>
-                        </motion.div>
+                  {/* Content Container */}
+                  <div className="absolute inset-0 flex flex-col justify-end p-3 md:p-4">
+                    <motion.div
+                      initial={{ y: 10, opacity: 0.8 }}
+                      whileInView={{ y: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="space-y-1"
+                    >
+                      {/* Service Icon/Badge */}
+                      <div className="inline-block">
+                        <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110">
+                          <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                        </div>
                       </div>
 
-                      {/* Hover Border Effect with Glow */}
-                      <div className="absolute inset-0 border-2 border-blue-500/0 group-hover:border-blue-500/50 transition-colors rounded-2xl pointer-events-none group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+                      {/* Service Name */}
+                      <h3 className="text-white text-base md:text-lg font-bold leading-tight">
+                        {service.name}
+                      </h3>
 
-        {/* Custom scrollbar hide styles */}
-        <style>{`
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-        `}</style>
+                      {/* Description - Show on hover/focus */}
+                      <p className="text-white/70 text-xs md:text-sm leading-relaxed group-hover:text-white/90 transition-colors duration-300">
+                        {service.description}
+                      </p>
+                    </motion.div>
+                  </div>
+
+                  {/* Animated Border on Hover */}
+                  <div className="absolute inset-0 rounded-xl md:rounded-2xl border-2 border-blue-400/0 group-hover:border-blue-400/60 transition-all duration-300 pointer-events-none" />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Optional: CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="mt-12 text-center"
+          >
+            <p className="text-gray-600 mb-6">Ready to experience our services?</p>
+            <Link href="/customize-umrah">
+              <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-3 md:py-4 text-base font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all">
+                Customize Your Umrah
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </motion.div>
+        </div>
       </section>
 
       {/* Airlines Carousel Section */}

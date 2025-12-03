@@ -59,9 +59,9 @@ export function Header() {
   ];
 
   const hotelItems = [
-    { name: t.header.makkahHotels, path: '/makkah-hotels' },
-    { name: t.header.madinaHotels, path: '/madina-hotels' },
-    { name: t.header.hotelList, path: '/hotels' },
+    { name: 'All Hotels', path: '/hotels', icon: Hotel },
+    { name: t.header.makkahHotels, path: '/hotels?city=Makkah' },
+    { name: t.header.madinaHotels, path: '/hotels?city=Madina' },
   ];
 
   const languages = [
@@ -288,13 +288,13 @@ export function Header() {
                 onMouseLeave={() => setHotelsOpen(false)}
               >
                 <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${
-                  (currentPage === '/makkah-hotels' || currentPage === '/madina-hotels')
+                  (currentPage === '/hotels')
                     ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
                     : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
                 }`}>
                   <span>{t.header.hotels}</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${hotelsOpen ? 'rotate-180' : ''}`} />
-                  {(currentPage === '/makkah-hotels' || currentPage === '/madina-hotels') && (
+                  {(currentPage === '/hotels') && (
                     <motion.div
                       layoutId="activeTab"
                       className={`absolute bottom-0 left-0 right-0 h-0.5 transition-colors ${
@@ -319,12 +319,14 @@ export function Header() {
                     >
                       <div className="p-2">
                         {hotelItems.map((item) => {
+                          const IconComponent = item.icon;
                           return (
                             <Link
                               key={item.path}
                               href={item.path}
-                              className="w-full flex items-center px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors text-left group"
+                              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors text-left group"
                             >
+                              {IconComponent && <IconComponent className="w-5 h-5 text-blue-600" />}
                               <span className="text-gray-700 group-hover:text-blue-600">
                                 {item.name}
                               </span>
