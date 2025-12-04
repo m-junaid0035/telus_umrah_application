@@ -33,6 +33,7 @@ import { toast } from '@/hooks/use-toast';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import makkahIcon from '@/assets/makkah-icon.png';
 import madinaIcon from '@/assets/madina-icon.png';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface Hotel {
   _id: string;
@@ -54,6 +55,7 @@ interface Hotel {
 export function HotelsPage() {
   const searchParams = useSearchParams();
   const cityParam = searchParams.get('city');
+  const { currency, convertPrice } = useCurrency();
 
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [filteredHotels, setFilteredHotels] = useState<Hotel[]>([]);
@@ -124,7 +126,12 @@ export function HotelsPage() {
         const minPrice = hotel.standardRoomPrice || hotel.deluxeRoomPrice || hotel.familySuitPrice;
         const filterMin = customMinPrice ? parseInt(customMinPrice) : 0;
         const filterMax = customMaxPrice ? parseInt(customMaxPrice) : Infinity;
-        matchesPrice = !minPrice || (minPrice >= filterMin && minPrice <= filterMax);
+        
+        // Convert filter range to PKR before comparing if the selected currency is not PKR
+        const filterMinPkr = currency.code === 'PKR' ? filterMin : filterMin / currency.rate;
+        const filterMaxPkr = currency.code === 'PKR' ? filterMax : filterMax / currency.rate;
+
+        matchesPrice = !minPrice || (minPrice >= filterMinPkr && minPrice <= filterMaxPkr);
       }
 
       return matchesSearch && matchesCity && matchesStars && matchesPrice;
@@ -153,7 +160,7 @@ export function HotelsPage() {
     console.log('After sorting:', filtered.length);
     setFilteredHotels(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [hotels, searchTerm, selectedCity, selectedStars, usePriceFilter, customMinPrice, customMaxPrice, sortBy]);
+  }, [hotels, searchTerm, selectedCity, selectedStars, usePriceFilter, customMinPrice, customMaxPrice, sortBy, currency]);
 
   // Scroll to top when the page changes (pagination)
   useEffect(() => {
@@ -325,7 +332,7 @@ export function HotelsPage() {
                     <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
                       <div>
                         <Label htmlFor="minPrice" className="text-xs font-semibold text-gray-600 block mb-2">
-                          Minimum Price (PKR)
+                          Minimum Price ({currency.code})
                         </Label>
                         <Input
                           id="minPrice"
@@ -338,7 +345,7 @@ export function HotelsPage() {
                       </div>
                       <div>
                         <Label htmlFor="maxPrice" className="text-xs font-semibold text-gray-600 block mb-2">
-                          Maximum Price (PKR)
+                          Maximum Price ({currency.code})
                         </Label>
                         <Input
                           id="maxPrice"
@@ -351,7 +358,7 @@ export function HotelsPage() {
                       </div>
                       {(customMinPrice || customMaxPrice) && (
                         <div className="text-xs text-blue-700 bg-blue-100 p-2 rounded">
-                          Filtering: PKR {customMinPrice || '0'} - PKR {customMaxPrice || '∞'}
+                          Filtering: {currency.code} {customMinPrice || '0'} - {currency.code} {customMaxPrice || '∞'}
                         </div>
                       )}
                     </div>
@@ -424,8 +431,6 @@ export function HotelsPage() {
                     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                     .map((hotel, index) => {
                   const slug = hotel.name.toLowerCase().replace(/\s+/g, '-');
-                  const cityPath = hotel.type === 'Makkah' ? 'makkah' : 'madinah';
-                  const basePath = hotel.type === 'Makkah' ? '/makkah-hotels' : '/madina-hotels';
                   const hotelImage = hotel.images && hotel.images.length > 0
                     ? hotel.images[0]
                     : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80';
@@ -441,7 +446,7 @@ export function HotelsPage() {
                       whileHover={{ y: -8 }}
                       className="group"
                     >
-                      <Link href={`${basePath}/${cityPath}/${slug}`}>
+                      <Link href={`/hotels/${hotel._id}`}>
                         <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-gray-100 h-full flex flex-col">
                           {/* Image Container */}
                           <div className="relative h-48 overflow-hidden bg-gray-100">
@@ -518,7 +523,7 @@ export function HotelsPage() {
                               <div>
                                 <p className="text-xs text-gray-500 mb-0.5">From</p>
                                 {typeof minPrice === 'number' ? (
-                                  <p className="text-2xl font-bold text-blue-600">PKR {minPrice.toLocaleString('en-PK')}</p>
+                                  <p className="text-2xl font-bold text-blue-600">{convertPrice(minPrice)}</p>
                                 ) : (
                                   <p className="text-sm font-semibold text-gray-700">{minPrice}</p>
                                 )}
