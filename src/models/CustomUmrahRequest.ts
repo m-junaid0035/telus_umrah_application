@@ -17,6 +17,9 @@ export interface ICustomUmrahRequest extends Document {
   returnDate: Date;
   airline: string;
   airlineClass: string;
+  differentReturnCity?: boolean;
+  returnFrom?: string;
+  returnTo?: string;
 
   // Travelers
   adults: number;
@@ -106,6 +109,18 @@ const customUmrahRequestSchema = new Schema<ICustomUmrahRequest>(
     airlineClass: {
       type: String,
       required: [true, "Airline class is required"],
+      trim: true,
+    },
+    differentReturnCity: {
+      type: Boolean,
+      default: false,
+    },
+    returnFrom: {
+      type: String,
+      trim: true,
+    },
+    returnTo: {
+      type: String,
       trim: true,
     },
     adults: {

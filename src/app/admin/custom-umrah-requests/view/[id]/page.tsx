@@ -16,6 +16,9 @@ interface CustomUmrahRequest {
   returnDate: string;
   airline: string;
   airlineClass: string;
+  differentReturnCity?: boolean;
+  returnFrom?: string;
+  returnTo?: string;
   adults: number;
   children: number;
   childAges: number[];
@@ -85,6 +88,12 @@ export default async function CustomUmrahRequestViewPage({
     returnDate: String(requestData.returnDate || ""),
     airline: String(requestData.airline || ""),
     airlineClass: String(requestData.airlineClass || ""),
+    differentReturnCity:
+      requestData.differentReturnCity !== undefined
+        ? Boolean(requestData.differentReturnCity)
+        : undefined,
+    returnFrom: requestData.returnFrom ? String(requestData.returnFrom) : undefined,
+    returnTo: requestData.returnTo ? String(requestData.returnTo) : undefined,
     adults: Number(requestData.adults || 0),
     children: Number(requestData.children || 0),
     childAges: Array.isArray(requestData.childAges)
@@ -184,6 +193,18 @@ export default async function CustomUmrahRequestViewPage({
               <p className="text-sm text-black">To</p>
               <p className="text-black">{request.to}</p>
             </div>
+            {request.differentReturnCity && (
+              <>
+                <div>
+                  <p className="text-sm text-black">Return From</p>
+                  <p className="text-black">{request.returnFrom || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-black">Return To</p>
+                  <p className="text-black">{request.returnTo || "N/A"}</p>
+                </div>
+              </>
+            )}
             <div>
               <p className="text-sm text-black">Departure Date</p>
               <p className="text-black">

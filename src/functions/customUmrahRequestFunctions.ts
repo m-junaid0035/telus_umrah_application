@@ -63,6 +63,17 @@ const sanitizeCustomUmrahRequestData = (data: any) => {
     throw new Error("Return date must be after departure date");
   }
 
+  // If differentReturnCity is requested, validate provided cities
+  const differentReturnCity = Boolean(data.differentReturnCity);
+  if (differentReturnCity) {
+    if (!data.returnFrom || typeof data.returnFrom !== 'string') {
+      throw new Error("Return From city is required when selecting a different return city");
+    }
+    if (!data.returnTo || typeof data.returnTo !== 'string') {
+      throw new Error("Return To city is required when selecting a different return city");
+    }
+  }
+
   // Validate and sanitize hotels
   const hotels = Array.isArray(data.hotels)
     ? data.hotels
@@ -138,6 +149,9 @@ const sanitizeCustomUmrahRequestData = (data: any) => {
     hotels,
     status: data.status || "pending",
     notes: data.notes ? String(data.notes).trim() : undefined,
+    differentReturnCity,
+    returnFrom: data.returnFrom ? String(data.returnFrom).trim() : undefined,
+    returnTo: data.returnTo ? String(data.returnTo).trim() : undefined,
   };
 };
 
@@ -204,6 +218,9 @@ export const serializeCustomUmrahRequest = (request: any) => {
     paymentMethod: request.paymentMethod,
     createdAt: request.createdAt instanceof Date ? request.createdAt.toISOString() : (request.createdAt?.toISOString?.() || request.createdAt),
     updatedAt: request.updatedAt instanceof Date ? request.updatedAt.toISOString() : (request.updatedAt?.toISOString?.() || request.updatedAt),
+    differentReturnCity: Boolean(request.differentReturnCity || false),
+    returnFrom: request.returnFrom || undefined,
+    returnTo: request.returnTo || undefined,
   };
 };
 

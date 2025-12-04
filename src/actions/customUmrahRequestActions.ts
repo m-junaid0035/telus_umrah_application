@@ -22,6 +22,9 @@ const customUmrahRequestSchema = z.object({
   to: z.string().trim().min(2, "Destination is required"),
   departDate: z.string().or(z.date()),
   returnDate: z.string().or(z.date()),
+  differentReturnCity: z.boolean().optional(),
+  returnFrom: z.string().trim().optional(),
+  returnTo: z.string().trim().optional(),
   airline: z.string().trim().min(2, "Airline is required"),
   airlineClass: z.string().trim().min(1, "Airline class is required"),
   adults: z.number().int().min(1, "At least one adult is required"),
@@ -71,6 +74,11 @@ async function parseCustomUmrahRequestFormData(formData: FormData) {
   const departDateStr = str(formData, "departDate");
   const returnDateStr = str(formData, "returnDate");
 
+  // Debug: log raw values for return city fields
+  console.log("[DEBUG] FormData differentReturnCity:", formData.get("differentReturnCity"));
+  console.log("[DEBUG] FormData returnFrom:", formData.get("returnFrom"));
+  console.log("[DEBUG] FormData returnTo:", formData.get("returnTo"));
+
   // Parse child ages array
   const childAges: number[] = [];
   const childAgesStr = formData.getAll("childAges");
@@ -119,6 +127,9 @@ async function parseCustomUmrahRequestFormData(formData: FormData) {
     to: str(formData, "to"),
     departDate: departDateStr || undefined,
     returnDate: returnDateStr || undefined,
+      differentReturnCity: (str(formData, "differentReturnCity") === "true") || false,
+      returnFrom: str(formData, "returnFrom") || undefined,
+      returnTo: str(formData, "returnTo") || undefined,
     airline: str(formData, "airline"),
     airlineClass: str(formData, "airlineClass"),
     adults: Number(formData.get("adults") || 1),

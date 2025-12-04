@@ -86,6 +86,9 @@ export function CustomUmrahForm() {
     childAges: [] as number[],
     rooms: 1,
     selectedServices: {} as Record<string, number>, // Object tracking service counts
+    differentReturnCity: false,
+    returnFrom: '',
+    returnTo: '',
     name: '',
     email: '',
     phone: '',
@@ -586,6 +589,15 @@ export function CustomUmrahForm() {
       });
       formDataObj.append("selectedServices", JSON.stringify(servicesToSend));
 
+      // If user selected a different return city, include those fields
+      // Always include the flag so server can detect the selection
+      formDataObj.append("differentReturnCity", (formData as any).differentReturnCity ? "true" : "false");
+      
+      if ((formData as any).differentReturnCity) {
+        formDataObj.append("returnFrom", (formData as any).returnFrom || '');
+        formDataObj.append("returnTo", (formData as any).returnTo || '');
+      }
+
       // Hotels - City is now part of hotel selection
       formDataObj.append("hotelCount", hotelSelections.length.toString());
       hotelSelections.forEach((hotel, index) => {
@@ -639,6 +651,9 @@ export function CustomUmrahForm() {
           childAges: [],
           rooms: 1,
           selectedServices: {},
+          differentReturnCity: false,
+          returnFrom: '',
+          returnTo: '',
           name: '',
           email: '',
           phone: '',
@@ -952,6 +967,15 @@ export function CustomUmrahForm() {
     }
     if (!formData.airlineClass || formData.airlineClass.trim().length < 1) {
       errors.airlineClass = 'Please select airline class';
+    }
+    // If user selected different return city, validate returnFrom/returnTo
+    if ((formData as any).differentReturnCity) {
+      if (!(formData as any).returnFrom || String((formData as any).returnFrom).trim().length < 1) {
+        errors.returnFrom = 'Please select return departure city';
+      }
+      if (!(formData as any).returnTo || String((formData as any).returnTo).trim().length < 1) {
+        errors.returnTo = 'Please select return destination city';
+      }
     }
     
     // Hotel validation
@@ -1418,6 +1442,74 @@ export function CustomUmrahForm() {
                         <p className="text-sm text-red-500 mt-1">{formErrors.to}</p>
                       )}
                     </div>
+
+                      {/* Move the switch/button here below From/To fields */}
+                      <div className="col-span-1 md:col-span-2">
+                        <div className="flex items-center gap-3 mt-2">
+                          <Switch
+                            checked={(formData as any).differentReturnCity}
+                            onCheckedChange={(val) => setFormData({ ...formData, differentReturnCity: !!val })}
+                            id="different-return-city"
+                          />
+                          <Label htmlFor="different-return-city" className="text-sm">Select a different return city</Label>
+                        </div>
+
+                        {(formData as any).differentReturnCity && (
+                          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-sm mb-2">Return From</Label>
+                              <Select
+                                value={(formData as any).returnFrom}
+                                onValueChange={(value) => setFormData({ ...formData, returnFrom: value })}
+                              >
+                                <SelectTrigger className={`bg-white ${(formErrors as any).returnFrom ? 'border-red-500' : ''}`}>
+                                  <SelectValue placeholder="Select return departure" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {loadingOptions ? (
+                                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                                  ) : (toCities.length > 0 ? (
+                                    toCities.map((city) => (
+                                      <SelectItem key={city.value} value={city.value}>{city.name}</SelectItem>
+                                    ))
+                                  ) : (
+                                    <SelectItem value="no-options" disabled>No cities available</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {(formErrors as any).returnFrom && (
+                                <p className="text-sm text-red-500 mt-1">{(formErrors as any).returnFrom}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <Label className="text-sm mb-2">Return To</Label>
+                              <Select
+                                value={(formData as any).returnTo}
+                                onValueChange={(value) => setFormData({ ...formData, returnTo: value })}
+                              >
+                                <SelectTrigger className={`bg-white ${(formErrors as any).returnTo ? 'border-red-500' : ''}`}>
+                                  <SelectValue placeholder="Select return destination" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {loadingOptions ? (
+                                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                                  ) : (fromCities.length > 0 ? (
+                                    fromCities.map((city) => (
+                                      <SelectItem key={city.value} value={city.value}>{city.name}</SelectItem>
+                                    ))
+                                  ) : (
+                                    <SelectItem value="no-options" disabled>No cities available</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {(formErrors as any).returnTo && (
+                                <p className="text-sm text-red-500 mt-1">{(formErrors as any).returnTo}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     
                     <div>
                       <Label className="text-sm mb-2 flex items-center gap-1">
@@ -1502,6 +1594,8 @@ export function CustomUmrahForm() {
                         <p className="text-sm text-red-500 mt-1">{formErrors.returnDate}</p>
                       )}
                     </div>
+
+                    <div className="col-span-1 md:col-span-2">
                     
                     <div>
                       <Label htmlFor="airline" className="text-sm mb-2">Airline</Label>
@@ -1571,6 +1665,7 @@ export function CustomUmrahForm() {
                       )}
                     </div>
                   </div>
+                </div>
                 </div>
               </motion.div>
             )}
