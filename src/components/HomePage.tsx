@@ -607,7 +607,7 @@ export function HomePage() {
             <Link href="/umrah-packages">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
-                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-5 rounded-lg text-sm gap-2 shadow-md"
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-5 rounded-lg text-sm gap-2 shadow-md"
                 >
                   View All Packages
                   <ArrowRight className="w-4 h-4" />
@@ -619,7 +619,7 @@ export function HomePage() {
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   variant="outline"
-                  className="border-2 border-green-600 text-green-600 hover:bg-green-50 px-8 py-5 rounded-lg text-sm gap-2"
+                  className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-5 rounded-lg text-sm gap-2"
                 >
                   <Settings className="w-4 h-4" />
                   Customize Your Package
@@ -653,80 +653,78 @@ export function HomePage() {
 
           {/* Services Grid - 4 columns on desktop, 2 on mobile */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {services.map((service, index) => (
-              <motion.div
-                key={service.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
-                whileHover={{ y: -6 }}
-                className="group h-full"
-              >
-                <div className="relative h-[200px] md:h-[240px] rounded-xl md:rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white">
-                  {/* Background Image with Zoom Effect */}
-                  <ImageWithFallback
-                    src={service.image}
-                    alt={service.name}
-                    className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700 ease-out"
-                  />
+            {services.map((service, index) => {
+              const serviceLinks: { [key: string]: string } = {
+                'Flight Booking': '/flight-booking',
+                'Hotel Reservation': '/hotel-reservation',
+                'Visa Services': '/visa-services',
+                'Umrah Service': '/umrah-service',
+                'Zaiarat Tours': '/zaiarat-tours',
+                'Meal': '/meal-service',
+                'E-Sim': '/e-sim-service',
+                'Transport': '/transport-service'
+              };
+              const link = serviceLinks[service.name] || '/';
 
-                  {/* Enhanced Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 group-hover:from-black/90 group-hover:via-black/50 transition-all duration-300" />
+              return (
+                <Link href={link} key={service.name} className="group h-full">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.08 }}
+                    whileHover={{ y: -6 }}
+                  >
+                    <div className="relative h-[200px] md:h-[240px] rounded-xl md:rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white">
+                      {/* Background Image with Zoom Effect */}
+                      <ImageWithFallback
+                        src={service.image}
+                        alt={service.name}
+                        className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700 ease-out"
+                      />
 
-                  {/* Accent Line */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      {/* Enhanced Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 group-hover:from-black/90 group-hover:via-black/50 transition-all duration-300" />
 
-                  {/* Content Container */}
-                  <div className="absolute inset-0 flex flex-col justify-end p-3 md:p-4">
-                    <motion.div
-                      initial={{ y: 10, opacity: 0.8 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="space-y-1"
-                    >
-                      {/* Service Icon/Badge */}
-                      <div className="inline-block">
-                        <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110">
-                          <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                        </div>
+                      {/* Accent Line */}
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                      {/* Content Container */}
+                      <div className="absolute inset-0 flex flex-col justify-end p-3 md:p-4">
+                        <motion.div
+                          initial={{ y: 10, opacity: 0.8 }}
+                          whileInView={{ y: 0, opacity: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="space-y-1"
+                        >
+                          {/* Service Icon/Badge */}
+                          <div className="inline-block">
+                            <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110">
+                              <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                            </div>
+                          </div>
+
+                          {/* Service Name */}
+                          <h3 className="text-white text-base md:text-lg font-bold leading-tight">
+                            {service.name}
+                          </h3>
+
+                          {/* Description - Show on hover/focus */}
+                          <p className="text-white/70 text-xs md:text-sm leading-relaxed group-hover:text-white/90 transition-colors duration-300">
+                            {service.description}
+                          </p>
+                        </motion.div>
                       </div>
 
-                      {/* Service Name */}
-                      <h3 className="text-white text-base md:text-lg font-bold leading-tight">
-                        {service.name}
-                      </h3>
-
-                      {/* Description - Show on hover/focus */}
-                      <p className="text-white/70 text-xs md:text-sm leading-relaxed group-hover:text-white/90 transition-colors duration-300">
-                        {service.description}
-                      </p>
-                    </motion.div>
-                  </div>
-
-                  {/* Animated Border on Hover */}
-                  <div className="absolute inset-0 rounded-xl md:rounded-2xl border-2 border-blue-400/0 group-hover:border-blue-400/60 transition-all duration-300 pointer-events-none" />
-                </div>
-              </motion.div>
-            ))}
+                      {/* Animated Border on Hover */}
+                      <div className="absolute inset-0 rounded-xl md:rounded-2xl border-2 border-blue-400/0 group-hover:border-blue-400/60 transition-all duration-300 pointer-events-none" />
+                    </div>
+                  </motion.div>
+                </Link>
+            )})}
           </div>
 
-          {/* Optional: CTA Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-            className="mt-12 text-center"
-          >
-            <p className="text-gray-600 mb-6">Ready to experience our services?</p>
-            <Link href="/customize-umrah">
-              <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-3 md:py-4 text-base font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all">
-                Customize Your Umrah
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </motion.div>
+
         </div>
       </section>
 
