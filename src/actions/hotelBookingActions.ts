@@ -128,9 +128,9 @@ export async function createHotelBookingAction(
     // OPTIONAL: Invoice logic (ensure paymentMethod exists)
     if (booking?._id) {
       try {
-        const { generateInvoiceNumber } = await import('@/lib/generateInvoice');
+        const { generateBookingNumber } = await import('@/lib/utils');
         const { sendInvoiceEmail } = await import('@/lib/sendInvoiceEmail');
-        const invoiceNumber = generateInvoiceNumber(booking._id.toString(), 'hotel');
+        const invoiceNumber = generateBookingNumber(booking._id.toString(), 'hotel');
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
         const invoiceUrl = `${baseUrl}/api/invoice/${booking._id}?type=hotel`;
 

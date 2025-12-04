@@ -108,17 +108,17 @@ export async function createPackageBookingAction(
     // Generate invoice for ALL bookings
     if (booking?._id) {
       try {
-        const { generateInvoiceNumber, generateInvoicePDF } = await import('@/lib/generateInvoice');
+        const { generateBookingNumber } = await import('@/lib/utils');
         const { UmrahPackage } = await import('@/models/UmrahPackage');
         const { sendInvoiceEmail } = await import('@/lib/sendInvoiceEmail');
-        
+
         // Get package details
         await connectToDatabase(); // Ensure DB connection
         const pkg = await UmrahPackage.findById(result.data.packageId).lean();
         const itemName = pkg?.name || 'Umrah Package';
-        
+
         // Generate invoice number
-        const invoiceNumber = generateInvoiceNumber(booking._id.toString(), 'package');
+        const invoiceNumber = generateBookingNumber(booking._id.toString(), 'package');
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
         const invoiceUrl = `${baseUrl}/api/invoice/${booking._id}?type=package`;
         

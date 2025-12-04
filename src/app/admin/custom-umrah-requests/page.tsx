@@ -141,7 +141,7 @@ function CustomUmrahRequestsTable({
             <TableHead>Travelers</TableHead>
             <TableHead>Departure</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Invoice</TableHead>
+            <TableHead>Request Date</TableHead>
             <TableHead className="w-[150px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -193,16 +193,7 @@ function CustomUmrahRequestsTable({
                   </Select>
                 </TableCell>
                 <TableCell>
-                  {request.invoiceGenerated ? (
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
-                      <FileText className="w-3 h-3 mr-1" />
-                      {request.invoiceNumber || 'Ready'}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-gray-500">
-                      Pending
-                    </Badge>
-                  )}
+                  {new Date(request.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end items-center gap-1.5">
@@ -213,7 +204,7 @@ function CustomUmrahRequestsTable({
                       onClick={() => {
                         window.open(`/api/invoice/${request._id}?type=custom`, '_blank');
                       }}
-                      title="Download Invoice"
+                      title="Download Request Form"
                     >
                       <Download className="h-4 w-4" />
                     </Button>

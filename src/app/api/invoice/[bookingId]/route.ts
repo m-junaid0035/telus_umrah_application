@@ -4,7 +4,9 @@ import { connectToDatabase } from '@/lib/db';
 import { HotelBooking } from '@/models/HotelBooking';
 import { PackageBooking } from '@/models/PackageBooking';
 import { CustomUmrahRequest } from '@/models/CustomUmrahRequest';
-import { generateInvoicePDF, generateInvoiceNumber } from '@/lib/generateInvoice';
+import { generateInvoicePDF } from '@/lib/generateInvoice';
+import { generateRequestFormPDF } from '@/lib/generateRequestForm';
+import { generateBookingNumber } from '@/lib/utils';
 import { UmrahPackage } from '@/models/UmrahPackage';
 import { Hotel } from '@/models/Hotel';
 
@@ -74,28 +76,8 @@ export async function GET(
       booking = await CustomUmrahRequest.findById(bookingId).lean();
       if (booking) {
         itemName = 'Custom Umrah Request';
-        // Estimate price for custom request
-        if (booking.adults) {
-          const totalTravelers = (booking.adults || 0) + (booking.children || 0);
-          calculatedTotal = 100000 * totalTravelers; // Base price per person
-
-          // Add additional services (estimate prices)
-          if (booking.umrahVisa) {
-            calculatedTotal += 50000 * totalTravelers;
-          }
-          if (booking.transport) {
-            calculatedTotal += 15000;
-          }
-          if (booking.zaiarat) {
-            calculatedTotal += 20000;
-          }
-          if (booking.meals) {
-            calculatedTotal += 30000 * totalTravelers;
-          }
-          if (booking.esim) {
-            calculatedTotal += 5000 * totalTravelers;
-          }
-        }
+        // This is a request form, not an invoice, so no price calculation
+        calculatedTotal = 0;
       }
     } else {
       booking = await PackageBooking.findById(bookingId).lean();
@@ -132,12 +114,13 @@ export async function GET(
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    // Generate invoice number if not already generated
+    // For custom requests, this is not an invoice, so no invoice number is generated.
+    // For other types, generate invoice number if not already generated.
     let invoiceNumber = booking.invoiceNumber;
-    if (!invoiceNumber) {
-      invoiceNumber = generateInvoiceNumber(bookingId, type);
+    if (type !== 'custom' && !invoiceNumber) {
+      invoiceNumber = generateBookingNumber(bookingId, type);
       const invoiceUrl = `/api/invoice/${bookingId}?type=${type}`;
-      
+
       // Save invoice info to database
       if (type === 'hotel') {
         await HotelBooking.findByIdAndUpdate(bookingId, {
@@ -151,20 +134,15 @@ export async function GET(
           invoiceNumber,
           invoiceUrl,
         });
-      } else if (type === 'custom') {
-        await CustomUmrahRequest.findByIdAndUpdate(bookingId, {
-          invoiceGenerated: true,
-          invoiceNumber,
-          invoiceUrl,
-        });
       }
     }
 
-    // Prepare invoice data
-    const invoiceData = {
-      invoiceNumber,
+    // Prepare data
+    const data = {
+      invoiceNumber: invoiceNumber || `REQ-${bookingId.slice(-6)}`,
       bookingId,
       bookingType: type as 'hotel' | 'package' | 'custom',
+      status: booking.status,
       customerName: booking.customerName || booking.name,
       customerEmail: booking.customerEmail || booking.email,
       customerPhone: booking.customerPhone || booking.phone,
@@ -173,31 +151,45 @@ export async function GET(
       checkInDate: booking.checkInDate || booking.departDate,
       checkOutDate: booking.checkOutDate || booking.returnDate,
       itemName,
-      // Use saved totalAmount (calculated at booking time) - this is the correct price
-      // Only recalculate if totalAmount is missing (for old bookings)
-      totalAmount: booking.totalAmount && booking.totalAmount > 0 ? booking.totalAmount : (calculatedTotal || 0),
+      totalAmount: calculatedTotal, // Will be 0 for custom requests
       paymentMethod: booking.paymentMethod || 'cash',
-      travelers: type === 'package' || type === 'custom' ? { adults: booking.adults || 0, children: booking.children || 0 } : { adults: booking.adults || 0, children: booking.children || 0 },
+      travelers: { adults: booking.adults || 0, children: booking.children || 0 },
+      childAges: booking.childAges,
       rooms: booking.rooms,
-      bedType: type === 'hotel' ? booking.bedType : undefined,
-      additionalServices: type === 'hotel'
-        ? [
-            ...(booking.meals ? ['Meals'] : []),
-            ...(booking.transport ? ['Transport'] : []),
-          ]
-        : [
-            ...(booking.umrahVisa ? ['Umrah Visa'] : []),
-            ...(booking.transport ? ['Transport'] : []),
-            ...(booking.zaiarat ? ['Zaiarat Tours'] : []),
-            ...(booking.meals ? ['Meals'] : []),
-            ...(booking.esim ? ['eSIM'] : []),
-          ],
+      bedType: booking.bedType,
+      from: booking.from,
+      to: booking.to,
+      airline: booking.airline,
+      airlineClass: booking.airlineClass,
+      differentReturnCity: booking.differentReturnCity,
+      returnFrom: booking.returnFrom,
+      returnTo: booking.returnTo,
+      hotels: booking.hotels,
+      notes: booking.notes,
+      additionalServices: booking.selectedServices
+        ? booking.selectedServices.map((s: { serviceName: string; }) => s.serviceName)
+        : (type === 'hotel'
+            ? [
+                ...(booking.meals ? ['Meals'] : []),
+                ...(booking.transport ? ['Transport'] : []),
+              ]
+            : [
+                ...(booking.umrahVisa ? ['Umrah Visa'] : []),
+                ...(booking.transport ? ['Transport'] : []),
+                ...(booking.zaiarat ? ['Zaiarat Tours'] : []),
+                ...(booking.meals ? ['Meals'] : []),
+                ...(booking.esim ? ['eSIM'] : []),
+              ]),
     };
 
     // Generate PDF
     let pdfBuffer: Buffer;
     try {
-      pdfBuffer = await generateInvoicePDF(invoiceData);
+      if (type === 'custom') {
+        pdfBuffer = await generateRequestFormPDF(data);
+      } else {
+        pdfBuffer = await generateInvoicePDF(data);
+      }
     } catch (pdfError: any) {
       return NextResponse.json(
         { error: 'Failed to generate PDF. Please try again later.', details: pdfError.message },
@@ -205,10 +197,14 @@ export async function GET(
       );
     }
 
+    const fileName = type === 'custom' 
+      ? `request-form-${bookingId}.pdf`
+      : `invoice-${invoiceNumber}.pdf`;
+
     return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="invoice-${invoiceNumber}.pdf"`,
+        'Content-Disposition': `attachment; filename="${fileName}"`,
       },
     });
   } catch (error: any) {
