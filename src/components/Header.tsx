@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import telusUmrahLogo from '@/assets/telus-umrah-blue.png';
 import telusUmrahLogoWhite from '@/assets/telus-umrah-white.png';
 import makkahIcon from '@/assets/makkah-icon.png';
@@ -29,11 +30,11 @@ export function Header() {
   const [hotelsOpen, setHotelsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<'login' | 'signup'>('login');
   const { user, logout, isAuthenticated } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const { currency, setCurrencyByCode, availableCurrencies } = useCurrency();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,15 +72,6 @@ export function Header() {
     { code: 'DE', name: 'Deutsch', flag: '🇩🇪' },
     { code: 'AR', name: 'العربية', flag: '🇸🇦' },
     { code: 'ZH', name: '中文', flag: '🇨🇳' },
-  ];
-
-  const currencies = [
-    { code: 'USD', symbol: '$', name: 'US Dollar' },
-    { code: 'EUR', symbol: '€', name: 'Euro' },
-    { code: 'GBP', symbol: '£', name: 'British Pound' },
-    { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
-    { code: 'SAR', symbol: 'ر.س', name: 'Saudi Riyal' },
-    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
   ];
 
   const isHomePage = currentPage === '/';
@@ -138,20 +130,19 @@ export function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center gap-1.5 hover:text-blue-200 transition-colors cursor-pointer focus:outline-none">
                   <DollarSign className="w-3.5 h-3.5" />
-                  <span>{selectedCurrency}</span>
+                  <span>{currency.code}</span>
                   <ChevronDown className="w-3 h-3" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-48 bg-white border border-gray-200 shadow-xl rounded-lg">
-                  {currencies.map((currency) => (
+                  {availableCurrencies.map((c) => (
                     <DropdownMenuItem
-                      key={currency.code}
-                      onClick={() => setSelectedCurrency(currency.code)}
+                      key={c.code}
+                      onClick={() => setCurrencyByCode(c.code)}
                       className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
                     >
-                      <span className="text-sm text-gray-700">{currency.symbol}</span>
-                      <span className="text-sm text-gray-700">{currency.code}</span>
-                      <span className="text-xs text-gray-500 ml-auto">{currency.name}</span>
-                      {selectedCurrency === currency.code && (
+                      <span className="text-sm text-gray-700">{c.symbol}</span>
+                      <span className="text-sm text-gray-700">{c.code}</span>
+                      {currency.code === c.code && (
                         <span className="text-blue-600 ml-2">•</span>
                       )}
                     </DropdownMenuItem>
@@ -756,18 +747,18 @@ export function Header() {
                           <DollarSign className="w-4 h-4 text-blue-600" />
                           <span className="text-sm text-gray-700">{t.header.currency}</span>
                         </div>
-                        <span className="text-sm text-gray-900">{selectedCurrency}</span>
+                        <span className="text-sm text-gray-900">{currency.code}</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-48 bg-white border border-gray-200 shadow-xl rounded-lg">
-                        {currencies.map((currency) => (
+                        {availableCurrencies.map((c) => (
                           <DropdownMenuItem
-                            key={currency.code}
-                            onClick={() => setSelectedCurrency(currency.code)}
+                            key={c.code}
+                            onClick={() => setCurrencyByCode(c.code)}
                             className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
                           >
-                            <span className="text-sm text-gray-700">{currency.symbol}</span>
-                            <span className="text-sm text-gray-700">{currency.code}</span>
-                            {selectedCurrency === currency.code && (
+                            <span className="text-sm text-gray-700">{c.symbol}</span>
+                            <span className="text-sm text-gray-700">{c.code}</span>
+                            {currency.code === c.code && (
                               <span className="ml-auto text-blue-600">•</span>
                             )}
                           </DropdownMenuItem>

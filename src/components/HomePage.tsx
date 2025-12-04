@@ -202,6 +202,8 @@ const heroCarouselImages = [
   },
 ];
 
+import { useCurrency } from '@/contexts/CurrencyContext';
+
 export function HomePage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -211,6 +213,7 @@ export function HomePage() {
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [hotels, setHotels] = useState<BackendHotel[]>([]);
   const [loadingHotels, setLoadingHotels] = useState(true);
+  const { convertPrice } = useCurrency();
 
   // Fetch packages from backend
   useEffect(() => {
@@ -507,7 +510,7 @@ export function HomePage() {
                       <div className="text-left sm:text-right flex-shrink-0 w-full sm:w-auto">
                         <p className="text-white/80 text-sm mb-0.5">Starts from</p>
                         <p className="text-2xl sm:text-3xl font-extrabold">
-                          PKR {pkg.price.toLocaleString()}
+                          {convertPrice(pkg.price)}
                         </p>
                         <p className="text-white/80 text-xs">per person</p>
                       </div>
