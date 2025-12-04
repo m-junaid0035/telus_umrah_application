@@ -522,7 +522,7 @@ export function HomePage() {
                       {/* Hotels */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {pkg.hotels?.makkah && (
-                          <Link href={`/makkah-hotels/makkah/${pkg.hotels.makkah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`} className="block hotel-card">
+                          <Link href={`/hotels/${pkg.hotels.makkah._id}`} className="block hotel-card">
                               <div className="flex items-center gap-3 mb-2">
                                 <img src={makkahIcon.src} alt="Makkah" className="w-8 h-8" />
                                 <div>
@@ -538,7 +538,7 @@ export function HomePage() {
                           </Link>
                         )}
                         {pkg.hotels?.madinah && (
-                           <Link href={`/madina-hotels/madinah/${pkg.hotels.madinah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`} className="block hotel-card">
+                           <Link href={`/hotels/${pkg.hotels.madinah._id}`} className="block hotel-card">
                               <div className="flex items-center gap-3 mb-2">
                                 <img src={madinaIcon.src} alt="Madinah" className="w-8 h-8" />
                                 <div>
@@ -867,13 +867,13 @@ export function HomePage() {
               hotels.map((hotel, index) => {
                 const slug = hotel.name.toLowerCase().replace(/\s+/g, '-');
                 const cityPath = hotel.type === 'Makkah' ? 'makkah' : 'madinah';
-                const basePath = hotel.type === 'Makkah' ? '/makkah-hotels' : '/madina-hotels';
+                const basePath = '/hotels';
                 const hotelImage = hotel.images && hotel.images.length > 0
                   ? hotel.images[0]
                   : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80';
 
                 return (
-                  <Link key={hotel._id} href={`${basePath}/${cityPath}/${slug}`}>
+                  <Link key={hotel._id} href={`${basePath}/${hotel._id}`}>
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       whileInView={{ opacity: 1, scale: 1 }}
@@ -923,13 +923,13 @@ export function HomePage() {
             viewport={{ once: true }}
             className="mt-8 text-center"
           >
-            <Link href="/makkah-hotels">
+            <Link href="/hotels">
               <Button className="bg-[rgb(30,58,109)] hover:bg-[rgb(40,70,130)] mr-3">
                 <Hotel className="w-4 h-4 mr-2" />
                 View All Makkah Hotels
               </Button>
             </Link>
-            <Link href="/madina-hotels">
+            <Link href="/hotels">
               <Button className="bg-[rgb(30,58,109)] hover:bg-[rgb(40,70,130)]">
                 <Hotel className="w-4 h-4 mr-2" />
                 View All Madina Hotels

@@ -652,7 +652,7 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                     {/* Makkah Hotel */}
                     {pkg.hotels?.makkah && (
                       <Link 
-                        href={`/makkah-hotels/makkah/${pkg.hotels.makkah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                        href={`/hotels/${pkg.hotels.makkah._id}`}
                         className="block"
                       >
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 hover:shadow-lg transition-shadow cursor-pointer">
@@ -681,7 +681,7 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
                     {/* Madinah Hotel */}
                     {pkg.hotels?.madinah && (
                       <Link 
-                        href={`/madina-hotels/madinah/${pkg.hotels.madinah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`}
+                        href={`/hotels/${pkg.hotels.madinah._id}`}
                         className="block"
                       >
                         <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 hover:shadow-lg transition-shadow cursor-pointer">

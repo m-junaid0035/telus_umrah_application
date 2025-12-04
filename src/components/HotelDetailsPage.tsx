@@ -966,7 +966,7 @@ interface BackendHotel {
 }
 
 export function HotelDetailsPage() {
-  const { city, hotelSlug } = useParams<{ city: string; hotelSlug: string }>();
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -983,7 +983,7 @@ export function HotelDetailsPage() {
   // Fetch hotel from backend by matching slug
   useEffect(() => {
     const findHotel = async () => {
-      if (!hotelSlug || !city) {
+      if (!id) {
         setLoading(false);
         return;
       }
@@ -992,44 +992,14 @@ export function HotelDetailsPage() {
       try {
         const result = await fetchAllHotelsAction();
         if (result?.data && Array.isArray(result.data)) {
-          // Filter by city type
-          const cityType = city.toLowerCase() === 'makkah' ? 'Makkah' : 'Madina';
-          const cityHotels = result.data.filter((h: any) => h.type === cityType);
-          
-          // Find hotel by matching slug
-          let foundHotel = cityHotels.find((h: any) => {
-            const hotelSlugFromName = generateSlug(h.name);
-            return hotelSlugFromName === hotelSlug.toLowerCase();
-          });
-          
-          // If no exact slug match, try fuzzy matching
-          if (!foundHotel) {
-            foundHotel = cityHotels.find((h: any) => {
-              const hotelSlugFromName = generateSlug(h.name);
-              // Check if slug contains hotel name parts or vice versa
-              return hotelSlugFromName.includes(hotelSlug.toLowerCase()) || 
-                     hotelSlug.toLowerCase().includes(hotelSlugFromName);
-            });
-          }
-          
-          // Last resort: match by name similarity
-          if (!foundHotel) {
-            const slugWords = hotelSlug.toLowerCase().split('-');
-            foundHotel = cityHotels.find((h: any) => {
-              const nameWords = h.name.toLowerCase().split(/\s+/);
-              // Check if at least 2 words match
-              const matchingWords = slugWords.filter(sw => 
-                nameWords.some((nw: string) => nw.includes(sw) || sw.includes(nw))
-              );
-              return matchingWords.length >= 2;
-            });
-          }
+          // Find hotel by matching id
+          const foundHotel = result.data.find((h: any) => h._id === id);
           
           if (foundHotel) {
             setHotel(foundHotel as BackendHotel);
             setHotelId(foundHotel._id);
           } else {
-            console.warn(`Hotel not found for slug: ${hotelSlug}. Available hotels:`, cityHotels.map((h: any) => generateSlug(h.name)));
+            console.warn(`Hotel not found for id: ${id}`);
             setHotel(null);
           }
         }
@@ -1041,10 +1011,10 @@ export function HotelDetailsPage() {
       }
     };
     findHotel();
-  }, [hotelSlug, city]); 
+  }, [id]); 
 
-  const cityIcon = city === 'makkah' ? makkahIcon : madinaIcon;
-  const cityName = city === 'makkah' ? 'Makkah' : 'Madinah';
+  const cityIcon = hotel?.type === 'Makkah' ? makkahIcon : madinaIcon;
+  const cityName = hotel?.type === 'Makkah' ? 'Makkah' : 'Madinah';
 
   const nextImage = () => {
     if (hotel?.images && hotel.images.length > 0) {

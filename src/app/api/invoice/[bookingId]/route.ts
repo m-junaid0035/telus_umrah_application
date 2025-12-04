@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { HotelBooking } from '@/models/HotelBooking';
 import { PackageBooking } from '@/models/PackageBooking';
+import { CustomUmrahRequest } from '@/models/CustomUmrahRequest';
 import { generateInvoicePDF, generateInvoiceNumber } from '@/lib/generateInvoice';
 import { UmrahPackage } from '@/models/UmrahPackage';
 import { Hotel } from '@/models/Hotel';
@@ -69,6 +70,33 @@ export async function GET(
           }
         }
       }
+    } else if (type === 'custom') {
+      booking = await CustomUmrahRequest.findById(bookingId).lean();
+      if (booking) {
+        itemName = 'Custom Umrah Request';
+        // Estimate price for custom request
+        if (booking.adults) {
+          const totalTravelers = (booking.adults || 0) + (booking.children || 0);
+          calculatedTotal = 100000 * totalTravelers; // Base price per person
+
+          // Add additional services (estimate prices)
+          if (booking.umrahVisa) {
+            calculatedTotal += 50000 * totalTravelers;
+          }
+          if (booking.transport) {
+            calculatedTotal += 15000;
+          }
+          if (booking.zaiarat) {
+            calculatedTotal += 20000;
+          }
+          if (booking.meals) {
+            calculatedTotal += 30000 * totalTravelers;
+          }
+          if (booking.esim) {
+            calculatedTotal += 5000 * totalTravelers;
+          }
+        }
+      }
     } else {
       booking = await PackageBooking.findById(bookingId).lean();
       if (booking) {
@@ -117,8 +145,14 @@ export async function GET(
           invoiceNumber,
           invoiceUrl,
         });
-      } else {
+      } else if (type === 'package') {
         await PackageBooking.findByIdAndUpdate(bookingId, {
+          invoiceGenerated: true,
+          invoiceNumber,
+          invoiceUrl,
+        });
+      } else if (type === 'custom') {
+        await CustomUmrahRequest.findByIdAndUpdate(bookingId, {
           invoiceGenerated: true,
           invoiceNumber,
           invoiceUrl,
@@ -130,23 +164,23 @@ export async function GET(
     const invoiceData = {
       invoiceNumber,
       bookingId,
-      bookingType: type as 'hotel' | 'package',
-      customerName: booking.customerName,
-      customerEmail: booking.customerEmail,
-      customerPhone: booking.customerPhone,
-      customerNationality: booking.customerNationality,
+      bookingType: type as 'hotel' | 'package' | 'custom',
+      customerName: booking.customerName || booking.name,
+      customerEmail: booking.customerEmail || booking.email,
+      customerPhone: booking.customerPhone || booking.phone,
+      customerNationality: booking.customerNationality || booking.nationality,
       bookingDate: booking.createdAt,
-      checkInDate: booking.checkInDate,
-      checkOutDate: booking.checkOutDate,
+      checkInDate: booking.checkInDate || booking.departDate,
+      checkOutDate: booking.checkOutDate || booking.returnDate,
       itemName,
       // Use saved totalAmount (calculated at booking time) - this is the correct price
       // Only recalculate if totalAmount is missing (for old bookings)
       totalAmount: booking.totalAmount && booking.totalAmount > 0 ? booking.totalAmount : (calculatedTotal || 0),
       paymentMethod: booking.paymentMethod || 'cash',
-      travelers: type === 'package' ? booking.travelers : { adults: booking.adults || 0, children: booking.children || 0 },
+      travelers: type === 'package' || type === 'custom' ? { adults: booking.adults || 0, children: booking.children || 0 } : { adults: booking.adults || 0, children: booking.children || 0 },
       rooms: booking.rooms,
       bedType: type === 'hotel' ? booking.bedType : undefined,
-      additionalServices: type === 'hotel' 
+      additionalServices: type === 'hotel'
         ? [
             ...(booking.meals ? ['Meals'] : []),
             ...(booking.transport ? ['Transport'] : []),

@@ -395,7 +395,7 @@ export function UmrahPackagesPage() {
                       {/* Hotels */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {pkg.hotels.makkah && (
-                          <Link href={`/makkah-hotels/makkah/${pkg.hotels.makkah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`} className="block hotel-card">
+                          <Link href={`/hotels/${pkg.hotels.makkah._id}`} className="block hotel-card">
                               <div className="flex items-center gap-3 mb-2">
                                 <img src={makkahIcon.src} alt="Makkah" className="w-8 h-8" />
                                 <div>
@@ -411,7 +411,7 @@ export function UmrahPackagesPage() {
                           </Link>
                         )}
                         {pkg.hotels.madinah && (
-                           <Link href={`/madina-hotels/madinah/${pkg.hotels.madinah.name?.toLowerCase().replace(/\s+/g, '-') || ''}`} className="block hotel-card">
+                           <Link href={`/hotels/${pkg.hotels.madinah._id}`} className="block hotel-card">
                               <div className="flex items-center gap-3 mb-2">
                                 <img src={madinaIcon.src} alt="Madinah" className="w-8 h-8" />
                                 <div>
