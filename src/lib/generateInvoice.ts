@@ -1,9 +1,11 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fs from 'fs/promises';
+import path from 'path';
 
 interface InvoiceData {
   invoiceNumber: string;
   bookingId: string;
-  bookingType: 'hotel' | 'package';
+  bookingType: 'hotel' | 'package' | 'custom';
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -29,292 +31,190 @@ interface InvoiceData {
 
 export async function generateInvoicePDF(invoiceData: InvoiceData): Promise<Buffer> {
   try {
-    // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
-    
-    // Embed standard fonts
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
-    // Add a page
-    const page = pdfDoc.addPage([595, 842]); // A4 size in points
-    
-    // Set up dimensions
+    const page = pdfDoc.addPage([595, 842]); // A4 size
+
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    const primaryColor = rgb(0.05, 0.2, 0.4);
+    const secondaryColor = rgb(0.1, 0.4, 0.8);
+    const textColor = rgb(0.1, 0.1, 0.1);
+    const lightTextColor = rgb(0.4, 0.4, 0.4);
+    const whiteColor = rgb(1, 1, 1);
+    const tableHeaderColor = rgb(0.94, 0.94, 0.94);
+
     const margin = 50;
-    const pageWidth = page.getWidth();
-    const pageHeight = page.getHeight();
-    let yPosition = pageHeight - margin;
+    const { width, height } = page.getSize();
+    let y = height - margin;
+
+    // --- Header ---
+    try {
+        const logoPath = path.resolve(process.cwd(), 'src', 'assets', 'telus-umrah-blue.png');
+        const logoBytes = await fs.readFile(logoPath);
+        const logoImage = await pdfDoc.embedPng(logoBytes);
+        const logoDims = logoImage.scale(0.35);
+        page.drawImage(logoImage, {
+            x: margin,
+            y: y - logoDims.height + 15,
+            width: logoDims.width,
+            height: logoDims.height,
+        });
+    } catch (e) {
+        // Did not find logo, skip embedding it
+    }
+
+    page.drawText('INVOICE', {
+      x: width - margin - 150,
+      y: y,
+      font: boldFont,
+      size: 26,
+      color: primaryColor,
+    });
+    y -= 45;
+
+    page.drawText(`Invoice #: ${invoiceData.invoiceNumber}`, {
+      x: width - margin - 150,
+      y: y,
+      font: font,
+      size: 10,
+      color: lightTextColor,
+    });
+    y -= 15;
+    page.drawText(`Booking ID: ${invoiceData.bookingId}`, {
+      x: width - margin - 150,
+      y: y,
+      font: font,
+      size: 10,
+      color: lightTextColor,
+    });
+    y -= 15;
+    page.drawText(`Date: ${new Date(invoiceData.bookingDate).toLocaleDateString()}`, {
+      x: width - margin - 150,
+      y: y,
+      font: font,
+      size: 10,
+      color: lightTextColor,
+    });
     
-    // Colors
-    const primaryColor = rgb(0.2, 0.4, 0.8); // Blue
-    const darkGray = rgb(0.2, 0.2, 0.2);
-    const lightGray = rgb(0.9, 0.9, 0.9);
-    const tableHeaderColor = rgb(0.95, 0.95, 0.95);
+    y -= 40;
+
+    // --- Billed To / From ---
+    page.drawText('BILLED TO', { x: margin, y, font: boldFont, size: 10, color: lightTextColor });
+    page.drawText('FROM', { x: width / 2, y, font: boldFont, size: 10, color: lightTextColor });
+    y -= 15;
+    page.drawText(invoiceData.customerName, { x: margin, y, font: boldFont, size: 12, color: textColor });
+    page.drawText('Telus Umrah', { x: width / 2, y, font: boldFont, size: 12, color: textColor });
+    y -= 15;
+    page.drawText(invoiceData.customerEmail, { x: margin, y, font: font, size: 10, color: textColor });
+    page.drawText('UG-14, Lucky Center', { x: width / 2, y, font: font, size: 10, color: textColor });
+    y -= 15;
+    page.drawText(invoiceData.customerPhone, { x: margin, y, font: font, size: 10, color: textColor });
+    page.drawText('Lahore, 54000, Pakistan', { x: width / 2, y, font: font, size: 10, color: textColor });
+    y -= 15;
+    page.drawText(`support@telusumrah.com`, { x: width / 2, y, font: font, size: 10, color: textColor });
+
+    y -= 40;
+
+    // --- Booking Details Table ---
+    const tableTop = y;
+    const tableWidth = width - margin * 2;
+    const rowHeight = 25;
+    const col1 = margin;
+    const col2 = 300;
     
-    // Helper function to add text
-    const addText = (
-      text: string,
-      x: number,
-      y: number,
-      size: number = 10,
-      font: any = helveticaFont,
-      color: any = darkGray,
-      align: 'left' | 'center' | 'right' = 'left'
-    ) => {
-      const textWidth = font.widthOfTextAtSize(text, size);
-      let xPos = x;
-      if (align === 'center') {
-        xPos = x - textWidth / 2;
-      } else if (align === 'right') {
-        xPos = x - textWidth;
-      }
-      page.drawText(text, {
-        x: xPos,
-        y: y,
-        size: size,
-        font: font,
-        color: color,
-      });
+    // Header
+    page.drawRectangle({
+        x: margin,
+        y: y - rowHeight,
+        width: tableWidth,
+        height: rowHeight,
+        color: tableHeaderColor,
+    });
+    y -= 17;
+    page.drawText('DESCRIPTION', { x: col1 + 15, y, font: boldFont, size: 10, color: textColor });
+    page.drawText('DETAILS', { x: col2 + 15, y, font: boldFont, size: 10, color: textColor });
+    y += 17;
+
+    const drawTableRow = (label: string, value: string) => {
+      y -= rowHeight;
+      page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.5, color: lightTextColor });
+      y -= 17;
+      page.drawText(label, { x: col1 + 15, y, font: boldFont, size: 10, color: textColor });
+      page.drawText(value, { x: col2 + 15, y, font: font, size: 10, color: textColor });
+      y += 17;
     };
     
-    // Helper function to draw rectangle
-    const drawRect = (x: number, y: number, width: number, height: number, color: any) => {
-      page.drawRectangle({
-        x: x,
-        y: y - height,
-        width: width,
-        height: height,
-        color: color,
-      });
-    };
+    const bookingTypeText = invoiceData.bookingType === 'hotel' 
+      ? 'Hotel Booking' 
+      : invoiceData.bookingType === 'package' 
+      ? 'Umrah Package' 
+      : 'Custom Umrah Request';
+    drawTableRow('Booking Type', bookingTypeText);
+    drawTableRow('Item', invoiceData.itemName);
+    if(invoiceData.checkInDate) drawTableRow('Check-in', new Date(invoiceData.checkInDate).toLocaleDateString());
+    if(invoiceData.checkOutDate) drawTableRow('Check-out', new Date(invoiceData.checkOutDate).toLocaleDateString());
+    if(invoiceData.travelers) drawTableRow('Travelers', `${invoiceData.travelers.adults} Adult(s), ${invoiceData.travelers.children} Child(ren)`);
+    if(invoiceData.rooms) drawTableRow('Rooms', `${invoiceData.rooms}`);
+    if(invoiceData.bedType) drawTableRow('Bed Type', invoiceData.bedType);
+    if(invoiceData.airline && invoiceData.from && invoiceData.to) drawTableRow('Flight', `${invoiceData.from} to ${invoiceData.to} (${invoiceData.airline})`);
     
-    // Helper function to draw line
-    const drawLine = (x1: number, y1: number, x2: number, y2: number, color: any = darkGray, width: number = 1) => {
-      page.drawLine({
-        start: { x: x1, y: y1 },
-        end: { x: x2, y: y2 },
-        color: color,
-        thickness: width,
-      });
-    };
-    
-    // Header Section with colored background
-    const headerHeight = 80;
-    drawRect(margin, yPosition + 20, pageWidth - 2 * margin, headerHeight, primaryColor);
-    addText('TELUS UMRAH', pageWidth / 2, yPosition - 15, 28, helveticaBoldFont, rgb(1, 1, 1), 'center');
-    addText('INVOICE', pageWidth / 2, yPosition - 40, 14, helveticaBoldFont, rgb(1, 1, 1), 'center');
-    yPosition -= headerHeight + 20;
-    
-    // Invoice Details Box (Right side)
-    const invoiceBoxWidth = 200;
-    const invoiceBoxHeight = 70;
-    const invoiceBoxX = pageWidth - margin - invoiceBoxWidth;
-    drawRect(invoiceBoxX, yPosition + invoiceBoxHeight, invoiceBoxWidth, invoiceBoxHeight, tableHeaderColor);
-    drawLine(invoiceBoxX, yPosition + invoiceBoxHeight, invoiceBoxX + invoiceBoxWidth, yPosition + invoiceBoxHeight, darkGray, 1);
-    drawLine(invoiceBoxX, yPosition, invoiceBoxX + invoiceBoxWidth, yPosition, darkGray, 1);
-    drawLine(invoiceBoxX, yPosition + invoiceBoxHeight, invoiceBoxX, yPosition, darkGray, 1);
-    drawLine(invoiceBoxX + invoiceBoxWidth, yPosition + invoiceBoxHeight, invoiceBoxX + invoiceBoxWidth, yPosition, darkGray, 1);
-    
-    addText('Invoice Number', invoiceBoxX + 10, yPosition + invoiceBoxHeight - 15, 9, helveticaBoldFont, darkGray);
-    addText(invoiceData.invoiceNumber, invoiceBoxX + 10, yPosition + invoiceBoxHeight - 30, 10, helveticaFont, darkGray);
-    addText('Invoice Date', invoiceBoxX + 10, yPosition + invoiceBoxHeight - 45, 9, helveticaBoldFont, darkGray);
-    addText(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }), invoiceBoxX + 10, yPosition + invoiceBoxHeight - 60, 10, helveticaFont, darkGray);
-    
-    // Company Info (Left side)
-    addText('From:', margin, yPosition + invoiceBoxHeight - 10, 11, helveticaBoldFont, darkGray);
-    yPosition -= 20;
-    addText('Telus Umrah', margin, yPosition + invoiceBoxHeight - 10, 11, helveticaBoldFont, primaryColor);
-    yPosition -= 15;
-    addText('UG-14, Lucky center, 7-8 Jail Road', margin, yPosition + invoiceBoxHeight - 10, 10, helveticaFont, darkGray);
-    yPosition -= 12;
-    addText('Lahore, 54000 Pakistan', margin, yPosition + invoiceBoxHeight - 10, 10, helveticaFont, darkGray);
-    yPosition -= 12;
-    addText('Phone: 080033333 | Email: support@telusumrah.com', margin, yPosition + invoiceBoxHeight - 10, 9, helveticaFont, darkGray);
-    yPosition -= 30;
-    
-    // Customer Info Box
-    addText('Bill To:', margin, yPosition, 11, helveticaBoldFont, darkGray);
-    yPosition -= 18;
-    drawRect(margin, yPosition + 60, 250, 60, rgb(0.98, 0.98, 0.98));
-    drawLine(margin, yPosition + 60, margin + 250, yPosition + 60, darkGray, 1);
-    drawLine(margin, yPosition, margin + 250, yPosition, darkGray, 1);
-    drawLine(margin, yPosition + 60, margin, yPosition, darkGray, 1);
-    drawLine(margin + 250, yPosition + 60, margin + 250, yPosition, darkGray, 1);
-    
-    addText(invoiceData.customerName, margin + 10, yPosition + 45, 11, helveticaBoldFont, darkGray);
-    yPosition -= 15;
-    addText(invoiceData.customerEmail, margin + 10, yPosition + 45, 10, helveticaFont, darkGray);
-    yPosition -= 12;
-    addText(invoiceData.customerPhone, margin + 10, yPosition + 45, 10, helveticaFont, darkGray);
-    yPosition -= 12;
-    if (invoiceData.customerNationality) {
-      addText(`Nationality: ${invoiceData.customerNationality}`, margin + 10, yPosition + 45, 10, helveticaFont, darkGray);
-    }
-    yPosition -= 20;
-    
-    // Booking Details Section
-    addText('Booking Information', margin, yPosition, 12, helveticaBoldFont, primaryColor);
-    yPosition -= 20;
-    
-    // Create a table for booking details
-    const tableStartY = yPosition;
-    const tableWidth = pageWidth - 2 * margin;
-    const rowHeight = 20;
-    let currentY = tableStartY;
-    
-    // Table Header
-    drawRect(margin, currentY + rowHeight, tableWidth, rowHeight, tableHeaderColor);
-    drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, darkGray, 1);
-    drawLine(margin, currentY, margin + tableWidth, currentY, darkGray, 1);
-    drawLine(margin, currentY + rowHeight, margin, currentY, darkGray, 1);
-    drawLine(margin + tableWidth, currentY + rowHeight, margin + tableWidth, currentY, darkGray, 1);
-    
-    addText('Description', margin + 10, currentY + 12, 10, helveticaBoldFont, darkGray);
-    addText('Details', margin + tableWidth / 2, currentY + 12, 10, helveticaBoldFont, darkGray);
-    currentY -= rowHeight;
-    
-    // Booking Type Row
-    drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-    addText('Booking Type', margin + 10, currentY + 12, 10, helveticaFont, darkGray);
-    addText(invoiceData.bookingType === 'hotel' ? 'Hotel Booking' : 'Umrah Package', margin + tableWidth / 2, currentY + 12, 10, helveticaFont, darkGray);
-    currentY -= rowHeight;
-    
-    // Item Name Row
-    drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-    addText('Item', margin + 10, currentY + 12, 10, helveticaFont, darkGray);
-    addText(invoiceData.itemName, margin + tableWidth / 2, currentY + 12, 10, helveticaFont, darkGray);
-    currentY -= rowHeight;
-    
-    // Dates
-    if (invoiceData.checkInDate) {
-      drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-      addText('Check-in Date', margin + 10, currentY + 12, 10, helveticaFont, darkGray);
-      addText(new Date(invoiceData.checkInDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }), margin + tableWidth / 2, currentY + 12, 10, helveticaFont, darkGray);
-      currentY -= rowHeight;
-    }
-    if (invoiceData.checkOutDate) {
-      drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-      addText('Check-out Date', margin + 10, currentY + 12, 10, helveticaFont, darkGray);
-      addText(new Date(invoiceData.checkOutDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }), margin + tableWidth / 2, currentY + 12, 10, helveticaFont, darkGray);
-      currentY -= rowHeight;
-    }
-    
-    // Travelers
-    if (invoiceData.travelers) {
-      drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-      addText('Travelers', margin + 10, currentY + 12, 10, helveticaFont, darkGray);
-      addText(`${invoiceData.travelers.adults} Adult(s), ${invoiceData.travelers.children} Child(ren)`, margin + tableWidth / 2, currentY + 12, 10, helveticaFont, darkGray);
-      currentY -= rowHeight;
-    }
-    
-    // Rooms
-    if (invoiceData.rooms) {
-      drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-      addText('Rooms', margin + 10, currentY + 12, 10, helveticaFont, darkGray);
-      addText(`${invoiceData.rooms}`, margin + tableWidth / 2, currentY + 12, 10, helveticaFont, darkGray);
-      currentY -= rowHeight;
-    }
-    
-    // Bed Type
-    if (invoiceData.bedType) {
-      drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-      addText('Bed Type', margin + 10, currentY + 12, 10, helveticaFont, darkGray);
-      addText(invoiceData.bedType.charAt(0).toUpperCase() + invoiceData.bedType.slice(1), margin + tableWidth / 2, currentY + 12, 10, helveticaFont, darkGray);
-      currentY -= rowHeight;
-    }
-    
-    // Flight Info
-    if (invoiceData.airline && invoiceData.from && invoiceData.to) {
-      drawLine(margin, currentY + rowHeight, margin + tableWidth, currentY + rowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-      addText('Flight', margin + 10, currentY + 12, 10, helveticaFont, darkGray);
-      addText(`${invoiceData.from} to ${invoiceData.to} (${invoiceData.airline}, ${invoiceData.airlineClass})`, margin + tableWidth / 2, currentY + 12, 10, helveticaFont, darkGray);
-      currentY -= rowHeight;
-    }
-    
-    // Close table
-    drawLine(margin, currentY, margin + tableWidth, currentY, darkGray, 1);
-    yPosition = currentY - 20;
-    
-    // Additional Services Table
+    y -= rowHeight;
+    page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.5, color: lightTextColor });
+
+    y -= 30;
+
+    // --- Additional Services ---
     if (invoiceData.additionalServices && invoiceData.additionalServices.length > 0) {
-      addText('Additional Services', margin, yPosition, 12, helveticaBoldFont, primaryColor);
-      yPosition -= 20;
-      
-      const servicesTableWidth = pageWidth - 2 * margin;
-      const servicesRowHeight = 18;
-      let servicesY = yPosition;
-      
-      // Services Table Header
-      drawRect(margin, servicesY + servicesRowHeight, servicesTableWidth, servicesRowHeight, tableHeaderColor);
-      drawLine(margin, servicesY + servicesRowHeight, margin + servicesTableWidth, servicesY + servicesRowHeight, darkGray, 1);
-      drawLine(margin, servicesY, margin + servicesTableWidth, servicesY, darkGray, 1);
-      drawLine(margin, servicesY + servicesRowHeight, margin, servicesY, darkGray, 1);
-      drawLine(margin + servicesTableWidth, servicesY + servicesRowHeight, margin + servicesTableWidth, servicesY, darkGray, 1);
-      
-      addText('Service', margin + 10, servicesY + 10, 10, helveticaBoldFont, darkGray);
-      addText('Status', margin + servicesTableWidth - 100, servicesY + 10, 10, helveticaBoldFont, darkGray);
-      servicesY -= servicesRowHeight;
-      
-      // Services Rows
-      invoiceData.additionalServices.forEach((service, index) => {
-        drawLine(margin, servicesY + servicesRowHeight, margin + servicesTableWidth, servicesY + servicesRowHeight, rgb(0.8, 0.8, 0.8), 0.5);
-        addText(service, margin + 10, servicesY + 10, 10, helveticaFont, darkGray);
-        addText('Included', margin + servicesTableWidth - 100, servicesY + 10, 10, helveticaFont, rgb(0, 0.6, 0));
-        servicesY -= servicesRowHeight;
-      });
-      
-      drawLine(margin, servicesY, margin + servicesTableWidth, servicesY, darkGray, 1);
-      yPosition = servicesY - 20;
+        page.drawText('ADDITIONAL SERVICES', { x: margin, y, font: boldFont, size: 10, color: lightTextColor });
+        y -= 20;
+        invoiceData.additionalServices.forEach(service => {
+            page.drawText(`• ${service}`, { x: margin + 15, y, font: font, size: 10, color: textColor });
+            y -= 15;
+        });
+        y -= 15;
     }
     
-    // Payment Method
-    addText('Payment Method', margin, yPosition, 12, helveticaBoldFont, primaryColor);
-    yPosition -= 18;
-    drawRect(margin, yPosition + 25, 200, 25, rgb(0.98, 0.98, 0.98));
-    drawLine(margin, yPosition + 25, margin + 200, yPosition + 25, darkGray, 1);
-    drawLine(margin, yPosition, margin + 200, yPosition, darkGray, 1);
-    drawLine(margin, yPosition + 25, margin, yPosition, darkGray, 1);
-    drawLine(margin + 200, yPosition + 25, margin + 200, yPosition, darkGray, 1);
-    addText(invoiceData.paymentMethod === 'cash' ? 'Cash Payment' : 'Online Payment', margin + 10, yPosition + 12, 11, helveticaBoldFont, primaryColor);
-    yPosition -= 40;
+    // --- Total ---
+    const totalBoxY = y > 180 ? y - 50 : 130;
+    page.drawRectangle({
+        x: width - margin - 220,
+        y: totalBoxY - 20,
+        width: 220,
+        height: 50,
+        color: primaryColor,
+    });
+    page.drawText('TOTAL AMOUNT', { x: width - margin - 210, y: totalBoxY + 15, font: boldFont, size: 10, color: whiteColor });
     
-    // Total Amount Box
-    const totalBoxWidth = 300;
-    const totalBoxHeight = 50;
-    const totalBoxX = pageWidth - margin - totalBoxWidth;
-    drawRect(totalBoxX, yPosition + totalBoxHeight, totalBoxWidth, totalBoxHeight, primaryColor);
-    drawLine(totalBoxX, yPosition + totalBoxHeight, totalBoxX + totalBoxWidth, yPosition + totalBoxHeight, darkGray, 2);
-    drawLine(totalBoxX, yPosition, totalBoxX + totalBoxWidth, yPosition, darkGray, 2);
-    drawLine(totalBoxX, yPosition + totalBoxHeight, totalBoxX, yPosition, darkGray, 2);
-    drawLine(totalBoxX + totalBoxWidth, yPosition + totalBoxHeight, totalBoxX + totalBoxWidth, yPosition, darkGray, 2);
-    
-    addText('Total Amount', totalBoxX + 15, yPosition + totalBoxHeight - 20, 12, helveticaBoldFont, rgb(1, 1, 1));
-    addText(`PKR ${invoiceData.totalAmount.toLocaleString()}`, totalBoxX + totalBoxWidth - 15, yPosition + totalBoxHeight - 20, 16, helveticaBoldFont, rgb(1, 1, 1), 'right');
-    yPosition -= 60;
-    
-    // Footer
-    drawLine(margin, yPosition, pageWidth - margin, yPosition, lightGray, 1);
-    yPosition -= 20;
-    addText('Thank you for choosing Telus Umrah!', pageWidth / 2, yPosition, 10, helveticaBoldFont, primaryColor, 'center');
-    yPosition -= 15;
-    addText('Please visit our office to complete your payment.', pageWidth / 2, yPosition, 9, helveticaFont, darkGray, 'center');
-    yPosition -= 12;
-    addText('For inquiries: support@telusumrah.com | Phone: 080033333', pageWidth / 2, yPosition, 8, helveticaFont, darkGray, 'center');
-    yPosition -= 12;
-    addText('This is a computer-generated invoice. No signature required.', pageWidth / 2, yPosition, 7, helveticaFont, rgb(0.5, 0.5, 0.5), 'center');
-    
-    // Serialize the PDF to bytes
+    const amountText = `PKR ${invoiceData.totalAmount.toLocaleString()}`;
+    const amountTextWidth = boldFont.widthOfTextAtSize(amountText, 20);
+    page.drawText(amountText, { 
+        x: width - margin - amountTextWidth - 15,
+        y: totalBoxY - 5, 
+        size: 20, 
+        font: boldFont, 
+        color: whiteColor 
+    });
+
+    // --- Footer ---
+    const footerY = margin + 20;
+    page.drawLine({ start: { x: margin, y: footerY }, end: { x: width - margin, y: footerY }, thickness: 0.5, color: lightTextColor });
+    y = footerY - 15;
+    page.drawText('Thank you for choosing Telus Umrah!', { x: width / 2 - 100, y, font: boldFont, size: 12, color: primaryColor });
+    y -= 20;
+    page.drawText('This is a computer-generated invoice and does not require a signature.', { x: width / 2 - 150, y, font: font, size: 8, color: lightTextColor });
+
+
     const pdfBytes = await pdfDoc.save();
-    
-    // Convert to Buffer
     return Buffer.from(pdfBytes);
+
   } catch (error: any) {
     throw new Error(`Failed to generate PDF: ${error.message}`);
   }
 }
 
 export function generateInvoiceNumber(bookingId: string, bookingType: string): string {
-  const prefix = bookingType === 'hotel' ? 'HTL' : 'PKG';
+  const prefix = bookingType === 'hotel' ? 'HTL' : bookingType === 'package' ? 'PKG' : 'CUS';
   const timestamp = Date.now().toString().slice(-6);
   const shortId = bookingId.slice(-4).toUpperCase();
   return `${prefix}-${timestamp}-${shortId}`;
