@@ -941,7 +941,7 @@ const hotelsData: any = {
     }
   }
 };
-
+// from this the hotel detail page start
 interface BackendHotel {
   _id: string;
   name: string;
