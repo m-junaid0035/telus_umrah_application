@@ -194,44 +194,49 @@
 }
 
 .admin-theme [data-slot="select-trigger"] {
-  background-color: #fff;
-  color: #0f172a;
-  border: 1px solid rgba(15, 23, 42, 0.25);
+  background-color: rgba(2, 12, 32, 0.85);
+  color: var(--admin-text-strong);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.75rem;
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.08);
 }
 
 .admin-theme [data-slot="select-trigger"] [data-slot="select-value"],
 .admin-theme [data-slot="select-value"] {
-  color: #0f172a;
+  color: var(--admin-text-strong);
 }
 
 .admin-theme [data-slot="select-trigger"] svg,
 .admin-theme [data-slot="select-item"] svg {
-  color: #0f172a;
+  color: var(--admin-text-strong);
 }
 
 .admin-theme [data-slot="select-content"] {
-  background-color: #fff;
-  color: #0f172a;
-  border-color: rgba(15, 23, 42, 0.15);
+  background-color: #1e293b;
+  color: var(--admin-text-strong);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .admin-theme [data-slot="select-item"] {
-  color: #0f172a;
+  color: var(--admin-text-strong);
+}
+
+.admin-theme [data-slot="select-item"]:hover {
+  background-color: rgba(59, 130, 246, 0.15);
 }
 
 .admin-theme select {
-  background-color: #fff;
-  color: #000;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  background-color: #1e293b;
+  color: var(--admin-text-strong);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.75rem;
   min-height: 2.75rem;
   padding-inline: 0.75rem;
 }
 
 .admin-theme select option {
-  color: #000;
-  background-color: #fff;
+  color: var(--admin-text-strong);
+  background-color: #1e293b;
 }
 
 .admin-theme [data-slot="button"] {

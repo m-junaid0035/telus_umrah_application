@@ -76,33 +76,33 @@ type ReactSelectOption = { value: string; label: string };
 const multiSelectStyles: StylesConfig<ReactSelectOption, true> = {
   control: (base, state) => ({
     ...base,
-    backgroundColor: "#fff",
-    color: "#0f172a",
-    borderColor: state.isFocused ? "#2563eb" : "rgba(15, 23, 42, 0.25)",
+    backgroundColor: "#1e293b",
+    color: "#fff",
+    borderColor: state.isFocused ? "#2563eb" : "#334155",
     borderRadius: "0.75rem",
     minHeight: "46px",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(37,99,235,0.12)" : "none",
   }),
   menu: (base) => ({
     ...base,
-    backgroundColor: "#fff",
-    color: "#0f172a",
+    backgroundColor: "#1e293b",
+    color: "#fff",
     zIndex: 30,
   }),
   option: (base, state) => ({
     ...base,
-    backgroundColor: state.isFocused ? "#e0f2fe" : "#fff",
-    color: "#0f172a",
+    backgroundColor: state.isFocused ? "#334155" : "#1e293b",
+    color: "#fff",
   }),
   multiValue: (base) => ({
     ...base,
-    backgroundColor: "#e2e8f0",
-    color: "#0f172a",
+    backgroundColor: "#334155",
+    color: "#fff",
     borderRadius: 9999,
   }),
   multiValueLabel: (base) => ({
     ...base,
-    color: "#0f172a",
+    color: "#fff",
   }),
   multiValueRemove: (base) => ({
     ...base,
@@ -282,14 +282,14 @@ export default function EditUmrahPackageForm() {
               </div>
             </div>
 
-            <div className="rounded-xl border bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 p-4 space-y-4">
+            <div className="rounded-xl border bg-slate-900 border-slate-700 p-4 space-y-4">
               <div>
-                <h3 className="text-base font-semibold text-slate-800">Flight Schedule</h3>
-                <p className="text-sm text-slate-600">Pakistan to KSA and return</p>
+                <h3 className="text-base font-semibold text-white">Flight Schedule</h3>
+                <p className="text-sm text-white/80">Pakistan to KSA and return</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-lg bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700">
-                  <h4 className="font-semibold text-slate-800 mb-3">Departure (Pakistan → KSA)</h4>
+                <div className="rounded-lg bg-slate-800 p-4 border border-slate-700">
+                  <h4 className="font-semibold text-white mb-3">Departure (Pakistan → KSA)</h4>
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="departureFlight">Flight</Label>
@@ -344,8 +344,8 @@ export default function EditUmrahPackageForm() {
                   </div>
                 </div>
 
-                <div className="rounded-lg bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700">
-                  <h4 className="font-semibold text-slate-800 mb-3">Arrival (KSA → Pakistan)</h4>
+                <div className="rounded-lg bg-slate-800 p-4 border border-slate-700">
+                  <h4 className="font-semibold text-white mb-3">Arrival (KSA → Pakistan)</h4>
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="arrivalFlight">Flight</Label>
@@ -438,108 +438,114 @@ export default function EditUmrahPackageForm() {
             </div>
 
             {/* Hotels */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Makkah Hotel</Label>
-                <select
-                  id="makkahHotel"
-                  name="hotels[makkah]"
-                  defaultValue={
-                    pkgData.hotels?.makkah 
-                      ? (typeof pkgData.hotels.makkah === 'object' && pkgData.hotels.makkah._id 
-                          ? pkgData.hotels.makkah._id 
-                          : String(pkgData.hotels.makkah))
-                      : ""
-                  }
-                  className="border p-2 rounded-md w-full"
-                >
-                  <option value="">Select</option>
-                  {makkahHotels.map((h) => (
-                    <option key={h._id} value={h._id}>
-                      {h.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="rounded-xl border bg-slate-900 border-slate-700 p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-white mb-2 block text-sm font-medium">Makkah Hotel</label>
+                  <select
+                    id="makkahHotel"
+                    name="hotels[makkah]"
+                    defaultValue={
+                      pkgData.hotels?.makkah 
+                        ? (typeof pkgData.hotels.makkah === 'object' && pkgData.hotels.makkah._id 
+                            ? pkgData.hotels.makkah._id 
+                            : String(pkgData.hotels.makkah))
+                        : ""
+                    }
+                    className="border border-slate-700 bg-slate-800 text-white p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    style={{ backgroundColor: "#1e293b", color: "#fff" }}
+                  >
+                    <option value="" style={{ backgroundColor: "#1e293b", color: "#fff" }}>Select</option>
+                    {makkahHotels.map((h) => (
+                      <option key={h._id} value={h._id} style={{ backgroundColor: "#1e293b", color: "#fff" }}>
+                        {h.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div>
-                <Label>Madinah Hotel</Label>
-                <select
-                  id="madinahHotel"
-                  name="hotels[madinah]"
-                  defaultValue={
-                    pkgData.hotels?.madinah 
-                      ? (typeof pkgData.hotels.madinah === 'object' && pkgData.hotels.madinah._id 
-                          ? pkgData.hotels.madinah._id 
-                          : String(pkgData.hotels.madinah))
-                      : ""
-                  }
-                  className="border p-2 rounded-md w-full"
-                >
-                  <option value="">Select</option>
-                  {madinahHotels.map((h) => (
-                    <option key={h._id} value={h._id}>
-                      {h.name}
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <label className="text-white mb-2 block text-sm font-medium">Madinah Hotel</label>
+                  <select
+                    id="madinahHotel"
+                    name="hotels[madinah]"
+                    defaultValue={
+                      pkgData.hotels?.madinah 
+                        ? (typeof pkgData.hotels.madinah === 'object' && pkgData.hotels.madinah._id 
+                            ? pkgData.hotels.madinah._id 
+                            : String(pkgData.hotels.madinah))
+                        : ""
+                    }
+                    className="border border-slate-700 bg-slate-800 text-white p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    style={{ backgroundColor: "#1e293b", color: "#fff" }}
+                  >
+                    <option value="" style={{ backgroundColor: "#1e293b", color: "#fff" }}>Select</option>
+                    {madinahHotels.map((h) => (
+                      <option key={h._id} value={h._id} style={{ backgroundColor: "#1e293b", color: "#fff" }}>
+                        {h.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
             {/* Multi-select fields */}
-            <div>
-              <Label>Features</Label>
-              <Select
-                styles={multiSelectStyles}
-                isMulti
-                options={features.map((f) => ({ value: f._id, label: f.feature_text }))}
-                value={selectedFeatures}
-                onChange={(newVal) => setSelectedFeatures([...(newVal as ReactSelectOption[])])}
-              />
-            </div>
+            <div className="rounded-xl border bg-slate-900 border-slate-700 p-4 space-y-4">
+              <div>
+                <Label className="text-white mb-2 block">Features</Label>
+                <Select
+                  styles={multiSelectStyles}
+                  isMulti
+                  options={features.map((f) => ({ value: f._id, label: f.feature_text }))}
+                  value={selectedFeatures}
+                  onChange={(newVal) => setSelectedFeatures([...(newVal as ReactSelectOption[])])}
+                />
+              </div>
 
-            <div>
-              <Label>Itinerary</Label>
-              <Select
-                styles={multiSelectStyles}
-                isMulti
-                options={itineraries.map((i) => ({ value: i._id, label: i.title }))}
-                value={selectedItineraries}
-                onChange={(newVal) => setSelectedItineraries([...(newVal as ReactSelectOption[])])}
-              />
-            </div>
+              <div>
+                <Label className="text-white mb-2 block">Itinerary</Label>
+                <Select
+                  styles={multiSelectStyles}
+                  isMulti
+                  options={itineraries.map((i) => ({ value: i._id, label: i.title }))}
+                  value={selectedItineraries}
+                  onChange={(newVal) => setSelectedItineraries([...(newVal as ReactSelectOption[])])}
+                />
+              </div>
 
-            <div>
-              <Label>Includes</Label>
-              <Select
-                styles={multiSelectStyles}
-                isMulti
-                options={includes.map((i) => ({ value: i._id, label: i.include_text }))}
-                value={selectedIncludes}
-                onChange={(newVal) => setSelectedIncludes([...(newVal as ReactSelectOption[])])}
-              />
-            </div>
+              <div>
+                <Label className="text-white mb-2 block">Includes</Label>
+                <Select
+                  styles={multiSelectStyles}
+                  isMulti
+                  options={includes.map((i) => ({ value: i._id, label: i.include_text }))}
+                  value={selectedIncludes}
+                  onChange={(newVal) => setSelectedIncludes([...(newVal as ReactSelectOption[])])}
+                />
+              </div>
 
-            <div>
-              <Label>Excludes</Label>
-              <Select
-                styles={multiSelectStyles}
-                isMulti
-                options={excludes.map((e) => ({ value: e._id, label: e.exclude_text }))}
-                value={selectedExcludes}
-                onChange={(newVal) => setSelectedExcludes([...(newVal as ReactSelectOption[])])}
-              />
-            </div>
+              <div>
+                <Label className="text-white mb-2 block">Excludes</Label>
+                <Select
+                  styles={multiSelectStyles}
+                  isMulti
+                  options={excludes.map((e) => ({ value: e._id, label: e.exclude_text }))}
+                  value={selectedExcludes}
+                  onChange={(newVal) => setSelectedExcludes([...(newVal as ReactSelectOption[])])}
+                />
+              </div>
 
-            <div>
-              <Label>Policies</Label>
-              <Select
-                styles={multiSelectStyles}
-                isMulti
-                options={policies.map((p) => ({ value: p._id, label: p.heading }))}
-                value={selectedPolicies}
-                onChange={(newVal) => setSelectedPolicies([...(newVal as ReactSelectOption[])])}
-              />
+              <div>
+                <Label className="text-white mb-2 block">Policies</Label>
+                <Select
+                  styles={multiSelectStyles}
+                  isMulti
+                  options={policies.map((p) => ({ value: p._id, label: p.heading }))}
+                  value={selectedPolicies}
+                  onChange={(newVal) => setSelectedPolicies([...(newVal as ReactSelectOption[])])}
+                />
+              </div>
             </div>
 
             <CardFooter className="flex justify-end border-none">

@@ -73,33 +73,33 @@ type ReactSelectOption = { value: string; label: string };
 const multiSelectStyles: StylesConfig<ReactSelectOption, true> = {
   control: (base, state) => ({
     ...base,
-    backgroundColor: "#fff",
-    color: "#0f172a",
-    borderColor: state.isFocused ? "#2563eb" : "rgba(15, 23, 42, 0.25)",
+    backgroundColor: "#1e293b",
+    color: "#fff",
+    borderColor: state.isFocused ? "#2563eb" : "#334155",
     borderRadius: "0.75rem",
     minHeight: "46px",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(37,99,235,0.12)" : "none",
   }),
   menu: (base) => ({
     ...base,
-    backgroundColor: "#fff",
-    color: "#0f172a",
+    backgroundColor: "#1e293b",
+    color: "#fff",
     zIndex: 30,
   }),
   option: (base, state) => ({
     ...base,
-    backgroundColor: state.isFocused ? "#e0f2fe" : "#fff",
-    color: "#0f172a",
+    backgroundColor: state.isFocused ? "#334155" : "#1e293b",
+    color: "#fff",
   }),
   multiValue: (base) => ({
     ...base,
-    backgroundColor: "#e2e8f0",
-    color: "#0f172a",
+    backgroundColor: "#334155",
+    color: "#fff",
     borderRadius: 9999,
   }),
   multiValueLabel: (base) => ({
     ...base,
-    color: "#0f172a",
+    color: "#fff",
   }),
   multiValueRemove: (base) => ({
     ...base,
@@ -445,14 +445,14 @@ export default function CreateUmrahPackageForm() {
             </div>
 
             {/* Flights */}
-            <div className="rounded-xl border bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 p-4 space-y-4">
+            <div className="rounded-xl border bg-slate-900 border-slate-700 p-4 space-y-4">
               <div>
-                <h3 className="text-base font-semibold text-slate-800">Flight Schedule</h3>
-                <p className="text-sm text-slate-600">Pakistan to KSA and return</p>
+                <h3 className="text-base font-semibold text-white">Flight Schedule</h3>
+                <p className="text-sm text-white/80">Pakistan to KSA and return</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-lg bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700">
-                  <h4 className="font-semibold text-slate-800 mb-3">Departure (Pakistan → KSA)</h4>
+                <div className="rounded-lg bg-slate-800 p-4 border border-slate-700">
+                  <h4 className="font-semibold text-white mb-3">Departure (Pakistan → KSA)</h4>
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="departureFlight">Flight</Label>
@@ -511,8 +511,8 @@ export default function CreateUmrahPackageForm() {
                   </div>
                 </div>
 
-                <div className="rounded-lg bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700">
-                  <h4 className="font-semibold text-slate-800 mb-3">Arrival (KSA → Pakistan)</h4>
+                <div className="rounded-lg bg-slate-800 p-4 border border-slate-700">
+                  <h4 className="font-semibold text-white mb-3">Arrival (KSA → Pakistan)</h4>
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="arrivalFlight">Flight</Label>
@@ -650,54 +650,58 @@ export default function CreateUmrahPackageForm() {
             </div>
 
             {/* Hotels */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="makkahHotel">Makkah Hotel</Label>
-                <select 
-                  id="makkahHotel" 
-                  name="hotels[makkah]" 
-                  required 
-                  value={formValues.makkahHotel}
-                  onChange={(e) => setFormValues({ ...formValues, makkahHotel: e.target.value })}
-                  aria-invalid={errorFor("hotels.makkah") ? "true" : "false"}
-                  className={`border p-2 w-full rounded-md ${
-                    errorFor("hotels.makkah") ? "border-red-500 border-2" : ""
-                  }`}
-                >
-                  <option value="">Select Makkah Hotel</option>
-                  {makkahHotels.map((h) => (
-                    <option key={h._id} value={h._id}>{h.name}</option>
-                  ))}
-                </select>
-                {errorFor("hotels.makkah") && <p className="text-sm text-red-500">{errorFor("hotels.makkah")}</p>}
-              </div>
+            <div className="rounded-xl border bg-slate-900 border-slate-700 p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-white mb-2 block text-sm font-medium">Makkah Hotel</label>
+                  <select 
+                    id="makkahHotel" 
+                    name="hotels[makkah]" 
+                    required 
+                    value={formValues.makkahHotel}
+                    onChange={(e) => setFormValues({ ...formValues, makkahHotel: e.target.value })}
+                    aria-invalid={errorFor("hotels.makkah") ? "true" : "false"}
+                    className={`border border-slate-700 bg-slate-800 text-white p-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${
+                      errorFor("hotels.makkah") ? "border-red-500 border-2" : ""
+                    }`}
+                    style={{ backgroundColor: "#1e293b", color: "#fff" }}
+                  >
+                    <option value="" style={{ backgroundColor: "#1e293b", color: "#fff" }}>Select Makkah Hotel</option>
+                    {makkahHotels.map((h) => (
+                      <option key={h._id} value={h._id} style={{ backgroundColor: "#1e293b", color: "#fff" }}>{h.name}</option>
+                    ))}
+                  </select>
+                  {errorFor("hotels.makkah") && <p className="text-sm text-red-500">{errorFor("hotels.makkah")}</p>}
+                </div>
 
-              <div>
-                <Label htmlFor="madinahHotel">Madinah Hotel</Label>
-                <select 
-                  id="madinahHotel" 
-                  name="hotels[madinah]" 
-                  required 
-                  value={formValues.madinahHotel}
-                  onChange={(e) => setFormValues({ ...formValues, madinahHotel: e.target.value })}
-                  aria-invalid={errorFor("hotels.madinah") ? "true" : "false"}
-                  className={`border p-2 w-full rounded-md ${
-                    errorFor("hotels.madinah") ? "border-red-500 border-2" : ""
-                  }`}
-                >
-                  <option value="">Select Madinah Hotel</option>
-                  {madinahHotels.map((h) => (
-                    <option key={h._id} value={h._id}>{h.name}</option>
-                  ))}
-                </select>
-                {errorFor("hotels.madinah") && <p className="text-sm text-red-500">{errorFor("hotels.madinah")}</p>}
+                <div>
+                  <label className="text-white mb-2 block text-sm font-medium">Madinah Hotel</label>
+                  <select 
+                    id="madinahHotel" 
+                    name="hotels[madinah]" 
+                    required 
+                    value={formValues.madinahHotel}
+                    onChange={(e) => setFormValues({ ...formValues, madinahHotel: e.target.value })}
+                    aria-invalid={errorFor("hotels.madinah") ? "true" : "false"}
+                    className={`border border-slate-700 bg-slate-800 text-white p-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${
+                      errorFor("hotels.madinah") ? "border-red-500 border-2" : ""
+                    }`}
+                    style={{ backgroundColor: "#1e293b", color: "#fff" }}
+                  >
+                    <option value="" style={{ backgroundColor: "#1e293b", color: "#fff" }}>Select Madinah Hotel</option>
+                    {madinahHotels.map((h) => (
+                      <option key={h._id} value={h._id} style={{ backgroundColor: "#1e293b", color: "#fff" }}>{h.name}</option>
+                    ))}
+                  </select>
+                  {errorFor("hotels.madinah") && <p className="text-sm text-red-500">{errorFor("hotels.madinah")}</p>}
+                </div>
               </div>
             </div>
 
             {/* Multi Selects */}
-            <div className="space-y-4">
+            <div className="rounded-xl border bg-slate-900 border-slate-700 p-4 space-y-4">
               <div>
-                <Label>Features</Label>
+                <Label className="text-white mb-2 block">Features</Label>
                 <Select
                   styles={multiSelectStyles}
                   isMulti
@@ -708,7 +712,7 @@ export default function CreateUmrahPackageForm() {
               </div>
 
               <div>
-                <Label>Itineraries</Label>
+                <Label className="text-white mb-2 block">Itineraries</Label>
                 <Select
                   styles={multiSelectStyles}
                   isMulti
@@ -719,7 +723,7 @@ export default function CreateUmrahPackageForm() {
               </div>
 
               <div>
-                <Label>Includes</Label>
+                <Label className="text-white mb-2 block">Includes</Label>
                 <Select
                   styles={multiSelectStyles}
                   isMulti
@@ -730,7 +734,7 @@ export default function CreateUmrahPackageForm() {
               </div>
 
               <div>
-                <Label>Excludes</Label>
+                <Label className="text-white mb-2 block">Excludes</Label>
                 <Select
                   styles={multiSelectStyles}
                   isMulti
@@ -741,7 +745,7 @@ export default function CreateUmrahPackageForm() {
               </div>
 
               <div>
-                <Label>Policies</Label>
+                <Label className="text-white mb-2 block">Policies</Label>
                 <Select
                   styles={multiSelectStyles}
                   isMulti
