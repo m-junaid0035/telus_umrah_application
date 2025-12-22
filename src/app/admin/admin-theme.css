@@ -116,9 +116,26 @@
 
 .admin-theme .admin-sidebar nav a.bg-primary {
   background: linear-gradient(120deg, rgba(37, 99, 235, 0.95), rgba(14, 165, 233, 0.9));
-  color: #f8fbff;
+  color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.25);
   box-shadow: var(--admin-shadow-soft);
+  font-weight: 600;
+}
+
+.admin-theme .admin-sidebar nav a.bg-primary:hover {
+  color: #ffffff !important;
+}
+
+/* Active navigation state with gradient background */
+.admin-theme .admin-sidebar nav a.bg-gradient-to-r,
+.admin-theme .admin-sidebar nav a[class*="from-blue-500"] {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.admin-theme .admin-sidebar nav a.bg-gradient-to-r:hover,
+.admin-theme .admin-sidebar nav a[class*="from-blue-500"]:hover {
+  color: #ffffff !important;
 }
 
 .admin-theme [data-slot="card"] {
@@ -293,3 +310,28 @@
   }
 }
 
+/* Scrollbar Styling */
+.admin-theme ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-theme ::-webkit-scrollbar-track {
+  background: rgba(2, 12, 32, 0.5);
+  border-radius: 4px;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.4);
+  border-radius: 4px;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.6);
+}
+
+/* Firefox scrollbar */
+.admin-theme * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.4) rgba(2, 12, 32, 0.5);
+}
