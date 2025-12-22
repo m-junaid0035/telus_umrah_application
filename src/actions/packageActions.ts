@@ -43,6 +43,20 @@ const umrahPackageSchema = z.object({
   includes: z.array(z.string()).optional(),
   excludes: z.array(z.string()).optional(),
   policies: z.array(z.string()).optional(),
+  flights: z.object({
+    departure: z.object({
+      flight: z.string().optional(),
+      sector: z.string().optional(),
+      departureTime: z.string().optional(),
+      arrivalTime: z.string().optional(),
+    }),
+    arrival: z.object({
+      flight: z.string().optional(),
+      sector: z.string().optional(),
+      departureTime: z.string().optional(),
+      arrivalTime: z.string().optional(),
+    }),
+  }),
 });
 
 // ================= UTILITY =================
@@ -60,6 +74,18 @@ function str(formData: FormData, key: string) {
 
 function parseUmrahPackageFormData(formData: FormData) {
   const imageStr = str(formData, "image");
+  const departureFlight = {
+    flight: str(formData, "flights[departure][flight]"),
+    sector: str(formData, "flights[departure][sector]"),
+    departureTime: str(formData, "flights[departure][departureTime]"),
+    arrivalTime: str(formData, "flights[departure][arrivalTime]"),
+  };
+  const arrivalFlight = {
+    flight: str(formData, "flights[arrival][flight]"),
+    sector: str(formData, "flights[arrival][sector]"),
+    departureTime: str(formData, "flights[arrival][departureTime]"),
+    arrivalTime: str(formData, "flights[arrival][arrivalTime]"),
+  };
   return {
     name: str(formData, "name"),
     price: Number(formData.get("price") || 0),
@@ -68,7 +94,7 @@ function parseUmrahPackageFormData(formData: FormData) {
     airline: str(formData, "airline"),
     departureCity: str(formData, "departureCity"),
     image: imageStr || undefined,
-    popular: formData.get("popular") !== null,
+    popular: (formData.get("popular") || "").toString() === "true",
     hotels: {
       makkah: str(formData, "hotels[makkah]"),
       madinah: str(formData, "hotels[madinah]"),
@@ -82,6 +108,10 @@ function parseUmrahPackageFormData(formData: FormData) {
     includes: formData.getAll("includes") as string[],
     excludes: formData.getAll("excludes") as string[],
     policies: formData.getAll("policies") as string[],
+    flights: {
+      departure: departureFlight,
+      arrival: arrivalFlight,
+    },
   };
 }
 

@@ -24,6 +24,20 @@ export interface IUmrahPackage extends Document {
   includes: string[];  // array of Include IDs
   excludes: string[];  // array of Exclude IDs
   policies: string[];  // array of Policy IDs
+  flights?: {
+    departure?: {
+      flight?: string;
+      sector?: string;
+      departureTime?: string;
+      arrivalTime?: string;
+    };
+    arrival?: {
+      flight?: string;
+      sector?: string;
+      departureTime?: string;
+      arrivalTime?: string;
+    };
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -55,6 +69,20 @@ const umrahPackageSchema = new Schema<IUmrahPackage>(
     includes: [{ type: String, ref: "Include" }],
     excludes: [{ type: String, ref: "Exclude" }],
     policies: [{ type: String, ref: "PackagePolicy" }],
+    flights: {
+      departure: {
+        flight: { type: String, trim: true },
+        sector: { type: String, trim: true },
+        departureTime: { type: String, trim: true },
+        arrivalTime: { type: String, trim: true },
+      },
+      arrival: {
+        flight: { type: String, trim: true },
+        sector: { type: String, trim: true },
+        departureTime: { type: String, trim: true },
+        arrivalTime: { type: String, trim: true },
+      },
+    },
   },
   { timestamps: true }
 );

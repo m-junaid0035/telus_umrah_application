@@ -6,6 +6,16 @@
   import { PackageExclude } from "@/models/Excludes";
   import { PackagePolicy } from "@/models/Policies";
 
+  const cleanFlightSegment = (segment?: any) => {
+    if (!segment) return {};
+    return {
+      flight: segment.flight?.trim() || "",
+      sector: segment.sector?.trim() || "",
+      departureTime: segment.departureTime?.trim() || "",
+      arrivalTime: segment.arrivalTime?.trim() || "",
+    };
+  };
+
   /**
    * ================= SANITIZER =================
    */
@@ -30,6 +40,10 @@
     includes: Array.isArray(data.includes) ? data.includes : [],
     excludes: Array.isArray(data.excludes) ? data.excludes : [],
     policies: Array.isArray(data.policies) ? data.policies : [],
+    flights: {
+      departure: cleanFlightSegment(data.flights?.departure),
+      arrival: cleanFlightSegment(data.flights?.arrival),
+    },
   });
 
   /**
@@ -57,6 +71,7 @@
     travelers: pkg.travelers,
     rating: pkg.rating,
     reviews: pkg.reviews,
+    flights: pkg.flights || { departure: {}, arrival: {} },
     createdAt: pkg.createdAt?.toISOString(),
     updatedAt: pkg.updatedAt?.toISOString(),
   });
@@ -127,6 +142,7 @@ export const getAllUmrahPackages = async () => {
     travelers: pkg.travelers,
     rating: pkg.rating,
     reviews: pkg.reviews,
+    flights: pkg.flights || { departure: {}, arrival: {} },
     createdAt: pkg.createdAt?.toISOString(),
     updatedAt: pkg.updatedAt?.toISOString(),
   }));
@@ -211,6 +227,7 @@ export const getAllUmrahPackages = async () => {
       travelers: pkg.travelers,
       rating: pkg.rating,
       reviews: pkg.reviews,
+      flights: pkg.flights || { departure: {}, arrival: {} },
       createdAt: pkg.createdAt?.toISOString(),
       updatedAt: pkg.updatedAt?.toISOString(),
     };

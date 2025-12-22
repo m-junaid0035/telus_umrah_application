@@ -282,6 +282,126 @@ export default function EditUmrahPackageForm() {
               </div>
             </div>
 
+            <div className="rounded-xl border bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 p-4 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-slate-800">Flight Schedule</h3>
+                <p className="text-sm text-slate-600">Pakistan to KSA and return</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-lg bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700">
+                  <h4 className="font-semibold text-slate-800 mb-3">Departure (Pakistan → KSA)</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="departureFlight">Flight</Label>
+                      <Input
+                        id="departureFlight"
+                        name="flights[departure][flight]"
+                        defaultValue={pkgData.flights?.departure?.flight}
+                        aria-invalid={errorFor("flights.departure.flight") ? "true" : "false"}
+                      />
+                      {errorFor("flights.departure.flight") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.departure.flight")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="departureSector">Sector</Label>
+                      <Input
+                        id="departureSector"
+                        name="flights[departure][sector]"
+                        defaultValue={pkgData.flights?.departure?.sector}
+                        aria-invalid={errorFor("flights.departure.sector") ? "true" : "false"}
+                      />
+                      {errorFor("flights.departure.sector") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.departure.sector")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="departureDepartureTime">Departure</Label>
+                      <Input
+                        id="departureDepartureTime"
+                        name="flights[departure][departureTime]"
+                        placeholder="e.g., 25-DEC 21:25"
+                        defaultValue={pkgData.flights?.departure?.departureTime}
+                        aria-invalid={errorFor("flights.departure.departureTime") ? "true" : "false"}
+                      />
+                      {errorFor("flights.departure.departureTime") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.departure.departureTime")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="departureArrivalTime">Arrival</Label>
+                      <Input
+                        id="departureArrivalTime"
+                        name="flights[departure][arrivalTime]"
+                        placeholder="e.g., 26-DEC 01:35"
+                        defaultValue={pkgData.flights?.departure?.arrivalTime}
+                        aria-invalid={errorFor("flights.departure.arrivalTime") ? "true" : "false"}
+                      />
+                      {errorFor("flights.departure.arrivalTime") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.departure.arrivalTime")}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700">
+                  <h4 className="font-semibold text-slate-800 mb-3">Arrival (KSA → Pakistan)</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="arrivalFlight">Flight</Label>
+                      <Input
+                        id="arrivalFlight"
+                        name="flights[arrival][flight]"
+                        defaultValue={pkgData.flights?.arrival?.flight}
+                        aria-invalid={errorFor("flights.arrival.flight") ? "true" : "false"}
+                      />
+                      {errorFor("flights.arrival.flight") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.arrival.flight")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="arrivalSector">Sector</Label>
+                      <Input
+                        id="arrivalSector"
+                        name="flights[arrival][sector]"
+                        defaultValue={pkgData.flights?.arrival?.sector}
+                        aria-invalid={errorFor("flights.arrival.sector") ? "true" : "false"}
+                      />
+                      {errorFor("flights.arrival.sector") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.arrival.sector")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="arrivalDepartureTime">Departure</Label>
+                      <Input
+                        id="arrivalDepartureTime"
+                        name="flights[arrival][departureTime]"
+                        placeholder="e.g., 14-JAN 02:50"
+                        defaultValue={pkgData.flights?.arrival?.departureTime}
+                        aria-invalid={errorFor("flights.arrival.departureTime") ? "true" : "false"}
+                      />
+                      {errorFor("flights.arrival.departureTime") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.arrival.departureTime")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="arrivalArrivalTime">Arrival</Label>
+                      <Input
+                        id="arrivalArrivalTime"
+                        name="flights[arrival][arrivalTime]"
+                        placeholder="e.g., 14-JAN 09:40"
+                        defaultValue={pkgData.flights?.arrival?.arrivalTime}
+                        aria-invalid={errorFor("flights.arrival.arrivalTime") ? "true" : "false"}
+                      />
+                      {errorFor("flights.arrival.arrivalTime") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.arrival.arrivalTime")}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="badge">Badge</Label>
               <Input id="badge" name="badge" defaultValue={pkgData.badge} />

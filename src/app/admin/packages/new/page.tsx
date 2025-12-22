@@ -164,6 +164,14 @@ export default function CreateUmrahPackageForm() {
     popular: false,
     makkahHotel: "",
     madinahHotel: "",
+    departureFlight: "",
+    departureSector: "",
+    departureDepartureTime: "",
+    departureArrivalTime: "",
+    arrivalFlight: "",
+    arrivalSector: "",
+    arrivalDepartureTime: "",
+    arrivalArrivalTime: "",
   });
 
   const [formState, setFormState] = useState<FormState>(initialState);
@@ -230,6 +238,14 @@ export default function CreateUmrahPackageForm() {
         popular: formState.formData.popular || false,
         makkahHotel: formState.formData.hotels?.makkah || "",
         madinahHotel: formState.formData.hotels?.madinah || "",
+        departureFlight: formState.formData.flights?.departure?.flight || "",
+        departureSector: formState.formData.flights?.departure?.sector || "",
+        departureDepartureTime: formState.formData.flights?.departure?.departureTime || "",
+        departureArrivalTime: formState.formData.flights?.departure?.arrivalTime || "",
+        arrivalFlight: formState.formData.flights?.arrival?.flight || "",
+        arrivalSector: formState.formData.flights?.arrival?.sector || "",
+        arrivalDepartureTime: formState.formData.flights?.arrival?.departureTime || "",
+        arrivalArrivalTime: formState.formData.flights?.arrival?.arrivalTime || "",
       });
       
       // Restore selected options if they exist in formData
@@ -321,6 +337,14 @@ export default function CreateUmrahPackageForm() {
           popular: false,
           makkahHotel: "",
           madinahHotel: "",
+          departureFlight: "",
+          departureSector: "",
+          departureDepartureTime: "",
+          departureArrivalTime: "",
+          arrivalFlight: "",
+          arrivalSector: "",
+          arrivalDepartureTime: "",
+          arrivalArrivalTime: "",
         });
         setSelectedFeatures([]);
         setSelectedItineraries([]);
@@ -417,6 +441,135 @@ export default function CreateUmrahPackageForm() {
                   aria-invalid={errorFor("departureCity") ? "true" : "false"}
                 />
                 {errorFor("departureCity") && <p className="text-sm text-red-500">{errorFor("departureCity")}</p>}
+              </div>
+            </div>
+
+            {/* Flights */}
+            <div className="rounded-xl border bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 p-4 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-slate-800">Flight Schedule</h3>
+                <p className="text-sm text-slate-600">Pakistan to KSA and return</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-lg bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700">
+                  <h4 className="font-semibold text-slate-800 mb-3">Departure (Pakistan → KSA)</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="departureFlight">Flight</Label>
+                      <Input
+                        id="departureFlight"
+                        name="flights[departure][flight]"
+                        value={formValues.departureFlight}
+                        onChange={(e) => setFormValues({ ...formValues, departureFlight: e.target.value })}
+                        aria-invalid={errorFor("flights.departure.flight") ? "true" : "false"}
+                      />
+                      {errorFor("flights.departure.flight") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.departure.flight")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="departureSector">Sector</Label>
+                      <Input
+                        id="departureSector"
+                        name="flights[departure][sector]"
+                        value={formValues.departureSector}
+                        onChange={(e) => setFormValues({ ...formValues, departureSector: e.target.value })}
+                        aria-invalid={errorFor("flights.departure.sector") ? "true" : "false"}
+                      />
+                      {errorFor("flights.departure.sector") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.departure.sector")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="departureDepartureTime">Departure</Label>
+                      <Input
+                        id="departureDepartureTime"
+                        name="flights[departure][departureTime]"
+                        placeholder="e.g., 25-DEC 21:25"
+                        value={formValues.departureDepartureTime}
+                        onChange={(e) => setFormValues({ ...formValues, departureDepartureTime: e.target.value })}
+                        aria-invalid={errorFor("flights.departure.departureTime") ? "true" : "false"}
+                      />
+                      {errorFor("flights.departure.departureTime") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.departure.departureTime")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="departureArrivalTime">Arrival</Label>
+                      <Input
+                        id="departureArrivalTime"
+                        name="flights[departure][arrivalTime]"
+                        placeholder="e.g., 26-DEC 01:35"
+                        value={formValues.departureArrivalTime}
+                        onChange={(e) => setFormValues({ ...formValues, departureArrivalTime: e.target.value })}
+                        aria-invalid={errorFor("flights.departure.arrivalTime") ? "true" : "false"}
+                      />
+                      {errorFor("flights.departure.arrivalTime") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.departure.arrivalTime")}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700">
+                  <h4 className="font-semibold text-slate-800 mb-3">Arrival (KSA → Pakistan)</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="arrivalFlight">Flight</Label>
+                      <Input
+                        id="arrivalFlight"
+                        name="flights[arrival][flight]"
+                        value={formValues.arrivalFlight}
+                        onChange={(e) => setFormValues({ ...formValues, arrivalFlight: e.target.value })}
+                        aria-invalid={errorFor("flights.arrival.flight") ? "true" : "false"}
+                      />
+                      {errorFor("flights.arrival.flight") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.arrival.flight")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="arrivalSector">Sector</Label>
+                      <Input
+                        id="arrivalSector"
+                        name="flights[arrival][sector]"
+                        value={formValues.arrivalSector}
+                        onChange={(e) => setFormValues({ ...formValues, arrivalSector: e.target.value })}
+                        aria-invalid={errorFor("flights.arrival.sector") ? "true" : "false"}
+                      />
+                      {errorFor("flights.arrival.sector") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.arrival.sector")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="arrivalDepartureTime">Departure</Label>
+                      <Input
+                        id="arrivalDepartureTime"
+                        name="flights[arrival][departureTime]"
+                        placeholder="e.g., 14-JAN 02:50"
+                        value={formValues.arrivalDepartureTime}
+                        onChange={(e) => setFormValues({ ...formValues, arrivalDepartureTime: e.target.value })}
+                        aria-invalid={errorFor("flights.arrival.departureTime") ? "true" : "false"}
+                      />
+                      {errorFor("flights.arrival.departureTime") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.arrival.departureTime")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="arrivalArrivalTime">Arrival</Label>
+                      <Input
+                        id="arrivalArrivalTime"
+                        name="flights[arrival][arrivalTime]"
+                        placeholder="e.g., 14-JAN 09:40"
+                        value={formValues.arrivalArrivalTime}
+                        onChange={(e) => setFormValues({ ...formValues, arrivalArrivalTime: e.target.value })}
+                        aria-invalid={errorFor("flights.arrival.arrivalTime") ? "true" : "false"}
+                      />
+                      {errorFor("flights.arrival.arrivalTime") && (
+                        <p className="text-sm text-red-500">{errorFor("flights.arrival.arrivalTime")}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

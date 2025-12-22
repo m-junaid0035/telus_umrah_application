@@ -512,6 +512,12 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
     }
   };
 
+  const departureFlight = pkg.flights?.departure;
+  const arrivalFlight = pkg.flights?.arrival;
+  const hasDepartureFlight = departureFlight && Object.values(departureFlight).some(Boolean);
+  const hasArrivalFlight = arrivalFlight && Object.values(arrivalFlight).some(Boolean);
+  const hasFlightInfo = hasDepartureFlight || hasArrivalFlight;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section with Image */}
@@ -637,6 +643,74 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-6">
+            {hasFlightInfo && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                <Card>
+                  <CardContent className="p-6 space-y-4">
+                    <h2 className="text-gray-900 mb-2 flex items-center gap-2">
+                      <Plane className="w-6 h-6 text-blue-600" />
+                      Flight Schedule
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="rounded-lg border bg-white p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-xs uppercase text-gray-500">Pakistan → KSA</p>
+                            <h3 className="text-gray-900 font-semibold">Departure</h3>
+                          </div>
+                        </div>
+                        {hasDepartureFlight ? (
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-4 text-xs font-semibold text-gray-500 uppercase">
+                              <span>Flight</span>
+                              <span>Sector</span>
+                              <span>Departure</span>
+                              <span>Arrival</span>
+                            </div>
+                            <div className="grid grid-cols-4 text-sm text-gray-800">
+                              <span>{departureFlight?.flight || '--'}</span>
+                              <span>{departureFlight?.sector || '--'}</span>
+                              <span>{departureFlight?.departureTime || '--'}</span>
+                              <span>{departureFlight?.arrivalTime || '--'}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600">Departure flight not provided.</p>
+                        )}
+                      </div>
+
+                      <div className="rounded-lg border bg-white p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-xs uppercase text-gray-500">KSA → Pakistan</p>
+                            <h3 className="text-gray-900 font-semibold">Arrival</h3>
+                          </div>
+                        </div>
+                        {hasArrivalFlight ? (
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-4 text-xs font-semibold text-gray-500 uppercase">
+                              <span>Flight</span>
+                              <span>Sector</span>
+                              <span>Departure</span>
+                              <span>Arrival</span>
+                            </div>
+                            <div className="grid grid-cols-4 text-sm text-gray-800">
+                              <span>{arrivalFlight?.flight || '--'}</span>
+                              <span>{arrivalFlight?.sector || '--'}</span>
+                              <span>{arrivalFlight?.departureTime || '--'}</span>
+                              <span>{arrivalFlight?.arrivalTime || '--'}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600">Return flight not provided.</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
             {/* Hotels */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
