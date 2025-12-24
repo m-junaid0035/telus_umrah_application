@@ -262,7 +262,7 @@ export default function CreateHotelForm() {
                 }`}
               >
                 <option value="">Select Star Rating</option>
-                <option value="1">1 Star</option>
+                <option value="1">1 Star(Economy)</option>
                 <option value="2">2 Stars</option>
                 <option value="3">3 Stars</option>
                 <option value="4">4 Stars</option>

@@ -369,7 +369,7 @@ export default function AdminPage() {
                     <div className="flex text-yellow-400">
                       <Star className="h-5 w-5" />
                     </div>
-                    <p className="text-sm font-medium text-gray-900">1 Star</p>
+                    <p className="text-sm font-medium text-gray-900">1 Star(Economy)</p>
                   </div>
                   <div className="text-xl font-bold text-purple-600">{stats.star1Hotels || 0}</div>
                 </div>

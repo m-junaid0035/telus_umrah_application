@@ -20,13 +20,14 @@ interface PackageBooking {
     childAges?: number[];
   };
   rooms: number;
+  // dates and additional services removed in new design
   checkInDate?: string;
   checkOutDate?: string;
-  umrahVisa: boolean;
-  transport: boolean;
-  zaiarat: boolean;
-  meals: boolean;
-  esim: boolean;
+  umrahVisa?: boolean;
+  transport?: boolean;
+  zaiarat?: boolean;
+  meals?: boolean;
+  esim?: boolean;
   status: string;
   notes?: string;
   totalAmount?: number;
@@ -82,13 +83,13 @@ export default async function PackageBookingViewPage({
         : undefined,
     },
     rooms: Number(bookingData.rooms || 0),
-    checkInDate: bookingData.checkInDate ? String(bookingData.checkInDate) : undefined,
-    checkOutDate: bookingData.checkOutDate ? String(bookingData.checkOutDate) : undefined,
-    umrahVisa: Boolean(bookingData.umrahVisa),
-    transport: Boolean(bookingData.transport),
-    zaiarat: Boolean(bookingData.zaiarat),
-    meals: Boolean(bookingData.meals),
-    esim: Boolean(bookingData.esim),
+    checkInDate: undefined,
+    checkOutDate: undefined,
+    umrahVisa: undefined,
+    transport: undefined,
+    zaiarat: undefined,
+    meals: undefined,
+    esim: undefined,
     status: String(bookingData.status || "pending"),
     notes: bookingData.notes ? String(bookingData.notes) : undefined,
     totalAmount: bookingData.totalAmount ? Number(bookingData.totalAmount) : undefined,
@@ -198,49 +199,10 @@ export default async function PackageBookingViewPage({
             </div>
           )}
 
-          {(booking.checkInDate || booking.checkOutDate) && (
-            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {booking.checkInDate && (
-                <div>
-                  <p className="text-sm text-black">Check-in Date</p>
-                  <p className="text-black">
-                    {new Date(booking.checkInDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-              {booking.checkOutDate && (
-                <div>
-                  <p className="text-sm text-black">Check-out Date</p>
-                  <p className="text-black">
-                    {new Date(booking.checkOutDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Dates removed per new booking flow */}
         </div>
 
-        {/* Additional Services */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3 text-black">Additional Services</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            {booking.umrahVisa && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">Umrah Visa</span>
-            )}
-            {booking.transport && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">Transport</span>
-            )}
-            {booking.zaiarat && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">Zaiarat</span>
-            )}
-            {booking.meals && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">Meals</span>
-            )}
-            {booking.esim && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">eSIM</span>
-            )}
-          </div>
-        </div>
+        {/* Additional Services removed per new booking flow */}
 
         {/* Payment Information */}
         {(booking.totalAmount || booking.paidAmount !== undefined || booking.paymentStatus) && (

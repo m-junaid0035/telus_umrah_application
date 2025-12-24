@@ -153,8 +153,8 @@ export async function GET(
       itemName,
       totalAmount: calculatedTotal, // Will be 0 for custom requests
       paymentMethod: booking.paymentMethod || 'cash',
-      travelers: { adults: booking.adults || 0, children: booking.children || 0 },
-      childAges: booking.childAges,
+      travelers: { adults: (booking.travelers?.adults || booking.adults || 0), children: (booking.travelers?.children || booking.children || 0) },
+      childAges: (booking.travelers?.childAges || booking.childAges),
       rooms: booking.rooms,
       bedType: booking.bedType,
       from: booking.from,

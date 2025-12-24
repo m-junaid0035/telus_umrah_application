@@ -20,6 +20,7 @@ interface PackageBooking {
   status: string;
   travelers: { adults: number; children: number; };
   rooms: number;
+  // dates removed for package bookings per new design
   checkInDate?: string;
   checkOutDate?: string;
   paymentMethod?: string;
@@ -29,6 +30,7 @@ interface PackageBooking {
   invoiceSent?: boolean;
   invoiceUrl?: string;
   invoiceNumber?: string;
+  // additional services removed in new design
   umrahVisa?: boolean;
   transport?: boolean;
   zaiarat?: boolean;
@@ -151,24 +153,11 @@ const PackageBookingCard = ({ booking }: { booking: PackageBooking }) => {
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6">
             <InfoItem icon={<Users size={16} />} label="Travelers" value={`${booking.travelers.adults} Adults, ${booking.travelers.children} Children`} />
             <InfoItem icon={<Hotel size={16} />} label="Rooms" value={booking.rooms} />
-            <InfoItem icon={<Calendar size={16} />} label="Check-in" value={formatDate(booking.checkInDate)} />
-            <InfoItem icon={<Calendar size={16} />} label="Check-out" value={formatDate(booking.checkOutDate)} />
+            <InfoItem icon={<Calendar size={16} />} label="Booked On" value={formatDate(booking.createdAt)} />
           </div>
-          {(booking.umrahVisa || booking.transport || booking.zaiarat || booking.meals || booking.esim) && (
-            <div className="mt-4 pt-4 border-t">
-              <h4 className="text-xs font-semibold text-slate-600 mb-2">Additional Services</h4>
-              <div className="flex flex-wrap gap-2">
-                {booking.umrahVisa && <Badge variant="outline">Umrah Visa</Badge>}
-                {booking.transport && <Badge variant="outline">Transport</Badge>}
-                {booking.zaiarat && <Badge variant="outline">Zaiarat</Badge>}
-                {booking.meals && <Badge variant="outline">Meals</Badge>}
-                {booking.esim && <Badge variant="outline">eSIM</Badge>}
-              </div>
-            </div>
-          )}
           <div className="mt-4 pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <InfoItem icon={<Wallet size={16} />} label="Payment" value={`${booking.paymentMethod || 'N/A'} (${booking.paymentStatus || 'N/A'})`} />
