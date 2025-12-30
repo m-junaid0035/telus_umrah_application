@@ -16,15 +16,31 @@ import { BookingStatus } from "@/models/PackageBooking";
 
 const packageBookingSchema = z.object({
   packageId: z.string().trim().min(1, "Package ID is required"),
-  customerName: z.string().trim().min(2, "Customer name is required"),
   customerEmail: z.string().trim().email("Valid email is required"),
-  customerPhone: z.string().trim().min(5, "Phone is required"),
   customerNationality: z.string().trim().optional(),
-  travelers: z.object({
-    adults: z.number().int().min(1, "At least one adult is required"),
-    children: z.number().int().min(0).optional(),
-    childAges: z.array(z.number().int().min(0).max(16)).optional(),
-  }),
+  adults: z.array(z.object({
+    name: z.string().trim().min(1),
+    gender: z.enum(["male", "female", ""]).optional(),
+    nationality: z.string().trim().optional(),
+    passportNumber: z.string().trim().optional(),
+    age: z.number().int().min(0).optional(),
+    phone: z.string().trim().optional(),
+    isHead: z.boolean().optional(),
+  })).optional(),
+  children: z.array(z.object({
+    name: z.string().trim().min(1),
+    gender: z.enum(["male", "female", ""]).optional(),
+    nationality: z.string().trim().optional(),
+    passportNumber: z.string().trim().optional(),
+    age: z.number().int().min(0).max(16).optional(),
+  })).optional(),
+  infants: z.array(z.object({
+    name: z.string().trim().min(1),
+    gender: z.enum(["male", "female", ""]).optional(),
+    nationality: z.string().trim().optional(),
+    passportNumber: z.string().trim().optional(),
+    age: z.number().int().min(0).max(2).optional(),
+  })).optional(),
   rooms: z.number().int().min(1, "At least one room is required"),
   checkInDate: z.string().or(z.date()).optional(),
   checkOutDate: z.string().or(z.date()).optional(),
@@ -54,25 +70,57 @@ function str(formData: FormData, key: string) {
 }
 
 function parsePackageBookingFormData(formData: FormData) {
-  // Parse child ages array
-  const childAges: number[] = [];
-  const childAgesStr = formData.getAll("childAges");
-  childAgesStr.forEach((age) => {
-    const num = Number(age);
-    if (!isNaN(num)) childAges.push(num);
-  });
+  // Prefer structured JSON arrays if provided, otherwise look for travelerDetails JSON fallback
+  const parseJsonArray = (key: string) => {
+    const v = formData.get(key);
+    if (!v) return null;
+    try {
+      const parsed = JSON.parse(String(v));
+      return Array.isArray(parsed) ? parsed : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const adults = parseJsonArray("adultsJson") || null;
+  const children = parseJsonArray("childrenJson") || null;
+  const infants = parseJsonArray("infantsJson") || null;
+
+  // travelerDetails fallback (used by client) may contain adults/children/infants
+  const travelerDetailsRaw = formData.get("travelerDetails");
+  let travelerDetailsObj: any = null;
+  if (travelerDetailsRaw) {
+    try {
+      travelerDetailsObj = JSON.parse(String(travelerDetailsRaw));
+    } catch (e) {
+      travelerDetailsObj = null;
+    }
+  }
+
+  // Determine adults array and set isHead based on travelerDetails.familyHeadIndex if provided
+  let adultsArr: any = adults || (travelerDetailsObj?.adults || undefined);
+  if (Array.isArray(adultsArr)) {
+    const rawHead = travelerDetailsObj?.familyHeadIndex;
+    const headIndex = typeof rawHead === "number" ? rawHead : (rawHead != null ? Number(rawHead) : NaN);
+    if (!isNaN(headIndex) && headIndex >= 0 && headIndex < adultsArr.length) {
+      adultsArr = adultsArr.map((a: any, i: number) => ({ ...(a || {}), isHead: i === headIndex }));
+    } else if (!adultsArr.some((a: any) => a && a.isHead)) {
+      adultsArr = adultsArr.map((a: any, i: number) => ({ ...(a || {}), isHead: i === 0 }));
+    }
+  } else {
+    adultsArr = undefined;
+  }
+
+  const childrenArr = children || (travelerDetailsObj?.children || undefined);
+  const infantsArr = infants || (travelerDetailsObj?.infants || undefined);
 
   return {
     packageId: str(formData, "packageId"),
-    customerName: str(formData, "customerName"),
     customerEmail: str(formData, "customerEmail"),
-    customerPhone: str(formData, "customerPhone"),
     customerNationality: str(formData, "customerNationality") || undefined,
-    travelers: {
-      adults: Number(formData.get("adults") || 1),
-      children: Number(formData.get("children") || 0),
-      childAges: childAges.length > 0 ? childAges : undefined,
-    },
+    adults: adultsArr,
+    children: childrenArr,
+    infants: infantsArr,
     rooms: Number(formData.get("rooms") || 1),
     checkInDate: str(formData, "checkInDate") || undefined,
     checkOutDate: str(formData, "checkOutDate") || undefined,
@@ -97,13 +145,17 @@ export async function createPackageBookingAction(
   formData: FormData
 ): Promise<PackageBookingFormState> {
   await connectToDatabase();
+  console.log("Creating package booking...");
   const parsed = parsePackageBookingFormData(formData);
+  console.log(parsed);
   const result = packageBookingSchema.safeParse(parsed);
-
+  console.log(result);
   if (!result.success) return { error: result.error.flatten().fieldErrors };
 
   try {
+    console.log("Inserting package booking into database...");
     const booking = await createPackageBooking(result.data);
+    console.log(`Package booking created: ${booking._id}`);
     
     // Generate invoice for ALL bookings
     if (booking?._id) {
@@ -130,13 +182,19 @@ export async function createPackageBookingAction(
           ? (result.data.checkOutDate instanceof Date ? result.data.checkOutDate : new Date(result.data.checkOutDate))
           : undefined;
         
+        // Determine family head from adults array (if provided)
+        const adultsArr = Array.isArray(result.data.adults) ? result.data.adults : [];
+        const headAdult = adultsArr.find((a: any) => a.isHead) || adultsArr[0] || null;
+        const customerNameForInvoice = headAdult?.name || "";
+        const customerPhoneForInvoice = headAdult?.phone || "";
+
         const invoiceData = {
           invoiceNumber,
           bookingId: booking._id.toString(),
           bookingType: 'package' as const,
-          customerName: result.data.customerName,
+          customerName: customerNameForInvoice,
           customerEmail: result.data.customerEmail,
-          customerPhone: result.data.customerPhone,
+          customerPhone: customerPhoneForInvoice,
           customerNationality: result.data.customerNationality,
           bookingDate: booking.createdAt ? new Date(booking.createdAt) : new Date(),
           checkInDate,
@@ -144,7 +202,9 @@ export async function createPackageBookingAction(
           itemName,
           totalAmount: result.data.totalAmount || 0,
           paymentMethod: result.data.paymentMethod || 'cash',
-          travelers: result.data.travelers,
+          adults: result.data.adults || [],
+          children: result.data.children || [],
+          infants: result.data.infants || [],
           rooms: result.data.rooms,
           additionalServices: [
             ...(result.data.umrahVisa ? ['Umrah Visa'] : []),
@@ -170,7 +230,7 @@ export async function createPackageBookingAction(
           console.log(`Attempting to send invoice email to ${result.data.customerEmail}...`);
           const emailResult = await sendInvoiceEmail({
             to: result.data.customerEmail,
-            customerName: result.data.customerName,
+            customerName: customerNameForInvoice,
             invoiceNumber,
             bookingType: 'package',
             invoiceUrl,
@@ -246,6 +306,7 @@ export async function fetchPackageBookingByIdAction(id: string) {
   try {
     const booking = await getPackageBookingById(id);
     if (!booking) return { error: { message: ["Booking not found"] } };
+    console.log(`Fetched package booking: ${booking}`);
     return { data: booking };
   } catch (error: any) {
     return { error: { message: [error?.message || "Failed to fetch booking"] } };

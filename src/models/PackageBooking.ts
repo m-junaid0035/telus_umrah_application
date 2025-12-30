@@ -16,17 +16,32 @@ export interface IPackageBooking extends Document {
   packageId: string; // Reference to UmrahPackage _id
   
   // Customer Information
-  customerName: string;
   customerEmail: string;
-  customerPhone: string;
-  customerNationality?: string;
   
   // Booking Details
-  travelers: {
-    adults: number;
-    children: number;
-    childAges?: number[];
-  };
+  adults?: Array<{
+    name: string;
+    gender?: "male" | "female" | "";
+    nationality?: string;
+    passportNumber?: string;
+    age?: number;
+    phone?: string;
+    isHead?: boolean;
+  }>;
+  children?: Array<{
+    name: string;
+    gender?: "male" | "female" | "";
+    nationality?: string;
+    passportNumber?: string;
+    age?: number;
+  }>;
+  infants?: Array<{
+    name: string;
+    gender?: "male" | "female" | "";
+    nationality?: string;
+    passportNumber?: string;
+    age?: number;
+  }>;
   rooms: number;
   checkInDate?: Date;
   checkOutDate?: Date;
@@ -66,41 +81,49 @@ const packageBookingSchema = new Schema<IPackageBooking>(
       required: [true, "Package ID is required"],
       trim: true,
     },
-    customerName: {
-      type: String,
-      required: [true, "Customer name is required"],
-      trim: true,
-    },
     customerEmail: {
       type: String,
       required: [true, "Customer email is required"],
       trim: true,
       lowercase: true,
     },
-    customerPhone: {
-      type: String,
-      required: [true, "Customer phone is required"],
-      trim: true,
+    adults: {
+      type: [
+        new Schema({
+          name: { type: String, required: true, trim: true },
+          gender: { type: String, enum: ["male", "female", ""], default: "" },
+          nationality: { type: String, trim: true },
+          passportNumber: { type: String, trim: true },
+          age: { type: Number, min: 0 },
+          phone: { type: String, trim: true },
+          isHead: { type: Boolean, default: false },
+        }),
+      ],
+      default: [],
     },
-    customerNationality: {
-      type: String,
-      trim: true,
+    children: {
+      type: [
+        new Schema({
+          name: { type: String, required: true, trim: true },
+          gender: { type: String, enum: ["male", "female", ""], default: "" },
+          nationality: { type: String, trim: true },
+          passportNumber: { type: String, trim: true },
+          age: { type: Number, min: 0, max: 16 },
+        }),
+      ],
+      default: [],
     },
-    travelers: {
-      adults: {
-        type: Number,
-        required: true,
-        min: [1, "At least one adult is required"],
-      },
-      children: {
-        type: Number,
-        default: 0,
-        min: [0, "Children count cannot be negative"],
-      },
-      childAges: {
-        type: [Number],
-        default: [],
-      },
+    infants: {
+      type: [
+        new Schema({
+          name: { type: String, required: true, trim: true },
+          gender: { type: String, enum: ["male", "female", ""], default: "" },
+          nationality: { type: String, trim: true },
+          passportNumber: { type: String, trim: true },
+          age: { type: Number, min: 0, max: 2 },
+        }),
+      ],
+      default: [],
     },
     rooms: {
       type: Number,

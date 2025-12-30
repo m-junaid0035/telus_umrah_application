@@ -47,13 +47,24 @@ export async function sendInvoiceEmail(data: InvoiceEmailData) {
     }
 
     if (booking) {
+      // Derive family head for package bookings (adult with isHead=true)
+      let derivedName = booking.customerName || data.customerName;
+      let derivedPhone = booking.customerPhone || '';
+      if (data.bookingType === 'package') {
+        const headAdult = booking.adults?.find((a: any) => a.isHead) || booking.adults?.[0];
+        if (headAdult) {
+          derivedName = headAdult.name || derivedName;
+          derivedPhone = headAdult.phone || derivedPhone;
+        }
+      }
+
       const invoiceData = {
         invoiceNumber: data.invoiceNumber,
         bookingId: data.bookingId,
         bookingType: data.bookingType as 'hotel' | 'package',
-        customerName: booking.customerName,
+        customerName: derivedName,
         customerEmail: booking.customerEmail,
-        customerPhone: booking.customerPhone,
+        customerPhone: derivedPhone,
         customerNationality: booking.customerNationality,
         bookingDate: booking.createdAt,
         checkInDate: booking.checkInDate,
@@ -61,7 +72,10 @@ export async function sendInvoiceEmail(data: InvoiceEmailData) {
         itemName,
         totalAmount: booking.totalAmount || 0,
         paymentMethod: booking.paymentMethod || 'cash',
-        travelers: data.bookingType === 'package' ? booking.travelers : undefined,
+        // For package bookings include explicit arrays
+        adults: data.bookingType === 'package' ? booking.adults : undefined,
+        children: data.bookingType === 'package' ? booking.children : undefined,
+        infants: data.bookingType === 'package' ? booking.infants : undefined,
         rooms: booking.rooms,
         additionalServices: data.bookingType === 'hotel' 
           ? [

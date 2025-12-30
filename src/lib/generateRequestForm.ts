@@ -18,10 +18,9 @@ interface InvoiceData {
   totalAmount: number;
   paymentMethod: string;
   additionalServices?: string[];
-  travelers?: {
-    adults: number;
-    children: number;
-  };
+    adults?: Array<{ name?: string; age?: number }>;
+    children?: Array<{ name?: string; age?: number }>;
+    infants?: Array<{ name?: string; age?: number }>;
   rooms?: number;
   bedType?: string;
   airline?: string;
@@ -120,10 +119,11 @@ export async function generateRequestFormPDF(invoiceData: InvoiceData): Promise<
         drawInfoRow('Nationality', invoiceData.customerNationality || '');
 
         drawSectionHeader('TRAVELERS');
-        drawInfoRow('Adults', `${invoiceData.travelers?.adults}`);
-        drawInfoRow('Children', `${invoiceData.travelers?.children}`);
-        if (invoiceData.childAges && invoiceData.childAges.length > 0) {
-            drawInfoRow('Child Ages', invoiceData.childAges.join(', '));
+        drawInfoRow('Adults', `${invoiceData.adults ? invoiceData.adults.length : 0}`);
+        drawInfoRow('Children', `${invoiceData.children ? invoiceData.children.length : 0}`);
+        if (invoiceData.children && invoiceData.children.length > 0) {
+            const ages = invoiceData.children.map(c => (typeof c.age === 'number' ? String(c.age) : '')).filter(Boolean);
+            if (ages.length > 0) drawInfoRow('Child Ages', ages.join(', '));
         }
         drawInfoRow('Rooms', `${invoiceData.rooms}`);
 

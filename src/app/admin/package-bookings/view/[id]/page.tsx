@@ -10,15 +10,11 @@ interface PackageBooking {
   _id: string;
   packageId: string;
   packageName?: string;
-  customerName: string;
   customerEmail: string;
-  customerPhone: string;
   customerNationality?: string;
-  travelers: {
-    adults: number;
-    children: number;
-    childAges?: number[];
-  };
+  adults?: Array<{ name: string; gender?: string; nationality?: string; passportNumber?: string; age?: number; phone?: string; isHead?: boolean }>;
+  children?: Array<{ name: string; gender?: string; nationality?: string; passportNumber?: string; age?: number }>;
+  infants?: Array<{ name: string; gender?: string; nationality?: string; passportNumber?: string; age?: number }>;
   rooms: number;
   // dates and additional services removed in new design
   checkInDate?: string;
@@ -61,7 +57,7 @@ export default async function PackageBookingViewPage({
 }: {
   params: { id: string };
 }) {
-  const { id } = params;
+  const { id } = await params;
   const result = await fetchPackageBookingByIdAction(id);
 
   if (!result || result.error || !result.data) return notFound();
@@ -71,17 +67,11 @@ export default async function PackageBookingViewPage({
     _id: String(bookingData._id),
     packageId: String(bookingData.packageId || ""),
     packageName: bookingData.packageName ? String(bookingData.packageName) : undefined,
-    customerName: String(bookingData.customerName || ""),
     customerEmail: String(bookingData.customerEmail || ""),
-    customerPhone: String(bookingData.customerPhone || ""),
     customerNationality: bookingData.customerNationality ? String(bookingData.customerNationality) : undefined,
-    travelers: {
-      adults: Number(bookingData.travelers?.adults || 0),
-      children: Number(bookingData.travelers?.children || 0),
-      childAges: Array.isArray(bookingData.travelers?.childAges)
-        ? bookingData.travelers.childAges.map(Number)
-        : undefined,
-    },
+    adults: Array.isArray(bookingData.adults) ? bookingData.adults : [],
+    children: Array.isArray(bookingData.children) ? bookingData.children : [],
+    infants: Array.isArray(bookingData.infants) ? bookingData.infants : [],
     rooms: Number(bookingData.rooms || 0),
     checkInDate: undefined,
     checkOutDate: undefined,
@@ -144,24 +134,33 @@ export default async function PackageBookingViewPage({
         <div className="border-b pb-4">
           <h3 className="text-lg font-semibold mb-3 text-black">Customer Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-black">Name</p>
-              <p className="text-black font-medium">{booking.customerName}</p>
-            </div>
-            <div>
-              <p className="text-sm text-black">Email</p>
-              <p className="text-black">{booking.customerEmail}</p>
-            </div>
-            <div>
-              <p className="text-sm text-black">Phone</p>
-              <p className="text-black">{booking.customerPhone}</p>
-            </div>
-            {booking.customerNationality && (
-              <div>
-                <p className="text-sm text-black">Nationality</p>
-                <p className="text-black">{booking.customerNationality}</p>
-              </div>
-            )}
+            {(() => {
+              const head = (booking.adults && booking.adults.find((a) => a.isHead)) || (booking.adults && booking.adults[0]);
+              const headName = head ? String(head.name || "") : "";
+              const headPhone = head ? String(head.phone || "") : "";
+              return (
+                <>
+                  <div>
+                    <p className="text-sm text-black">Name</p>
+                    <p className="text-black font-medium">{headName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-black">Email</p>
+                    <p className="text-black">{booking.customerEmail}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-black">Phone</p>
+                    <p className="text-black">{headPhone}</p>
+                  </div>
+                  {booking.customerNationality && (
+                    <div>
+                      <p className="text-sm text-black">Nationality</p>
+                      <p className="text-black">{booking.customerNationality}</p>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
 
@@ -171,35 +170,111 @@ export default async function PackageBookingViewPage({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-black">Adults</p>
-              <p className="text-black">{booking.travelers.adults}</p>
+              <p className="text-black">{booking.adults ? booking.adults.length : 0}</p>
             </div>
             <div>
               <p className="text-sm text-black">Children</p>
-              <p className="text-black">{booking.travelers.children}</p>
+              <p className="text-black">{booking.children ? booking.children.length : 0}</p>
+            </div>
+            <div>
+              <p className="text-sm text-black">Infants</p>
+              <p className="text-black">{booking.infants ? booking.infants.length : 0}</p>
             </div>
             <div>
               <p className="text-sm text-black">Rooms</p>
               <p className="text-black">{booking.rooms}</p>
             </div>
+            {booking.checkInDate && (
+              <div>
+                <p className="text-sm text-black">Check-in</p>
+                <p className="text-black">{new Date(booking.checkInDate).toLocaleString()}</p>
+              </div>
+            )}
+            {booking.checkOutDate && (
+              <div>
+                <p className="text-sm text-black">Check-out</p>
+                <p className="text-black">{new Date(booking.checkOutDate).toLocaleString()}</p>
+              </div>
+            )}
           </div>
 
-          {booking.travelers.childAges && booking.travelers.childAges.length > 0 && (
-            <div className="mt-3">
-              <p className="text-sm text-black mb-2">Child Ages</p>
-              <div className="flex flex-wrap gap-2">
-                {booking.travelers.childAges.map((age, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                  >
-                    Child {index + 1}: {age} years
-                  </span>
+          {/* Adults detail list */}
+          {booking.adults && booking.adults.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-black mb-2">Adults Details</p>
+              <div className="grid gap-3">
+                {booking.adults.map((a, idx) => (
+                  <div key={idx} className="p-3 border rounded">
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium">{a.name || `Adult ${idx + 1}`}</div>
+                      {a.isHead && <Badge className="bg-blue-100 text-blue-800">Family Head</Badge>}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div>Nationality: <span className="text-black">{a.nationality || 'N/A'}</span></div>
+                      <div>Passport: <span className="text-black">{a.passportNumber || 'N/A'}</span></div>
+                      <div>Age: <span className="text-black">{a.age ?? 'N/A'}</span></div>
+                      <div>Gender: <span className="text-black">{a.gender || 'N/A'}</span></div>
+                      <div>Phone: <span className="text-black">{a.phone || 'N/A'}</span></div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Dates removed per new booking flow */}
+          {/* Children details */}
+          {booking.children && booking.children.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-black mb-2">Children Details</p>
+              <div className="grid gap-3">
+                {booking.children.map((c, index) => (
+                  <div key={index} className="p-3 border rounded">
+                    <div className="font-medium">{c.name || `Child ${index + 1}`}</div>
+                    <div className="text-sm text-muted-foreground mt-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div>Age: <span className="text-black">{c.age ?? 'N/A'}</span></div>
+                      <div>Nationality: <span className="text-black">{c.nationality || 'N/A'}</span></div>
+                      <div>Passport: <span className="text-black">{c.passportNumber || 'N/A'}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Infants details */}
+          {booking.infants && booking.infants.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-black mb-2">Infants Details</p>
+              <div className="grid gap-3">
+                {booking.infants.map((c, index) => (
+                  <div key={index} className="p-3 border rounded">
+                    <div className="font-medium">{c.name || `Infant ${index + 1}`}</div>
+                    <div className="text-sm text-muted-foreground mt-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div>Age: <span className="text-black">{c.age ?? 'N/A'}</span></div>
+                      <div>Nationality: <span className="text-black">{c.nationality || 'N/A'}</span></div>
+                      <div>Passport: <span className="text-black">{c.passportNumber || 'N/A'}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Dates (if any) */}
+          {/* Additional Services */}
+          <div className="mt-4">
+            <p className="text-sm text-black mb-2">Additional Services</p>
+            <div className="flex flex-wrap gap-2">
+              {booking.umrahVisa ? <Badge className="bg-blue-100 text-blue-800">Umrah Visa</Badge> : null}
+              {booking.transport ? <Badge className="bg-blue-100 text-blue-800">Transport</Badge> : null}
+              {booking.zaiarat ? <Badge className="bg-blue-100 text-blue-800">Zaiarat Tours</Badge> : null}
+              {booking.meals ? <Badge className="bg-blue-100 text-blue-800">Meals</Badge> : null}
+              {booking.esim ? <Badge className="bg-blue-100 text-blue-800">eSIM</Badge> : null}
+              {!booking.umrahVisa && !booking.transport && !booking.zaiarat && !booking.meals && !booking.esim && (
+                <span className="text-muted-foreground">No additional services</span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Additional Services removed per new booking flow */}

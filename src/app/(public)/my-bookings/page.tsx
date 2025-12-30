@@ -18,7 +18,9 @@ interface PackageBooking {
   packageId: string;
   packageName?: string;
   status: string;
-  travelers: { adults: number; children: number; };
+  adults?: Array<{ name?: string; age?: number }>;
+  children?: Array<{ name?: string; age?: number }>;
+  infants?: Array<{ name?: string; age?: number }>;
   rooms: number;
   // dates removed for package bookings per new design
   checkInDate?: string;
@@ -154,7 +156,7 @@ const PackageBookingCard = ({ booking }: { booking: PackageBooking }) => {
         </CardHeader>
         <CardContent className="p-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6">
-            <InfoItem icon={<Users size={16} />} label="Travelers" value={`${booking.travelers.adults} Adults, ${booking.travelers.children} Children`} />
+            <InfoItem icon={<Users size={16} />} label="Travelers" value={`${booking.adults ? booking.adults.length : 0} Adults, ${booking.children ? booking.children.length : 0} Children`} />
             <InfoItem icon={<Hotel size={16} />} label="Rooms" value={booking.rooms} />
             <InfoItem icon={<Calendar size={16} />} label="Booked On" value={formatDate(booking.createdAt)} />
           </div>

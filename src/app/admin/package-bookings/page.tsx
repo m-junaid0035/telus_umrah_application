@@ -64,10 +64,9 @@ interface IPackageBooking {
   customerEmail: string;
   customerPhone: string;
   status: string;
-  travelers: {
-    adults: number;
-    children: number;
-  };
+  adults?: Array<{ name?: string; age?: number }>;
+  children?: Array<{ name?: string; age?: number }>;
+  infants?: Array<{ name?: string; age?: number }>;
   invoiceGenerated?: boolean;
   invoiceNumber?: string;
   invoiceUrl?: string;
@@ -140,8 +139,8 @@ function PackageBookingsTable({
                 <TableCell>{booking.customerEmail}</TableCell>
                 <TableCell>{booking.customerPhone}</TableCell>
                 <TableCell>
-                  {booking.travelers.adults} Adult{booking.travelers.adults > 1 ? "s" : ""}
-                  {booking.travelers.children > 0 && `, ${booking.travelers.children} Child${booking.travelers.children > 1 ? "ren" : ""}`}
+                  {booking.adults ? booking.adults.length : 0} Adult{(booking.adults ? booking.adults.length : 0) > 1 ? "s" : ""}
+                  {(booking.children ? booking.children.length : 0) > 0 && `, ${booking.children!.length} Child${booking.children!.length > 1 ? "ren" : ""}`}
                 </TableCell>
                 <TableCell>
                   <Select

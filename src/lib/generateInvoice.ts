@@ -17,10 +17,9 @@ interface InvoiceData {
   totalAmount: number;
   paymentMethod: string;
   additionalServices?: string[];
-  travelers?: {
-    adults: number;
-    children: number;
-  };
+  adults?: Array<{ name?: string; age?: number }>;
+  children?: Array<{ name?: string; age?: number }>;
+  infants?: Array<{ name?: string; age?: number }>;
   rooms?: number;
   bedType?: string;
   airline?: string;
@@ -385,8 +384,14 @@ export async function generateInvoicePDF(invoiceData: InvoiceData): Promise<Buff
     if (invoiceData.checkOutDate) {
       drawDetailRow('Check-out Date', new Date(invoiceData.checkOutDate).toLocaleDateString());
     }
-    if (invoiceData.travelers) {
-      drawDetailRow('Travelers', `${invoiceData.travelers.adults} Adult(s), ${invoiceData.travelers.children} Child(ren)`);
+    if (invoiceData.adults || invoiceData.children || invoiceData.infants) {
+      const adultsCount = invoiceData.adults ? invoiceData.adults.length : 0;
+      const childrenCount = invoiceData.children ? invoiceData.children.length : 0;
+      const infantsCount = invoiceData.infants ? invoiceData.infants.length : 0;
+      let travelersText = `${adultsCount} Adult(s)`;
+      travelersText += `, ${childrenCount} Child(ren)`;
+      if (infantsCount > 0) travelersText += `, ${infantsCount} Infant(s)`;
+      drawDetailRow('Travelers', travelersText);
     }
     if (invoiceData.rooms) {
       drawDetailRow('Rooms', `${invoiceData.rooms}`);

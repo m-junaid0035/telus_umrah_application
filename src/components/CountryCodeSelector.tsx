@@ -19,7 +19,7 @@ export interface Country {
   dialCode: string;
 }
 
-const countries: Country[] = [
+export const countries: Country[] = [
   { code: 'US', name: 'United States', flagCode: 'us', dialCode: '+1' },
   { code: 'GB', name: 'United Kingdom', flagCode: 'gb', dialCode: '+44' },
   { code: 'CA', name: 'Canada', flagCode: 'ca', dialCode: '+1' },

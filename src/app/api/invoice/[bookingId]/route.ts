@@ -86,9 +86,12 @@ export async function GET(
         itemName = pkg?.name || 'Umrah Package';
         
         // Calculate package booking price
-        if (pkg && booking.travelers) {
-          const totalTravelers = (booking.travelers.adults || 0) + (booking.travelers.children || 0);
-          calculatedTotal = (pkg.price || 0) * totalTravelers;
+          if (pkg) {
+            const adultsCount = Array.isArray(booking.adults) ? booking.adults.length : (booking.travelers?.adults || 0);
+            const childrenCount = Array.isArray(booking.children) ? booking.children.length : (booking.travelers?.children || 0);
+            const infantsCount = Array.isArray(booking.infants) ? booking.infants.length : 0;
+            const totalTravelers = adultsCount + childrenCount + infantsCount;
+            calculatedTotal = (pkg.price || 0) * totalTravelers;
           
           // Add additional services (estimate prices)
           if (booking.umrahVisa) {
@@ -143,9 +146,22 @@ export async function GET(
       bookingId,
       bookingType: type as 'hotel' | 'package' | 'custom',
       status: booking.status,
-      customerName: booking.customerName || booking.name,
+      // Derive customer details: for package bookings use family head from adults array
+      customerName: ((): string => {
+        if (type === 'package') {
+          const head = Array.isArray(booking.adults) ? (booking.adults.find((a: any) => a.isHead) || booking.adults[0]) : null;
+          return head?.name || booking.customerName || booking.name || '';
+        }
+        return booking.customerName || booking.name || '';
+      })(),
       customerEmail: booking.customerEmail || booking.email,
-      customerPhone: booking.customerPhone || booking.phone,
+      customerPhone: ((): string => {
+        if (type === 'package') {
+          const head = Array.isArray(booking.adults) ? (booking.adults.find((a: any) => a.isHead) || booking.adults[0]) : null;
+          return head?.phone || booking.customerPhone || booking.phone || '';
+        }
+        return booking.customerPhone || booking.phone || '';
+      })(),
       customerNationality: booking.customerNationality || booking.nationality,
       bookingDate: booking.createdAt,
       checkInDate: booking.checkInDate || booking.departDate,
@@ -153,8 +169,11 @@ export async function GET(
       itemName,
       totalAmount: calculatedTotal, // Will be 0 for custom requests
       paymentMethod: booking.paymentMethod || 'cash',
-      travelers: { adults: (booking.travelers?.adults || booking.adults || 0), children: (booking.travelers?.children || booking.children || 0) },
-      childAges: (booking.travelers?.childAges || booking.childAges),
+      // For package bookings include structured arrays
+      adults: Array.isArray(booking.adults) ? booking.adults : undefined,
+      children: Array.isArray(booking.children) ? booking.children : undefined,
+      infants: Array.isArray(booking.infants) ? booking.infants : undefined,
+      childAges: Array.isArray(booking.children) ? booking.children.map((c: any) => c.age).filter((a: any) => a !== undefined) : (booking.childAges || undefined),
       rooms: booking.rooms,
       bedType: booking.bedType,
       from: booking.from,
