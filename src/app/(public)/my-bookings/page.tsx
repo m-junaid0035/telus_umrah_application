@@ -165,9 +165,14 @@ const PackageBookingCard = ({ booking }: { booking: PackageBooking }) => {
               <InfoItem icon={<Wallet size={16} />} label="Payment" value={`${booking.paymentMethod || 'N/A'} (${booking.paymentStatus || 'N/A'})`} />
               {booking.totalAmount && <InfoItem icon={<FileText size={16} />} label="Total" value={`PKR ${booking.totalAmount.toLocaleString()}`} />}
             </div>
-            {booking.invoiceGenerated && booking.invoiceUrl &&
-              <Button size="sm" onClick={() => window.open(booking.invoiceUrl, '_blank')}><Download size={16} className="mr-2" /> Download Invoice</Button>
-            }
+            <div className="flex items-center gap-2">
+              <Button size="sm" asChild variant="default">
+                <Link href={`/bookings/package/${booking._id}`}>View Details</Link>
+              </Button>
+              {booking.invoiceGenerated && booking.invoiceUrl &&
+                <Button size="sm" onClick={() => window.open(booking.invoiceUrl, '_blank')}><Download size={16} className="mr-2" /> Download Invoice</Button>
+              }
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -197,14 +202,19 @@ const HotelBookingCard = ({ booking }: { booking: HotelBooking }) => {
             <InfoItem icon={<BedDouble size={16} />} label="Bed Type" value={booking.bedType || 'N/A'} />
             <InfoItem icon={<Calendar size={16} />} label="Dates" value={`${formatDate(booking.checkInDate)} - ${formatDate(booking.checkOutDate)}`} />
           </div>
-           <div className="mt-4 pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mt-4 pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <InfoItem icon={<Wallet size={16} />} label="Payment" value={`${booking.paymentMethod || 'N/A'} (${booking.paymentStatus || 'N/A'})`} />
               {booking.totalAmount && <InfoItem icon={<FileText size={16} />} label="Total" value={`PKR ${booking.totalAmount.toLocaleString()}`} />}
             </div>
-            {booking.invoiceGenerated && booking.invoiceUrl &&
-              <Button size="sm" onClick={() => window.open(booking.invoiceUrl, '_blank')}><Download size={16} className="mr-2" /> Download Invoice</Button>
-            }
+            <div className="flex items-center gap-2">
+              <Button size="sm" asChild variant="default">
+                <Link href={`/bookings/hotel/${booking._id}`}>View Details</Link>
+              </Button>
+              {booking.invoiceGenerated && booking.invoiceUrl &&
+                <Button size="sm" onClick={() => window.open(booking.invoiceUrl, '_blank')}><Download size={16} className="mr-2" /> Download Invoice</Button>
+              }
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -252,6 +262,11 @@ const CustomUmrahRequestCard = ({ request }: { request: CustomUmrahRequest }) =>
               </div>
             </div>
           )}
+          <div className="mt-4 pt-4 border-t flex flex-col sm:flex-row items-center justify-end gap-2">
+            <Button size="sm" asChild variant="default">
+              <Link href={`/bookings/custom/${request._id}`}>View Details</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </motion.div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createPackageBookingAction } from "@/actions/packageBookingActions";
+import { fetchUmrahPackageByIdAction } from "@/actions/packageActions";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, CreditCard, DollarSign, Plus, Minus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +38,9 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
   const [open, setOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "online" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [packageData, setPackageData] = useState<any>(null);
+  const [loadingPackage, setLoadingPackage] = useState(false);
+  
   const [formData, setFormData] = useState({
     // kept for backend compatibility; values will be derived from family head on submit
     customerName: user?.name || "",
@@ -50,6 +54,25 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
     rooms: 1,
     notes: "",
   });
+
+  // Fetch package details when dialog opens
+  useEffect(() => {
+    if (open && !packageData) {
+      setLoadingPackage(true);
+      fetchUmrahPackageByIdAction(packageId)
+        .then((result) => {
+          if (result?.data) {
+            setPackageData(result.data);
+          }
+        })
+        .catch(() => {
+          toast({ title: "Error", description: "Failed to load package details", variant: "destructive" });
+        })
+        .finally(() => {
+          setLoadingPackage(false);
+        });
+    }
+  }, [open, packageId, packageData]);
   
   // Traveler details state (UI only)
   type AdultDetail = {
@@ -175,6 +198,26 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
   const adultsAccordionValues = useMemo(() => adultsDetails.map((_, i) => `adult-${i}`), [adultsDetails]);
   const childrenAccordionValues = useMemo(() => childrenDetails.map((_, i) => `child-${i}`), [childrenDetails]);
   const infantsAccordionValues = useMemo(() => infantsDetails.map((_, i) => `infant-${i}`), [infantsDetails]);
+
+  // Calculate price breakdown and tax based on package pricing and traveler counts
+  const pricing = useMemo(() => {
+    if (!packageData) return { subtotal: 0, taxRate: 0, taxAmount: 0, total: 0, adultPrice: 0, childPrice: 0, infantPrice: 0 };
+
+    const adultPrice = Number(packageData.adultPrice ?? packageData.price ?? 0);
+    const childPrice = Number(packageData.childPrice ?? adultPrice);
+    const infantPrice = Number(packageData.infantPrice ?? 0);
+
+    const adultsTotal = formData.adults * adultPrice;
+    const childrenTotal = formData.children * childPrice;
+    const infantsTotal = formData.infants * infantPrice;
+
+    const subtotal = adultsTotal + childrenTotal + infantsTotal;
+    const taxRate = Number(process.env.NEXT_PUBLIC_TAX_RATE || 0);
+    const taxAmount = Math.round(subtotal * taxRate);
+    const total = subtotal + taxAmount;
+
+    return { subtotal, taxRate, taxAmount, total, adultPrice, childPrice, infantPrice };
+  }, [packageData, formData.adults, formData.children, formData.infants]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -328,6 +371,13 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
       if (paymentMethod) {
         formDataObj.append("paymentMethod", paymentMethod);
       }
+      // Add calculated total amount (including tax)
+      if (pricing.total > 0) {
+        formDataObj.append("totalAmount", String(pricing.total));
+        formDataObj.append("subtotalAmount", String(pricing.subtotal));
+        formDataObj.append("taxAmount", String(pricing.taxAmount));
+        formDataObj.append("taxRate", String(pricing.taxRate));
+      }
 
       // Attach traveler details for reference (backend will ignore unknown keys if unsupported)
       const travelerDetails = {
@@ -348,6 +398,7 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
         setOpen(false);
         // Reset form
         setPaymentMethod(null);
+        setPackageData(null);
         setFormData({
           customerName: user?.name || "",
           customerEmail: user?.email || "",
@@ -370,9 +421,25 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
         // Redirect to thank you page
         router.push("/thank-you?type=package");
       } else {
+        // Show detailed error message
+        const errorMessage = result?.error?.message?.[0];
+        const fieldErrors = result?.error;
+        let fullMessage = errorMessage || "Failed to submit booking. Please try again.";
+        
+        // Add field-specific errors if available
+        if (fieldErrors && typeof fieldErrors === "object" && !Array.isArray(fieldErrors)) {
+          const errorEntries = Object.entries(fieldErrors).slice(0, 3);
+          if (errorEntries.length > 0) {
+            fullMessage += "\n" + errorEntries
+              .map(([field, msgs]: any) => `${field}: ${Array.isArray(msgs) ? msgs[0] : msgs}`)
+              .join("\n");
+          }
+        }
+        
+        console.error("Booking submission error:", result?.error);
         toast({
           title: "Error",
-          description: result?.error?.message?.[0] || "Failed to submit booking. Please try again.",
+          description: fullMessage,
           variant: "destructive",
         });
       }
@@ -533,7 +600,14 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
+            {loadingPackage && (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <span className="ml-2 text-gray-600">Loading package details...</span>
+              </div>
+            )}
+            
             {/* Booking Summary Card */}
             <Card className="border-2 border-blue-100 shadow-sm">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-3">
@@ -1061,6 +1135,71 @@ export function PackageBookingDialog({ packageId, packageName, trigger, user }: 
 
               </CardContent>
             </Card>
+
+            {/* Price Summary Card */}
+            {packageData && pricing.subtotal > 0 && (
+              <Card className="border-2 border-green-100 shadow-md bg-gradient-to-br from-green-50 to-emerald-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <DollarSign className="w-6 h-6 text-green-600" />
+                    Price Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {formData.adults > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-700">
+                        Adults ({formData.adults} × PKR {pricing.adultPrice.toLocaleString()})
+                      </span>
+                      <span className="font-semibold text-gray-900">
+                        PKR {(formData.adults * pricing.adultPrice).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {formData.children > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-700">
+                        Children ({formData.children} × PKR {pricing.childPrice.toLocaleString()})
+                      </span>
+                      <span className="font-semibold text-gray-900">
+                        PKR {(formData.children * pricing.childPrice).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {formData.infants > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-700">
+                        Infants ({formData.infants} × PKR {pricing.infantPrice.toLocaleString()})
+                      </span>
+                      <span className="font-semibold text-gray-900">
+                        PKR {(formData.infants * pricing.infantPrice).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-700">Subtotal</span>
+                    <span className="font-semibold text-gray-900">PKR {pricing.subtotal.toLocaleString()}</span>
+                  </div>
+                  {pricing.taxRate > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-700">Tax ({Math.round(pricing.taxRate * 100)}%)</span>
+                      <span className="font-semibold text-gray-900">PKR {pricing.taxAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="border-t-2 border-green-200 pt-3 mt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold text-gray-900">Total Amount</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        PKR {pricing.total.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    * Final price excludes optional additional services shown during invoice generation
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Additional Notes Card */}
             <Card className="border-2 border-blue-100 shadow-sm">

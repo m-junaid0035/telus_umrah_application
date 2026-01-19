@@ -592,9 +592,16 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
               <div className="bg-white rounded-lg p-4 md:p-6 shadow-2xl">
                 <p className="text-sm text-gray-600 mb-1">Starting from</p>
                 <p className="text-blue-600 text-3xl md:text-4xl mb-1">
-                  PKR {pkg.price.toLocaleString()}
+                  PKR {(pkg.adultPrice || pkg.price).toLocaleString()}
                 </p>
-                <p className="text-sm text-gray-500 mb-4">per person</p>
+                <p className="text-sm text-gray-500 mb-1">per adult</p>
+                {(pkg.childPrice || pkg.infantPrice) && (
+                  <div className="text-xs text-gray-500 mb-4 space-y-0.5">
+                    {pkg.childPrice && <p>Child: PKR {pkg.childPrice.toLocaleString()}</p>}
+                    {pkg.infantPrice && <p>Infant: PKR {pkg.infantPrice.toLocaleString()}</p>}
+                  </div>
+                )}
+                {!(pkg.childPrice || pkg.infantPrice) && <div className="mb-4"></div>}
                 <div className="flex gap-2">
                   {user ? (
                     <PackageBookingDialog
@@ -961,14 +968,32 @@ export function PackageDetailsPage({ id }: PackageDetailsPageProps) {
 
                   <Separator className="my-4" />
 
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="text-gray-600">Total Price</span>
-                    <div className="text-right">
-                      <p className="text-blue-600 text-2xl">
-                        PKR {pkg.price.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500">per person</p>
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-600">Price per Person</span>
+                      <div className="text-right">
+                        <p className="text-blue-600 text-2xl">
+                          PKR {(pkg.adultPrice || pkg.price).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500">per adult</p>
+                      </div>
                     </div>
+                    {(pkg.childPrice || pkg.infantPrice) && (
+                      <div className="text-sm text-gray-600 space-y-1 ml-2">
+                        {pkg.childPrice && (
+                          <div className="flex justify-between">
+                            <span>Child (2-11 years):</span>
+                            <span className="text-blue-600 font-semibold">PKR {pkg.childPrice.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {pkg.infantPrice && (
+                          <div className="flex justify-between">
+                            <span>Infant (0-23 months):</span>
+                            <span className="text-blue-600 font-semibold">PKR {pkg.infantPrice.toLocaleString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {user ? (

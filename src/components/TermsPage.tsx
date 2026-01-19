@@ -21,7 +21,7 @@ export function TermsPage() {
             transition={{ delay: 0.1 }}
             className="text-blue-100 text-lg"
           >
-            Last updated: November 13, 2025
+            Last updated: January 19, 2026
           </motion.p>
         </div>
       </div>

@@ -445,6 +445,12 @@ export function Header() {
                         <p className="text-sm">{user?.name}</p>
                         <p className="text-xs text-gray-500">{user?.email}</p>
                       </div>
+                      <Link href="/profile">
+                        <DropdownMenuItem className="cursor-pointer">
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Profile
+                        </DropdownMenuItem>
+                      </Link>
                       <Link href="/my-bookings">
                         <DropdownMenuItem className="cursor-pointer">
                           <BookmarkPlus className="w-4 h-4 mr-2" />

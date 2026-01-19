@@ -19,28 +19,28 @@ const packageBookingSchema = z.object({
   customerEmail: z.string().trim().email("Valid email is required"),
   customerNationality: z.string().trim().optional(),
   adults: z.array(z.object({
-    name: z.string().trim().min(1),
+    name: z.string().trim().min(1, "Name required for adult"),
     gender: z.enum(["male", "female", ""]).optional(),
     nationality: z.string().trim().optional(),
     passportNumber: z.string().trim().optional(),
     age: z.number().int().min(0).optional(),
     phone: z.string().trim().optional(),
     isHead: z.boolean().optional(),
-  })).optional(),
+  }).passthrough()).optional(), // passthrough allows extra properties
   children: z.array(z.object({
-    name: z.string().trim().min(1),
+    name: z.string().trim().min(1, "Name required for child"),
     gender: z.enum(["male", "female", ""]).optional(),
     nationality: z.string().trim().optional(),
     passportNumber: z.string().trim().optional(),
-    age: z.number().int().min(0).max(16).optional(),
-  })).optional(),
+    age: z.number().int().min(0).optional(),
+  }).passthrough()).optional(),
   infants: z.array(z.object({
-    name: z.string().trim().min(1),
+    name: z.string().trim().min(1, "Name required for infant"),
     gender: z.enum(["male", "female", ""]).optional(),
     nationality: z.string().trim().optional(),
     passportNumber: z.string().trim().optional(),
-    age: z.number().int().min(0).max(2).optional(),
-  })).optional(),
+    age: z.number().int().min(0).optional(),
+  }).passthrough()).optional(),
   rooms: z.number().int().min(1, "At least one room is required"),
   checkInDate: z.string().or(z.date()).optional(),
   checkOutDate: z.string().or(z.date()).optional(),
@@ -76,8 +76,15 @@ function parsePackageBookingFormData(formData: FormData) {
     if (!v) return null;
     try {
       const parsed = JSON.parse(String(v));
-      return Array.isArray(parsed) ? parsed : null;
+      if (!Array.isArray(parsed)) return null;
+      
+      // Convert age strings to numbers
+      return parsed.map((item: any) => ({
+        ...item,
+        age: item.age !== undefined && item.age !== "" ? Number(item.age) : undefined,
+      }));
     } catch (e) {
+      console.error("Failed to parse JSON array:", e);
       return null;
     }
   };
@@ -93,6 +100,7 @@ function parsePackageBookingFormData(formData: FormData) {
     try {
       travelerDetailsObj = JSON.parse(String(travelerDetailsRaw));
     } catch (e) {
+      console.error("Failed to parse travelerDetails:", e);
       travelerDetailsObj = null;
     }
   }
@@ -147,10 +155,13 @@ export async function createPackageBookingAction(
   await connectToDatabase();
   console.log("Creating package booking...");
   const parsed = parsePackageBookingFormData(formData);
-  console.log(parsed);
+  console.log("Parsed form data:", JSON.stringify(parsed, null, 2));
   const result = packageBookingSchema.safeParse(parsed);
-  console.log(result);
-  if (!result.success) return { error: result.error.flatten().fieldErrors };
+  console.log("Validation result:", result);
+  if (!result.success) {
+    console.error("Validation errors:", result.error.flatten().fieldErrors);
+    return { error: result.error.flatten().fieldErrors };
+  }
 
   try {
     console.log("Inserting package booking into database...");

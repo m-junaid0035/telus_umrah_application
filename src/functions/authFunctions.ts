@@ -218,7 +218,10 @@ const serializeUser = (user: IUser) => ({
   id: user._id.toString(),
   name: user.name,
   email: user.email,
-  avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+  avatar: user.avatar || "",
+  phone: user.phone,
+  countryCode: user.countryCode,
+  createdAt: user.createdAt,
 });
 
 /**

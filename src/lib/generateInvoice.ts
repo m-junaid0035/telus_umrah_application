@@ -26,6 +26,22 @@ interface InvoiceData {
   airlineClass?: string;
   from?: string;
   to?: string;
+  // Optional pricing breakdown for package invoices
+  pricing?: {
+    adultsCount: number;
+    childrenCount: number;
+    infantsCount: number;
+    adultUnit: number;
+    childUnit: number;
+    infantUnit: number;
+    adultsTotal: number;
+    childrenTotal: number;
+    infantsTotal: number;
+    subtotal: number;
+    taxRate: number; // e.g., 0.05 for 5%
+    taxAmount: number;
+    grandTotal: number;
+  };
 }
 
 export async function generateInvoicePDF(invoiceData: InvoiceData): Promise<Buffer> {
@@ -439,65 +455,57 @@ export async function generateInvoicePDF(invoiceData: InvoiceData): Promise<Buff
       currentY -= 10;
     }
 
-    // ========== TOTAL SECTION ==========
+    // ========== PRICE BREAKDOWN (for package bookings) ==========
+    if (invoiceData.bookingType === 'package' && invoiceData.pricing) {
+      currentY -= 10;
+      page.drawText('PRICE BREAKDOWN', {
+        x: marginLeft,
+        y: currentY,
+        font: boldFont,
+        size: 10,
+        color: primaryColor,
+      });
+      currentY -= 18;
+
+      const pb = invoiceData.pricing;
+      const col1X = marginLeft + 10;
+      const col2X = marginLeft + contentWidth / 2 - 60;
+      const col3X = width - marginRight - 80;
+      const line = (label: string, qty: number, unit: number, total: number) => {
+        page.drawText(label, { x: col1X, y: currentY, font, size: 9, color: textColor });
+        page.drawText(`Qty: ${qty}`, { x: col2X, y: currentY, font, size: 9, color: lightTextColor });
+        page.drawText(`PKR ${(unit || 0).toLocaleString()}`, { x: col2X + 80, y: currentY, font, size: 9, color: textColor });
+        page.drawText(`PKR ${(total || 0).toLocaleString()}`, { x: col3X, y: currentY, font: boldFont, size: 9, color: textColor });
+        currentY -= 14;
+      };
+
+      line('Adults', pb.adultsCount, pb.adultUnit, pb.adultsTotal);
+      line('Children', pb.childrenCount, pb.childUnit, pb.childrenTotal);
+      line('Infants', pb.infantsCount, pb.infantUnit, pb.infantsTotal);
+
+      // Subtotal, Tax, Grand Total
+      currentY -= 6;
+      page.drawLine({
+        start: { x: marginLeft, y: currentY },
+        end: { x: width - marginRight, y: currentY },
+        thickness: 0.4,
+        color: borderColor,
+      });
+      currentY -= 16;
+      page.drawText('Subtotal', { x: col2X + 80, y: currentY, font, size: 9, color: lightTextColor });
+      page.drawText(`PKR ${(pb.subtotal || 0).toLocaleString()}`, { x: col3X, y: currentY, font: boldFont, size: 9, color: textColor });
+      currentY -= 14;
+      const taxLabel = `Tax (${Math.round((pb.taxRate || 0) * 100)}%)`;
+      page.drawText(taxLabel, { x: col2X + 80, y: currentY, font, size: 9, color: lightTextColor });
+      page.drawText(`PKR ${(pb.taxAmount || 0).toLocaleString()}`, { x: col3X, y: currentY, font: boldFont, size: 9, color: textColor });
+      currentY -= 14;
+      page.drawText('Total', { x: col2X + 80, y: currentY, font: boldFont, size: 10, color: primaryColor });
+      page.drawText(`PKR ${(pb.grandTotal || invoiceData.totalAmount || 0).toLocaleString()}`, { x: col3X, y: currentY, font: boldFont, size: 10, color: primaryColor });
+      currentY -= 20;
+    }
+
+    // ========== TOTAL SECTION REMOVED (shown in price breakdown above) ==========
     currentY -= 20;
-    
-    // Compact total box with accent strip and border
-    const totalBoxWidth = 180;
-    const totalBoxHeight = 56;
-    const totalBoxX = width - marginRight - totalBoxWidth;
-    const totalBoxY = currentY - totalBoxHeight;
-
-    // Card background with border
-    page.drawRectangle({
-      x: totalBoxX,
-      y: totalBoxY,
-      width: totalBoxWidth,
-      height: totalBoxHeight,
-      color: whiteColor,
-      borderColor: borderColor,
-      borderWidth: 0.75,
-    });
-
-    // Accent strip at top
-    page.drawRectangle({
-      x: totalBoxX,
-      y: totalBoxY + totalBoxHeight - 6,
-      width: totalBoxWidth,
-      height: 6,
-      color: accentColor,
-    });
-
-    // Total label
-    page.drawText('TOTAL', {
-      x: totalBoxX + 12,
-      y: totalBoxY + totalBoxHeight - 18,
-      font: boldFont,
-      size: 9,
-      color: lightTextColor,
-    });
-
-    // Amount (right aligned within box)
-    const amountText = `PKR ${invoiceData.totalAmount.toLocaleString()}`;
-    const amountTextWidth = boldFont.widthOfTextAtSize(amountText, 18);
-    page.drawText(amountText, {
-      x: totalBoxX + totalBoxWidth - amountTextWidth - 12,
-      y: totalBoxY + 22,
-      size: 18,
-      font: boldFont,
-      color: primaryColor,
-    });
-
-    // Tax notice small and subtle
-    page.drawText('(Includes all applicable taxes)', {
-      x: totalBoxX + 12,
-      y: totalBoxY + 10,
-      size: 7,
-      font: font,
-      color: lightTextColor,
-    });
-
-    currentY = totalBoxY - 24;
 
     // ========== TERMS AND CONDITIONS ==========
     const termsStartY = currentY;

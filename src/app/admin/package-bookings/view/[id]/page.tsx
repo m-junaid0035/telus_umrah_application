@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import { FileText, Mail } from "lucide-react";
 import { DownloadInvoiceButton } from "@/components/DownloadInvoiceButton";
 
@@ -37,18 +40,18 @@ interface PackageBooking {
   updatedAt?: string;
 }
 
-const getStatusColor = (status: string) => {
+const getStatusClasses = (status: string) => {
   switch (status) {
     case "pending":
-      return "bg-yellow-100 text-yellow-800";
+      return "bg-yellow-500/15 text-yellow-300 border border-yellow-300/25";
     case "confirmed":
-      return "bg-green-100 text-green-800";
+      return "bg-emerald-500/15 text-emerald-300 border border-emerald-300/25";
     case "cancelled":
-      return "bg-red-100 text-red-800";
+      return "bg-rose-500/15 text-rose-300 border border-rose-300/25";
     case "completed":
-      return "bg-blue-100 text-blue-800";
+      return "bg-blue-500/15 text-blue-200 border border-blue-300/25";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-slate-500/15 text-slate-300 border border-slate-300/25";
   }
 };
 
@@ -94,291 +97,342 @@ export default async function PackageBookingViewPage({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg text-black">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-black">Package Booking Details</h2>
-          <p className="text-sm text-black mt-1">Booking ID: {booking._id}</p>
-        </div>
-        <Link href="/admin/package-bookings">
-          <Button variant="secondary">Back to Bookings</Button>
-        </Link>
+    <div className="mx-auto max-w-6xl space-y-6 text-white">
+      <div className="flex flex-col gap-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/admin/package-bookings">Package Bookings</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>View</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle className="text-xl">Package Booking</CardTitle>
+            <CardDescription>Booking ID: {booking._id}</CardDescription>
+            <div data-slot="card-action" className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
+              <Link href="/admin/package-bookings">
+                <Button size="sm" variant="secondary">Back to Bookings</Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <Badge className={getStatusClasses(booking.status)}>
+                {booking.status.toUpperCase()}
+              </Badge>
+              {booking.paymentStatus && (
+                <Badge className={
+                  booking.paymentStatus === "paid"
+                    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-300/25"
+                    : booking.paymentStatus === "partial"
+                    ? "bg-yellow-500/15 text-yellow-300 border border-yellow-300/25"
+                    : "bg-rose-500/15 text-rose-300 border border-rose-300/25"
+                }>
+                  {booking.paymentStatus}
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="space-y-6 text-black">
-        {/* Status Badge */}
-        <div>
-          <Badge className={getStatusColor(booking.status)}>
-            {booking.status.toUpperCase()}
-          </Badge>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column */}
+        <div className="space-y-6 lg:col-span-2">
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Customer & Package</CardTitle>
+              <CardDescription>Primary booking and contact details</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <p className="text-sm text-white/70">Package Name</p>
+                  <p className="font-medium">
+                    {booking.packageName || booking.packageId || "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm text-white/70">Package ID</p>
+                  <p className="font-medium">{booking.packageId}</p>
+                </div>
+              </div>
 
-        {/* Package Information */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3 text-black">Package Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-black">Package Name</p>
-              <p className="text-black font-medium">
-                {booking.packageName || booking.packageId || "N/A"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-black">Package ID</p>
-              <p className="text-black">{booking.packageId}</p>
-            </div>
-          </div>
-        </div>
+              <Separator className="my-6" />
 
-        {/* Customer Information */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3 text-black">Customer Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(() => {
-              const head = (booking.adults && booking.adults.find((a) => a.isHead)) || (booking.adults && booking.adults[0]);
-              const headName = head ? String(head.name || "") : "";
-              const headPhone = head ? String(head.phone || "") : "";
-              return (
-                <>
-                  <div>
-                    <p className="text-sm text-black">Name</p>
-                    <p className="text-black font-medium">{headName}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-black">Email</p>
-                    <p className="text-black">{booking.customerEmail}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-black">Phone</p>
-                    <p className="text-black">{headPhone}</p>
-                  </div>
-                  {booking.customerNationality && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(() => {
+                  const head = (booking.adults && booking.adults.find((a) => a.isHead)) || (booking.adults && booking.adults[0]);
+                  const headName = head ? String(head.name || "") : "";
+                  const headPhone = head ? String(head.phone || "") : "";
+                  return (
+                    <>
+                      <div className="space-y-3">
+                        <p className="text-sm text-white/70">Name</p>
+                        <p className="font-medium">{headName}</p>
+                      </div>
+                      <div className="space-y-3">
+                        <p className="text-sm text-white/70">Email</p>
+                        <p className="font-medium">{booking.customerEmail}</p>
+                      </div>
+                      <div className="space-y-3">
+                        <p className="text-sm text-white/70">Phone</p>
+                        <p className="font-medium">{headPhone}</p>
+                      </div>
+                      {booking.customerNationality && (
+                        <div className="space-y-3">
+                          <p className="text-sm text-white/70">Nationality</p>
+                          <p className="font-medium">{booking.customerNationality}</p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Travelers</CardTitle>
+              <CardDescription>Counts and detailed traveler information</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm text-white/70">Adults</p>
+                  <p className="font-medium">{booking.adults ? booking.adults.length : 0}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-white/70">Children</p>
+                  <p className="font-medium">{booking.children ? booking.children.length : 0}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-white/70">Infants</p>
+                  <p className="font-medium">{booking.infants ? booking.infants.length : 0}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-white/70">Rooms</p>
+                  <p className="font-medium">{booking.rooms}</p>
+                </div>
+              </div>
+
+              {(booking.checkInDate || booking.checkOutDate) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  {booking.checkInDate && (
                     <div>
-                      <p className="text-sm text-black">Nationality</p>
-                      <p className="text-black">{booking.customerNationality}</p>
+                      <p className="text-sm text-white/70">Check-in</p>
+                      <p className="font-medium">{new Date(booking.checkInDate).toLocaleString()}</p>
                     </div>
                   )}
-                </>
-              );
-            })()}
-          </div>
+                  {booking.checkOutDate && (
+                    <div>
+                      <p className="text-sm text-white/70">Check-out</p>
+                      <p className="font-medium">{new Date(booking.checkOutDate).toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {booking.adults && booking.adults.length > 0 && (
+                <div className="mt-6">
+                  <p className="text-sm text-white/70 mb-3">Adults</p>
+                  <div className="grid gap-3">
+                    {booking.adults.map((a, idx) => (
+                      <div key={idx} className="rounded-lg border border-white/10 p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium">{a.name || `Adult ${idx + 1}`}</div>
+                          {a.isHead && (
+                            <Badge className="bg-blue-500/15 text-blue-200 border border-blue-300/25">Family Head</Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-white/70 mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <div>Nationality: <span className="text-white">{a.nationality || 'N/A'}</span></div>
+                          <div>Passport: <span className="text-white">{a.passportNumber || 'N/A'}</span></div>
+                          <div>Age: <span className="text-white">{a.age ?? 'N/A'}</span></div>
+                          <div>Gender: <span className="text-white">{a.gender || 'N/A'}</span></div>
+                          <div>Phone: <span className="text-white">{a.phone || 'N/A'}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {booking.children && booking.children.length > 0 && (
+                <div className="mt-6">
+                  <p className="text-sm text-white/70 mb-3">Children</p>
+                  <div className="grid gap-3">
+                    {booking.children.map((c, index) => (
+                      <div key={index} className="rounded-lg border border-white/10 p-4">
+                        <div className="font-medium">{c.name || `Child ${index + 1}`}</div>
+                        <div className="text-sm text-white/70 mt-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <div>Age: <span className="text-white">{c.age ?? 'N/A'}</span></div>
+                          <div>Gender: <span className="text-white">{c.gender || 'N/A'}</span></div>
+                          <div>Nationality: <span className="text-white">{c.nationality || 'N/A'}</span></div>
+                          <div>Passport: <span className="text-white">{c.passportNumber || 'N/A'}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {booking.infants && booking.infants.length > 0 && (
+                <div className="mt-6">
+                  <p className="text-sm text-white/70 mb-3">Infants</p>
+                  <div className="grid gap-3">
+                    {booking.infants.map((c, index) => (
+                      <div key={index} className="rounded-lg border border-white/10 p-4">
+                        <div className="font-medium">{c.name || `Infant ${index + 1}`}</div>
+                        <div className="text-sm text-white/70 mt-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <div>Age: <span className="text-white">{c.age ?? 'N/A'}</span></div>
+                          <div>Gender: <span className="text-white">{c.gender || 'N/A'}</span></div>
+                          <div>Nationality: <span className="text-white">{c.nationality || 'N/A'}</span></div>
+                          <div>Passport: <span className="text-white">{c.passportNumber || 'N/A'}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6">
+                <p className="text-sm text-white/70 mb-2">Additional Services</p>
+                <div className="flex flex-wrap gap-2">
+                  {booking.umrahVisa ? <Badge className="bg-blue-500/15 text-blue-200 border border-blue-300/25">Umrah Visa</Badge> : null}
+                  {booking.transport ? <Badge className="bg-blue-500/15 text-blue-200 border border-blue-300/25">Transport</Badge> : null}
+                  {booking.zaiarat ? <Badge className="bg-blue-500/15 text-blue-200 border border-blue-300/25">Zaiarat Tours</Badge> : null}
+                  {booking.meals ? <Badge className="bg-blue-500/15 text-blue-200 border border-blue-300/25">Meals</Badge> : null}
+                  {booking.esim ? <Badge className="bg-blue-500/15 text-blue-200 border border-blue-300/25">eSIM</Badge> : null}
+                  {!booking.umrahVisa && !booking.transport && !booking.zaiarat && !booking.meals && !booking.esim && (
+                    <span className="text-white/60">No additional services</span>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Travel Details */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3 text-black">Travel Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-black">Adults</p>
-              <p className="text-black">{booking.adults ? booking.adults.length : 0}</p>
-            </div>
-            <div>
-              <p className="text-sm text-black">Children</p>
-              <p className="text-black">{booking.children ? booking.children.length : 0}</p>
-            </div>
-            <div>
-              <p className="text-sm text-black">Infants</p>
-              <p className="text-black">{booking.infants ? booking.infants.length : 0}</p>
-            </div>
-            <div>
-              <p className="text-sm text-black">Rooms</p>
-              <p className="text-black">{booking.rooms}</p>
-            </div>
-            {booking.checkInDate && (
-              <div>
-                <p className="text-sm text-black">Check-in</p>
-                <p className="text-black">{new Date(booking.checkInDate).toLocaleString()}</p>
-              </div>
-            )}
-            {booking.checkOutDate && (
-              <div>
-                <p className="text-sm text-black">Check-out</p>
-                <p className="text-black">{new Date(booking.checkOutDate).toLocaleString()}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Adults detail list */}
-          {booking.adults && booking.adults.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm text-black mb-2">Adults Details</p>
-              <div className="grid gap-3">
-                {booking.adults.map((a, idx) => (
-                  <div key={idx} className="p-3 border rounded">
-                    <div className="flex items-center justify-between">
-                      <div className="font-medium">{a.name || `Adult ${idx + 1}`}</div>
-                      {a.isHead && <Badge className="bg-blue-100 text-blue-800">Family Head</Badge>}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <div>Nationality: <span className="text-black">{a.nationality || 'N/A'}</span></div>
-                      <div>Passport: <span className="text-black">{a.passportNumber || 'N/A'}</span></div>
-                      <div>Age: <span className="text-black">{a.age ?? 'N/A'}</span></div>
-                      <div>Gender: <span className="text-black">{a.gender || 'N/A'}</span></div>
-                      <div>Phone: <span className="text-black">{a.phone || 'N/A'}</span></div>
-                    </div>
+        {/* Right column */}
+        <div className="space-y-6">
+          {(booking.totalAmount || booking.paidAmount !== undefined || booking.paymentStatus) && (
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Payment</CardTitle>
+                <CardDescription>Amounts and status</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 grid grid-cols-1 gap-4">
+                {booking.totalAmount && (
+                  <div>
+                    <p className="text-sm text-white/70">Total Amount</p>
+                    <p className="font-medium">PKR {booking.totalAmount.toLocaleString()}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Children details */}
-          {booking.children && booking.children.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm text-black mb-2">Children Details</p>
-              <div className="grid gap-3">
-                {booking.children.map((c, index) => (
-                  <div key={index} className="p-3 border rounded">
-                    <div className="font-medium">{c.name || `Child ${index + 1}`}</div>
-                    <div className="text-sm text-muted-foreground mt-1 grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <div>Age: <span className="text-black">{c.age ?? 'N/A'}</span></div>
-                      <div>Nationality: <span className="text-black">{c.nationality || 'N/A'}</span></div>
-                      <div>Passport: <span className="text-black">{c.passportNumber || 'N/A'}</span></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Infants details */}
-          {booking.infants && booking.infants.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm text-black mb-2">Infants Details</p>
-              <div className="grid gap-3">
-                {booking.infants.map((c, index) => (
-                  <div key={index} className="p-3 border rounded">
-                    <div className="font-medium">{c.name || `Infant ${index + 1}`}</div>
-                    <div className="text-sm text-muted-foreground mt-1 grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <div>Age: <span className="text-black">{c.age ?? 'N/A'}</span></div>
-                      <div>Nationality: <span className="text-black">{c.nationality || 'N/A'}</span></div>
-                      <div>Passport: <span className="text-black">{c.passportNumber || 'N/A'}</span></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Dates (if any) */}
-          {/* Additional Services */}
-          <div className="mt-4">
-            <p className="text-sm text-black mb-2">Additional Services</p>
-            <div className="flex flex-wrap gap-2">
-              {booking.umrahVisa ? <Badge className="bg-blue-100 text-blue-800">Umrah Visa</Badge> : null}
-              {booking.transport ? <Badge className="bg-blue-100 text-blue-800">Transport</Badge> : null}
-              {booking.zaiarat ? <Badge className="bg-blue-100 text-blue-800">Zaiarat Tours</Badge> : null}
-              {booking.meals ? <Badge className="bg-blue-100 text-blue-800">Meals</Badge> : null}
-              {booking.esim ? <Badge className="bg-blue-100 text-blue-800">eSIM</Badge> : null}
-              {!booking.umrahVisa && !booking.transport && !booking.zaiarat && !booking.meals && !booking.esim && (
-                <span className="text-muted-foreground">No additional services</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Additional Services removed per new booking flow */}
-
-        {/* Payment Information */}
-        {(booking.totalAmount || booking.paidAmount !== undefined || booking.paymentStatus) && (
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold mb-3 text-black">Payment Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {booking.totalAmount && (
-                <div>
-                  <p className="text-sm text-black">Total Amount</p>
-                  <p className="text-black font-medium">PKR {booking.totalAmount.toLocaleString()}</p>
-                </div>
-              )}
-              {typeof booking.paidAmount === "number" && (
-                <div>
-                  <p className="text-sm text-black">Paid Amount</p>
-                  <p className="text-black font-medium">PKR {booking.paidAmount.toLocaleString()}</p>
-                </div>
-              )}
-              {booking.paymentStatus && (
-                <div>
-                  <p className="text-sm text-black">Payment Status</p>
-                  <Badge
-                    className={
-                      booking.paymentStatus === "paid"
-                        ? "bg-green-100 text-green-800"
-                        : booking.paymentStatus === "partial"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                    }
-                  >
-                    {booking.paymentStatus}
-                  </Badge>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Invoice */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-semibold mb-3 text-black">Invoice Information</h3>
-
-          {booking.invoiceGenerated ? (
-            <>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
-                  <FileText className="w-3 h-3" /> Invoice Generated
-                </Badge>
-                {booking.invoiceSent && (
-                  <Badge className="border border-blue-300 text-blue-700 flex items-center gap-1">
-                    <Mail className="w-3 h-3" /> Sent to Customer
-                  </Badge>
                 )}
-              </div>
+                {typeof booking.paidAmount === "number" && (
+                  <div>
+                    <p className="text-sm text-white/70">Paid Amount</p>
+                    <p className="font-medium">PKR {booking.paidAmount.toLocaleString()}</p>
+                  </div>
+                )}
+                {booking.paymentStatus && (
+                  <div>
+                    <p className="text-sm text-white/70">Payment Status</p>
+                    <Badge className={
+                      booking.paymentStatus === "paid"
+                        ? "bg-emerald-500/15 text-emerald-300 border border-emerald-300/25"
+                        : booking.paymentStatus === "partial"
+                        ? "bg-yellow-500/15 text-yellow-300 border border-yellow-300/25"
+                        : "bg-rose-500/15 text-rose-300 border border-rose-300/25"
+                    }>
+                      {booking.paymentStatus}
+                    </Badge>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-              {booking.invoiceNumber && (
-                <div className="mt-2">
-                  <p className="text-sm text-black">Invoice Number</p>
-                  <p className="text-black font-medium">{booking.invoiceNumber}</p>
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Invoice</CardTitle>
+              <CardDescription>Generation and delivery</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {booking.invoiceGenerated ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-300/25 flex items-center gap-1">
+                      <FileText className="w-3 h-3" /> Invoice Generated
+                    </Badge>
+                    {booking.invoiceSent && (
+                      <Badge className="bg-blue-500/15 text-blue-200 border border-blue-300/25 flex items-center gap-1">
+                        <Mail className="w-3 h-3" /> Sent to Customer
+                      </Badge>
+                    )}
+                  </div>
+
+                  {booking.invoiceNumber && (
+                    <div className="mt-3">
+                      <p className="text-sm text-white/70">Invoice Number</p>
+                      <p className="font-medium">{booking.invoiceNumber}</p>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <DownloadInvoiceButton bookingId={booking._id} bookingType="package" />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <Badge className="bg-slate-500/15 text-slate-300 border border-slate-300/25">Invoice Pending</Badge>
+                  <p className="text-sm text-white/70 mt-2">
+                    Invoice will be generated when the booking is confirmed.
+                  </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
 
-              <div className="mt-3">
-                <DownloadInvoiceButton bookingId={booking._id} bookingType="package" />
-              </div>
-            </>
-          ) : (
-            <div>
-              <Badge className="border text-black">Invoice Pending</Badge>
-              <p className="text-sm text-black mt-2">
-                Invoice will be generated when the booking is confirmed.
-              </p>
-            </div>
+          {booking.notes && (
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Notes</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <p className="text-white/85">{booking.notes}</p>
+              </CardContent>
+            </Card>
           )}
-        </div>
 
-        {/* Notes */}
-        {booking.notes && (
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-black">Notes</h3>
-            <p className="text-black">{booking.notes}</p>
-          </div>
-        )}
-
-        {/* Timestamps */}
-        <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {booking.createdAt && (
-            <div>
-              <p className="text-sm text-black">Created At</p>
-              <p className="text-black">
-                {new Date(booking.createdAt).toLocaleString()}
-              </p>
-            </div>
-          )}
-          {booking.updatedAt && (
-            <div>
-              <p className="text-sm text-black">Last Updated</p>
-              <p className="text-black">
-                {new Date(booking.updatedAt).toLocaleString()}
-              </p>
-            </div>
+          {(booking.createdAt || booking.updatedAt) && (
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Timestamps</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 grid grid-cols-1 gap-4">
+                {booking.createdAt && (
+                  <div>
+                    <p className="text-sm text-white/70">Created At</p>
+                    <p className="font-medium">{new Date(booking.createdAt).toLocaleString()}</p>
+                  </div>
+                )}
+                {booking.updatedAt && (
+                  <div>
+                    <p className="text-sm text-white/70">Last Updated</p>
+                    <p className="font-medium">{new Date(booking.updatedAt).toLocaleString()}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

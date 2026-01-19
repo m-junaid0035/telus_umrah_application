@@ -79,38 +79,68 @@ export async function GET(
         // This is a request form, not an invoice, so no price calculation
         calculatedTotal = 0;
       }
-    } else {
-      booking = await PackageBooking.findById(bookingId).lean();
-      if (booking) {
-        pkg = await UmrahPackage.findById(booking.packageId).lean();
-        itemName = pkg?.name || 'Umrah Package';
-        
-        // Calculate package booking price
+      } else {
+        booking = await PackageBooking.findById(bookingId).lean();
+        if (booking) {
+          pkg = await UmrahPackage.findById(booking.packageId).lean();
+          itemName = pkg?.name || 'Umrah Package';
+
+          // Calculate package booking price with distinct unit prices
           if (pkg) {
             const adultsCount = Array.isArray(booking.adults) ? booking.adults.length : (booking.travelers?.adults || 0);
             const childrenCount = Array.isArray(booking.children) ? booking.children.length : (booking.travelers?.children || 0);
             const infantsCount = Array.isArray(booking.infants) ? booking.infants.length : 0;
+
+            const adultUnit = Number(pkg.adultPrice ?? pkg.price ?? 0);
+            const childUnit = Number(pkg.childPrice ?? pkg.adultPrice ?? pkg.price ?? 0);
+            const infantUnit = Number(pkg.infantPrice ?? 0);
+
+            const adultsTotal = adultsCount * adultUnit;
+            const childrenTotal = childrenCount * childUnit;
+            const infantsTotal = infantsCount * infantUnit;
+
+            let subtotal = adultsTotal + childrenTotal + infantsTotal;
+
             const totalTravelers = adultsCount + childrenCount + infantsCount;
-            calculatedTotal = (pkg.price || 0) * totalTravelers;
-          
-          // Add additional services (estimate prices)
-          if (booking.umrahVisa) {
-            calculatedTotal += 50000 * totalTravelers; // 50000 PKR per person for visa
-          }
-          if (booking.transport) {
-            calculatedTotal += 15000; // 15000 PKR for transport
-          }
-          if (booking.zaiarat) {
-            calculatedTotal += 20000; // 20000 PKR for zaiarat tours
-          }
-          if (booking.meals) {
-            calculatedTotal += 30000 * totalTravelers; // 30000 PKR per person for meals
-          }
-          if (booking.esim) {
-            calculatedTotal += 5000 * totalTravelers; // 5000 PKR per person for eSIM
+            // Additional services (estimates) added to subtotal
+            if (booking.umrahVisa) {
+              subtotal += 50000 * totalTravelers; // 50000 PKR per person for visa
+            }
+            if (booking.transport) {
+              subtotal += 15000; // 15000 PKR for transport
+            }
+            if (booking.zaiarat) {
+              subtotal += 20000; // 20000 PKR for zaiarat tours
+            }
+            if (booking.meals) {
+              subtotal += 30000 * totalTravelers; // 30000 PKR per person for meals
+            }
+            if (booking.esim) {
+              subtotal += 5000 * totalTravelers; // 5000 PKR per person for eSIM
+            }
+
+            const taxRate = Number(process.env.INVOICE_TAX_RATE || process.env.NEXT_PUBLIC_TAX_RATE || 0);
+            const taxAmount = Math.round(subtotal * taxRate);
+            calculatedTotal = subtotal + taxAmount;
+
+            // Attach breakdown for invoice rendering
+            (booking as any).__pricing = {
+              adultsCount,
+              childrenCount,
+              infantsCount,
+              adultUnit,
+              childUnit,
+              infantUnit,
+              adultsTotal,
+              childrenTotal,
+              infantsTotal,
+              subtotal,
+              taxRate,
+              taxAmount,
+              grandTotal: calculatedTotal,
+            };
           }
         }
-      }
     }
 
     if (!booking) {
@@ -141,7 +171,7 @@ export async function GET(
     }
 
     // Prepare data
-    const data = {
+    const data: any = {
       invoiceNumber: invoiceNumber || `REQ-${bookingId.slice(-6)}`,
       bookingId,
       bookingType: type as 'hotel' | 'package' | 'custom',
@@ -200,6 +230,11 @@ export async function GET(
                 ...(booking.esim ? ['eSIM'] : []),
               ]),
     };
+
+    // Inject pricing breakdown for package invoices
+    if (type === 'package' && (booking as any).__pricing) {
+      data.pricing = (booking as any).__pricing;
+    }
 
     // Generate PDF
     let pdfBuffer: Buffer;

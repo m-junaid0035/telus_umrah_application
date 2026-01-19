@@ -15,7 +15,10 @@ import {
 
 const umrahPackageSchema = z.object({
   name: z.string().trim().min(2, "Name is required"),
-  price: z.number().min(1, "Price must be greater than 0"),
+  price: z.number().min(1, "Price must be greater than 0").refine(n => !isNaN(n), "Price must be a valid number"),
+  adultPrice: z.number().min(1, "Adult price must be greater than 0").refine(n => !isNaN(n), "Adult price must be a valid number"),
+  childPrice: z.number().min(0, "Child price must be 0 or greater").refine(n => !isNaN(n), "Child price must be a valid number"),
+  infantPrice: z.number().min(0, "Infant price must be 0 or greater").refine(n => !isNaN(n), "Infant price must be a valid number"),
   duration: z.number().min(1, "Duration must be greater than 0"),
   badge: z.string().trim().optional(),
   airline: z.string().trim().min(2, "Airline is required"),
@@ -86,9 +89,30 @@ function parseUmrahPackageFormData(formData: FormData) {
     departureTime: str(formData, "flights[arrival][departureTime]"),
     arrivalTime: str(formData, "flights[arrival][arrivalTime]"),
   };
-  return {
+  
+  // Parse prices carefully - they must be numbers and required
+  const adultPriceValue = formData.get("adultPrice") || formData.get("price");
+  const childPriceValue = formData.get("childPrice");
+  const infantPriceValue = formData.get("infantPrice");
+  
+  const adultPrice = adultPriceValue ? Number(adultPriceValue) : NaN;
+  const childPrice = childPriceValue ? Number(childPriceValue) : NaN;
+  const infantPrice = infantPriceValue ? Number(infantPriceValue) : NaN;
+  
+  console.log("=== PACKAGE PARSING ===");
+  console.log("Raw form values - adult:", adultPriceValue, "(type:", typeof adultPriceValue + ")");
+  console.log("Raw form values - child:", childPriceValue, "(type:", typeof childPriceValue + ")");
+  console.log("Raw form values - infant:", infantPriceValue, "(type:", typeof infantPriceValue + ")");
+  console.log("Parsed values - adult:", adultPrice, "isNaN:", isNaN(adultPrice));
+  console.log("Parsed values - child:", childPrice, "isNaN:", isNaN(childPrice));
+  console.log("Parsed values - infant:", infantPrice, "isNaN:", isNaN(infantPrice));
+  
+  const parsed = {
     name: str(formData, "name"),
-    price: Number(formData.get("price") || 0),
+    price: adultPrice, // Use adultPrice for backward compatibility
+    adultPrice: adultPrice,
+    childPrice: childPrice,
+    infantPrice: infantPrice,
     duration: Number(formData.get("duration") || 0),
     badge: str(formData, "badge"),
     airline: str(formData, "airline"),
@@ -113,6 +137,9 @@ function parseUmrahPackageFormData(formData: FormData) {
       arrival: arrivalFlight,
     },
   };
+  
+  console.log("Final parsed object:", parsed);
+  return parsed;
 }
 
 // ================= UMRAH PACKAGE CRUD ACTIONS =================
@@ -123,10 +150,14 @@ export async function createUmrahPackageAction(
 ): Promise<UmrahPackageFormState> {
   await connectToDatabase();
   const parsed = parseUmrahPackageFormData(formData);
+  console.log("Parsed package data:", parsed);
+  
   const result = umrahPackageSchema.safeParse(parsed);
+  console.log("Validation result:", result);
 
   if (!result.success) {
     // Return errors along with parsed form data to preserve user input
+    console.error("Package validation errors:", result.error.flatten().fieldErrors);
     return { 
       error: result.error.flatten().fieldErrors,
       formData: parsed 
@@ -135,9 +166,11 @@ export async function createUmrahPackageAction(
 
   try {
     const pkg = await createUmrahPackage(result.data);
+    console.log("Package created successfully:", pkg._id);
     return { data: pkg };
   } catch (error: any) {
     // On database error, also preserve form data
+    console.error("Database error creating package:", error);
     return { 
       error: { message: [error?.message || "Failed to create package"] },
       formData: parsed 

@@ -120,7 +120,8 @@ const packageBookingSchema = new Schema<IPackageBooking>(
           gender: { type: String, enum: ["male", "female", ""], default: "" },
           nationality: { type: String, trim: true },
           passportNumber: { type: String, trim: true },
-          age: { type: Number, min: 0, max: 2 },
+          // Age captured in months on the client (0-23 months)
+          age: { type: Number, min: 0, max: 23 },
         }),
       ],
       default: [],

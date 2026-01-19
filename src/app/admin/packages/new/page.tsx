@@ -153,6 +153,9 @@ export default function CreateUmrahPackageForm() {
   const [formValues, setFormValues] = useState({
     name: "",
     price: "",
+    adultPrice: "",
+    childPrice: "",
+    infantPrice: "",
     duration: "",
     badge: "",
     airline: "",
@@ -227,6 +230,9 @@ export default function CreateUmrahPackageForm() {
       setFormValues({
         name: formState.formData.name || "",
         price: formState.formData.price?.toString() || "",
+        adultPrice: formState.formData.adultPrice?.toString() || "",
+        childPrice: formState.formData.childPrice?.toString() || "",
+        infantPrice: formState.formData.infantPrice?.toString() || "",
         duration: formState.formData.duration?.toString() || "",
         badge: formState.formData.badge || "",
         airline: formState.formData.airline || "",
@@ -297,6 +303,21 @@ export default function CreateUmrahPackageForm() {
   // ✅ Submit handler with FormData appending for selected options
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Client-side validation for prices BEFORE setting pending
+    if (!formValues.adultPrice || parseFloat(formValues.adultPrice) <= 0) {
+      toast({ title: "Validation Error", description: "Adult price must be greater than 0", variant: "destructive" });
+      return;
+    }
+    if (!formValues.childPrice || parseFloat(formValues.childPrice) < 0) {
+      toast({ title: "Validation Error", description: "Child price is required and must be 0 or greater", variant: "destructive" });
+      return;
+    }
+    if (!formValues.infantPrice || parseFloat(formValues.infantPrice) < 0) {
+      toast({ title: "Validation Error", description: "Infant price is required and must be 0 or greater", variant: "destructive" });
+      return;
+    }
+    
     setIsPending(true);
     setFormState({ error: {} });
 
@@ -306,6 +327,11 @@ export default function CreateUmrahPackageForm() {
     if (formValues.image) {
       formData.set("image", formValues.image);
     }
+    
+    // Explicitly ensure price fields are set (in case they didn't get picked up from form)
+    formData.set("adultPrice", formValues.adultPrice);
+    formData.set("childPrice", formValues.childPrice);
+    formData.set("infantPrice", formValues.infantPrice);
 
     // Append manually for react-select values
     selectedFeatures.forEach((f) => formData.append("features", f.value));
@@ -326,6 +352,9 @@ export default function CreateUmrahPackageForm() {
         setFormValues({
           name: "",
           price: "",
+          adultPrice: "",
+          childPrice: "",
+          infantPrice: "",
           duration: "",
           badge: "",
           airline: "",
@@ -352,6 +381,16 @@ export default function CreateUmrahPackageForm() {
         setSelectedExcludes([]);
         setSelectedPolicies([]);
       } else {
+        // Show validation errors
+        if (res?.error) {
+          const firstError = Object.values(res.error)[0];
+          const errorMsg = Array.isArray(firstError) ? firstError[0] : String(firstError);
+          toast({
+            title: "Validation Failed",
+            description: errorMsg || "Please check the form for errors",
+            variant: "destructive",
+          });
+        }
         setFormState(res);
       }
     } catch {
@@ -390,15 +429,17 @@ export default function CreateUmrahPackageForm() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="price">Price</Label>
+                <Label htmlFor="price">Price (Adult) - Deprecated</Label>
                 <Input 
                   id="price" 
                   name="price" 
-                  type="number" 
-                  required 
-                  value={formValues.price}
-                  onChange={(e) => setFormValues({ ...formValues, price: e.target.value })}
+                  type="number"
+                  value={formValues.adultPrice || formValues.price}
+                  onChange={(e) => setFormValues({ ...formValues, price: e.target.value, adultPrice: e.target.value })}
                   aria-invalid={errorFor("price") ? "true" : "false"}
+                  disabled
+                  className="bg-gray-100"
+                  title="This field is auto-filled from Adult Price for backward compatibility"
                 />
                 {errorFor("price") && <p className="text-sm text-red-500">{errorFor("price")}</p>}
               </div>
@@ -414,6 +455,63 @@ export default function CreateUmrahPackageForm() {
                   aria-invalid={errorFor("duration") ? "true" : "false"}
                 />
                 {errorFor("duration") && <p className="text-sm text-red-500">{errorFor("duration")}</p>}
+              </div>
+            </div>
+
+            <div className="rounded-xl border bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 p-4 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-blue-900 dark:text-blue-100">Pricing per Person</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">Set different prices for adults, children, and infants</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="adultPrice">Adult Price (12+ years)</Label>
+                  <Input 
+                    id="adultPrice" 
+                    name="adultPrice" 
+                    type="number" 
+                    step="0.01"
+                    min="0.01"
+                    required 
+                    value={formValues.adultPrice}
+                    onChange={(e) => {
+                      setFormValues({ ...formValues, adultPrice: e.target.value, price: e.target.value });
+                    }}
+                    aria-invalid={errorFor("adultPrice") ? "true" : "false"}
+                    placeholder="e.g., 150000"
+                  />
+                  {errorFor("adultPrice") && <p className="text-sm text-red-500">{errorFor("adultPrice")}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="childPrice">Child Price (2-11 years)</Label>
+                  <Input 
+                    id="childPrice" 
+                    name="childPrice" 
+                    type="number" 
+                    step="0.01"
+                    min="0"
+                    required 
+                    value={formValues.childPrice}
+                    onChange={(e) => setFormValues({ ...formValues, childPrice: e.target.value })}
+                    aria-invalid={errorFor("childPrice") ? "true" : "false"}
+                    placeholder="e.g., 120000"
+                  />
+                  {errorFor("childPrice") && <p className="text-sm text-red-500">{errorFor("childPrice")}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="infantPrice">Infant Price (0-23 months)</Label>
+                  <Input 
+                    id="infantPrice" 
+                    name="infantPrice" 
+                    type="number"                     step="0.01"
+                    min="0"                    required 
+                    value={formValues.infantPrice}
+                    onChange={(e) => setFormValues({ ...formValues, infantPrice: e.target.value })}
+                    aria-invalid={errorFor("infantPrice") ? "true" : "false"}
+                    placeholder="e.g., 50000"
+                  />
+                  {errorFor("infantPrice") && <p className="text-sm text-red-500">{errorFor("infantPrice")}</p>}
+                </div>
               </div>
             </div>
 

@@ -262,12 +262,57 @@ export default function EditUmrahPackageForm() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="price">Price</Label>
-                <Input id="price" name="price" type="number" defaultValue={pkgData.price} required />
+                <Label htmlFor="price">Price (Adult) - Deprecated</Label>
+                <Input id="price" name="price" type="number" defaultValue={pkgData.adultPrice || pkgData.price} disabled className="bg-gray-100" title="This field is auto-filled from Adult Price for backward compatibility" />
               </div>
               <div>
                 <Label htmlFor="duration">Duration</Label>
                 <Input id="duration" name="duration" type="number" defaultValue={pkgData.duration} required />
+              </div>
+            </div>
+
+            <div className="rounded-xl border bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 p-4 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-blue-900 dark:text-blue-100">Pricing per Person</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">Set different prices for adults, children, and infants</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="adultPrice">Adult Price (12+ years)</Label>
+                  <Input 
+                    id="adultPrice" 
+                    name="adultPrice" 
+                    type="number" 
+                    required 
+                    defaultValue={pkgData.adultPrice || pkgData.price}
+                    placeholder="e.g., 150000"
+                  />
+                  {errorFor("adultPrice") && <p className="text-sm text-red-500">{errorFor("adultPrice")}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="childPrice">Child Price (2-11 years)</Label>
+                  <Input 
+                    id="childPrice" 
+                    name="childPrice" 
+                    type="number" 
+                    required 
+                    defaultValue={pkgData.childPrice || Math.round(pkgData.price * 0.8)}
+                    placeholder="e.g., 120000"
+                  />
+                  {errorFor("childPrice") && <p className="text-sm text-red-500">{errorFor("childPrice")}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="infantPrice">Infant Price (0-23 months)</Label>
+                  <Input 
+                    id="infantPrice" 
+                    name="infantPrice" 
+                    type="number" 
+                    required 
+                    defaultValue={pkgData.infantPrice || Math.round(pkgData.price * 0.3)}
+                    placeholder="e.g., 50000"
+                  />
+                  {errorFor("infantPrice") && <p className="text-sm text-red-500">{errorFor("infantPrice")}</p>}
+                </div>
               </div>
             </div>
 

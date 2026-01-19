@@ -69,7 +69,10 @@ const getAirlineLogo = (airlineName: string) => {
 interface Package {
   _id: string;
   name: string;
-  price: number;
+  price: number; // backward compatibility, represents adult price
+  adultPrice?: number;
+  childPrice?: number;
+  infantPrice?: number;
   duration: number;
   badge?: string;
   airline: string;
@@ -175,7 +178,7 @@ export function UmrahPackagesPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center text-white"
           >
-            <h1 className="text-white mb-4 text-5xl md:text-6xl">Umrah Packages 2025</h1>
+            <h1 className="text-white mb-4 text-5xl md:text-6xl">Umrah Packages 2026</h1>
             <p className="text-white/90 text-lg max-w-2xl mx-auto">
               Find the perfect Umrah package that suits your needs and budget
             </p>
@@ -411,9 +414,14 @@ export function UmrahPackagesPage() {
                       <div className="text-left sm:text-right flex-shrink-0 w-full sm:w-auto">
                         <p className="text-white/80 text-sm mb-0.5">Starts from</p>
                         <p className="text-2xl sm:text-3xl font-extrabold">
-                          PKR {pkg.price.toLocaleString()}
+                          PKR {(pkg.adultPrice || pkg.price).toLocaleString()}
                         </p>
-                        <p className="text-white/80 text-xs">per person</p>
+                        <p className="text-white/80 text-xs">per adult</p>
+                        {(pkg.childPrice || pkg.infantPrice) && (
+                          <p className="text-white/60 text-xs mt-1">
+                            Child/Infant rates available
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

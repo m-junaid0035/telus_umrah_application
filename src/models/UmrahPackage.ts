@@ -3,7 +3,10 @@ import mongoose, { Schema, Document, Model, Types } from "mongoose";
 // Interface for UmrahPackage document
 export interface IUmrahPackage extends Document {
   name: string;
-  price: number;
+  price: number; // Kept for backward compatibility, represents adult price
+  adultPrice: number;
+  childPrice: number;
+  infantPrice: number;
   duration: number;
   badge?: string;
   airline: string;
@@ -46,7 +49,10 @@ export interface IUmrahPackage extends Document {
 const umrahPackageSchema = new Schema<IUmrahPackage>(
   {
     name: { type: String, required: true, trim: true },
-    price: { type: Number, required: true },
+    price: { type: Number, required: true }, // Kept for backward compatibility, represents adult price
+    adultPrice: { type: Number, required: true },
+    childPrice: { type: Number, required: true },
+    infantPrice: { type: Number, required: true },
     duration: { type: Number, required: true },
     badge: { type: String, trim: true },
     airline: { type: String, required: true, trim: true },
