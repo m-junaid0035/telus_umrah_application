@@ -215,7 +215,7 @@ export const getCurrentApplication = async (token: string) => {
  * Serialize user object for client usage
  */
 const serializeUser = (user: IUser) => ({
-  id: user._id.toString(),
+  _id: user._id.toString(),
   name: user.name,
   email: user.email,
   avatar: user.avatar || "",

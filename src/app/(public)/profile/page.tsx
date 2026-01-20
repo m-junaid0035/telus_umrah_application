@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getCurrentUserAction, logoutUserAction } from "@/actions/authActions";
+import { updateUserProfileAction, changeUserPasswordAction } from "@/actions/userActions";
 import { fetchAllPackageBookingsAction } from "@/actions/packageBookingActions";
 import { fetchAllHotelBookingsAction } from "@/actions/hotelBookingActions";
 import { fetchAllCustomUmrahRequestsAction } from "@/actions/customUmrahRequestActions";
@@ -110,7 +111,48 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     try {
       setSaving(true);
-      // TODO: Implement update user profile action
+      
+      // Validate phone number
+      if (!formData.phone || formData.phone.trim() === "") {
+        toast({
+          title: "Error",
+          description: "Phone number is required",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+
+      // Validate name
+      if (!formData.name || formData.name.trim() === "") {
+        toast({
+          title: "Error",
+          description: "Name is required",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+
+      const result = await updateUserProfileAction(user._id || user.id, {
+        name: formData.name,
+        phone: formData.phone,
+        countryCode: formData.countryCode,
+      });
+
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error.message?.[0] || "Failed to update profile",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+
+      // Update local user state
+      setUser(result.data);
+      
       toast({
         title: "Success",
         description: "Profile updated successfully",
@@ -128,6 +170,26 @@ export default function ProfilePage() {
   };
 
   const handleChangePassword = async () => {
+    // Validate current password
+    if (!passwordData.currentPassword || passwordData.currentPassword.trim() === "") {
+      toast({
+        title: "Error",
+        description: "Current password is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate new password
+    if (!passwordData.newPassword || passwordData.newPassword.trim() === "") {
+      toast({
+        title: "Error",
+        description: "New password is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
         title: "Error",
@@ -148,7 +210,18 @@ export default function ProfilePage() {
 
     try {
       setSaving(true);
-      // TODO: Implement change password action
+      
+      const result = await changeUserPasswordAction(user._id || user.id, passwordData.currentPassword, passwordData.newPassword);
+
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error.message?.[0] || "Failed to change password",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Success",
         description: "Password changed successfully",
@@ -684,12 +757,11 @@ export default function ProfilePage() {
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      disabled={!editing}
-                      className="mt-2"
+                      disabled={true}
+                      className="mt-2 bg-gray-50"
+                      readOnly
                     />
+                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                   </div>
                   <div>
                     <Label htmlFor="countryCode">Country Code</Label>

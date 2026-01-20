@@ -103,3 +103,56 @@ export const deleteUser = async (id: string) => {
   return { message: "User deleted successfully" };
 };
 
+/**
+ * Update user profile information
+ */
+export const updateUserProfile = async (userId: string, data: { name?: string; phone?: string; countryCode?: string }) => {
+  await connectToDatabase();
+  
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // Check if phone is being changed and already exists
+  if (data.phone && data.phone !== user.phone) {
+    const existingUser = await User.findOne({ phone: data.phone });
+    if (existingUser && existingUser._id.toString() !== userId) {
+      throw new Error("Phone number already in use");
+    }
+  }
+
+  // Update fields
+  if (data.name !== undefined) user.name = data.name;
+  if (data.phone !== undefined) user.phone = data.phone;
+  if (data.countryCode !== undefined) user.countryCode = data.countryCode;
+
+  await user.save();
+  
+  return serializeUser(user);
+};
+
+/**
+ * Change user password
+ */
+export const changeUserPassword = async (userId: string, currentPassword: string, newPassword: string) => {
+  await connectToDatabase();
+  
+  const user = await User.findById(userId).select("+password");
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // Verify current password
+  const isMatch = await user.comparePassword(currentPassword);
+  if (!isMatch) {
+    throw new Error("Current password is incorrect");
+  }
+
+  // Update password (will be hashed by pre-save hook)
+  user.password = newPassword;
+  await user.save();
+
+  return { message: "Password changed successfully" };
+};
+

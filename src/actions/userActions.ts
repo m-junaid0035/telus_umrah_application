@@ -1,7 +1,7 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/db";
-import { getAllUsers, getRecentUsers, getUserById, getUserStatistics, deleteUser } from "@/functions/userFunctions";
+import { getAllUsers, getRecentUsers, getUserById, getUserStatistics, deleteUser, updateUserProfile, changeUserPassword } from "@/functions/userFunctions";
 
 export type UserFormState = {
   error?: Record<string, string[]> | { message?: string[] };
@@ -59,3 +59,22 @@ export async function deleteUserAction(id: string) {
   }
 }
 
+export async function updateUserProfileAction(userId: string, data: { name?: string; phone?: string; countryCode?: string }) {
+  await connectToDatabase();
+  try {
+    const updatedUser = await updateUserProfile(userId, data);
+    return { data: updatedUser };
+  } catch (error: any) {
+    return { error: { message: [error?.message || "Failed to update profile"] } };
+  }
+}
+
+export async function changeUserPasswordAction(userId: string, currentPassword: string, newPassword: string) {
+  await connectToDatabase();
+  try {
+    const result = await changeUserPassword(userId, currentPassword, newPassword);
+    return { data: result };
+  } catch (error: any) {
+    return { error: { message: [error?.message || "Failed to change password"] } };
+  }
+}
