@@ -268,11 +268,11 @@ export default function ProfilePage() {
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "Error",
-        description: "Image size should be less than 5MB",
+        description: "Image size should be less than 10MB",
         variant: "destructive",
       });
       return;
@@ -281,11 +281,25 @@ export default function ProfilePage() {
     try {
       setUploadingAvatar(true);
       
-      // TODO: Implement avatar upload action
-      // For now, create a local preview URL
-      const previewUrl = URL.createObjectURL(file);
-      
-      setUser({ ...user, avatar: previewUrl });
+      // Create FormData and upload to the server
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "profile-pictures");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload image");
+      }
+
+      // Update user avatar with the server URL
+      const updatedUser = { ...user, avatar: data.url };
+      setUser(updatedUser);
       
       toast({
         title: "Success",
@@ -299,6 +313,7 @@ export default function ProfilePage() {
       });
     } finally {
       setUploadingAvatar(false);
+      event.target.value = "";
     }
   };
 
