@@ -162,31 +162,31 @@ export function Header() {
         shouldShowWhiteBg ? 'bg-white/98 shadow-md' : 'bg-transparent'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-16 sm:h-20">
             {/* Logo */}
-            <Link href="/">
+            <Link href="/" className="flex-shrink-0">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3 cursor-pointer group"
+              className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
             >
               <img 
                 src={shouldShowWhiteBg ? telusUmrahLogo.src : telusUmrahLogoWhite.src} 
                 alt="Telus Umrah - Complete Spiritual Journey" 
-                className="h-16 w-auto transition-all group-hover:scale-105"
+                className="h-12 sm:h-14 md:h-16 w-auto transition-all group-hover:scale-105"
               />
             </motion.div>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1 flex-shrink-0">
               {navItems.map((item, index) => (
                 <Link key={item.path} href={item.path}>
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`px-5 py-2 rounded-lg transition-all relative group ${
+                    className={`px-3 lg:px-5 py-2 rounded-lg transition-all relative group whitespace-nowrap ${
                       shouldShowWhiteBg
                         ? currentPage === item.path
                           ? 'text-blue-600'
@@ -219,7 +219,7 @@ export function Header() {
                 onMouseEnter={() => setUmrahPackagesOpen(true)}
                 onMouseLeave={() => setUmrahPackagesOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${
+                <button className={`px-3 lg:px-5 py-2 rounded-lg transition-all flex items-center gap-1 group whitespace-nowrap ${
                   (currentPage === '/umrah-packages' || currentPage === '/customize-umrah' || currentPage === '/custom-umrah')
                     ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
                     : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
@@ -278,7 +278,7 @@ export function Header() {
                 onMouseEnter={() => setHotelsOpen(true)}
                 onMouseLeave={() => setHotelsOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${
+                <button className={`px-3 lg:px-5 py-2 rounded-lg transition-all flex items-center gap-1 group whitespace-nowrap ${
                   (currentPage === '/hotels')
                     ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
                     : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
@@ -336,7 +336,7 @@ export function Header() {
                 onMouseEnter={() => setAboutOpen(true)}
                 onMouseLeave={() => setAboutOpen(false)}
               >
-                <button className={`px-5 py-2 rounded-lg transition-all flex items-center gap-1 group ${
+                <button className={`px-3 lg:px-5 py-2 rounded-lg transition-all flex items-center gap-1 group whitespace-nowrap ${
                   (currentPage === '/about' || currentPage === '/faq')
                     ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
                     : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
@@ -391,7 +391,7 @@ export function Header() {
               {/* Contact Link */}
               <Link href="/contact">
                 <motion.div
-                  className={`px-5 py-2 rounded-lg transition-all relative group ${
+                  className={`px-3 lg:px-5 py-2 rounded-lg transition-all relative group whitespace-nowrap ${
                     currentPage === '/contact'
                       ? (shouldShowWhiteBg ? 'text-blue-600' : 'text-white')
                       : (shouldShowWhiteBg ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white')
@@ -414,13 +414,14 @@ export function Header() {
               </Link>
 
               {/* CTA Buttons */}
-              <div className={`flex items-center gap-3 ml-4 pl-4 border-l transition-colors ${
+              <div className={`flex items-center gap-2 lg:gap-3 ml-2 lg:ml-4 pl-2 lg:pl-4 border-l transition-colors flex-shrink-0 ${
                 shouldShowWhiteBg ? 'border-gray-200' : 'border-white/30'
               }`}>
-                <Link href="/contact#contact-form">
+                <Link href="/contact#contact-form" className="hidden xl:block">
                   <Button 
                     variant="outline" 
-                    className={`transition-all ${
+                    size="sm"
+                    className={`transition-all whitespace-nowrap ${
                       shouldShowWhiteBg 
                         ? 'border-blue-600 text-blue-600 hover:bg-blue-50' 
                         : 'border-white text-blue-600 hover:bg-white/10'
@@ -432,10 +433,10 @@ export function Header() {
                 
                 {isAuthenticated ? (
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="focus:outline-none">
-                      <Avatar className="h-10 w-10 cursor-pointer ring-2 ring-blue-600 hover:ring-blue-700 transition-all">
+                    <DropdownMenuTrigger className="focus:outline-none flex-shrink-0">
+                      <Avatar className="h-9 w-9 lg:h-10 lg:w-10 cursor-pointer ring-2 ring-blue-600 hover:ring-blue-700 transition-all">
                         <AvatarImage src={user?.avatar} alt={user?.name} />
-                        <AvatarFallback className="bg-blue-600 text-white">
+                        <AvatarFallback className="bg-blue-600 text-white text-sm">
                           {user?.name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -481,7 +482,7 @@ export function Header() {
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         data-register-trigger
-                        className={`px-4 py-2 rounded-lg transition-all cursor-pointer text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl`}
+                        className={`px-3 lg:px-4 py-1.5 lg:py-2 text-sm lg:text-base rounded-lg transition-all cursor-pointer text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl whitespace-nowrap flex-shrink-0`}
                       >
                         {t.header.registerNow}
                       </DropdownMenuTrigger>
@@ -515,7 +516,7 @@ export function Header() {
 
             {/* Mobile Menu Button */}
             <button
-              className={`md:hidden p-2 rounded-lg transition-colors ${
+              className={`lg:hidden p-2 rounded-lg transition-colors flex-shrink-0 ${
                 shouldShowWhiteBg ? 'hover:bg-gray-100' : 'hover:bg-white/10'
               }`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -536,9 +537,9 @@ export function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-t border-gray-200"
+              className="lg:hidden bg-white border-t border-gray-200 max-h-[calc(100vh-80px)] overflow-y-auto"
             >
-              <div className="px-4 py-4 space-y-2 max-w-7xl mx-auto">
+              <div className="px-4 py-4 space-y-2 max-w-7xl mx-auto pb-6">
                 {navItems.map((item) => (
                   <Link
                     key={item.path}

@@ -143,10 +143,21 @@ export const changeUserPassword = async (userId: string, currentPassword: string
     throw new Error("User not found");
   }
 
-  // Verify current password
+  // Verify current password is correct
   const isMatch = await user.comparePassword(currentPassword);
   if (!isMatch) {
     throw new Error("Current password is incorrect");
+  }
+
+  // Validate minimum password length
+  if (!newPassword || newPassword.trim().length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
+  // Prevent reusing the same password
+  const isSame = await user.comparePassword(newPassword);
+  if (isSame) {
+    throw new Error("New password must be different from the current password");
   }
 
   // Update password (will be hashed by pre-save hook)

@@ -190,6 +190,7 @@ export default function ProfilePage() {
       return;
     }
 
+    // Validate password confirmation match
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
         title: "Error",
@@ -199,10 +200,21 @@ export default function ProfilePage() {
       return;
     }
 
+    // Validate minimum password length
     if (passwordData.newPassword.length < 8) {
       toast({
         title: "Error",
         description: "Password must be at least 8 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate password is different from current
+    if (passwordData.newPassword === passwordData.currentPassword) {
+      toast({
+        title: "Error",
+        description: "New password must be different from the current password",
         variant: "destructive",
       });
       return;
