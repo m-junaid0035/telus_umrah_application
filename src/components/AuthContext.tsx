@@ -4,10 +4,13 @@ import { loginUserAction, signupUserAction, logoutUserAction, getCurrentUserActi
 import { toast } from '@/hooks/use-toast';
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   avatar?: string;
+  phone?: string;
+  countryCode?: string;
+  createdAt?: Date;
 }
 
 interface AuthContextType {
