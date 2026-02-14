@@ -57,6 +57,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navItems: NavItem[] = [
     { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { path: "/admin/users", label: "Users", icon: UserCheck },
+    { path: "/admin/agents", label: "Agents", icon: Users },
     { path: "/admin/packages", label: "Packages", icon: Package },
     { path: "/admin/hotels", label: "Hotels", icon: Hotel },
     { path: "/admin/form-options", label: "Form Options", icon: Settings },
@@ -246,13 +247,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="admin-theme flex min-h-screen overflow-hidden">
-      <aside className="hidden sm:flex admin-sidebar w-72 flex-shrink-0 p-6 flex-col fixed top-0 left-0 h-screen overflow-y-auto">
+      <aside className="hidden min-[900px]:flex admin-sidebar w-72 flex-shrink-0 p-6 flex-col fixed top-0 left-0 h-screen overflow-y-auto">
         <SidebarContent />
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 sm:ml-72 relative">
+      <div className="flex-1 flex flex-col min-w-0 min-[900px]:ml-72 relative">
 
-        <header className="sm:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-900/90 via-indigo-900/85 to-blue-900/80 text-white border-b border-white/10 shadow-lg shadow-blue-950/40 flex-shrink-0">
+        <header className="min-[900px]:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-900/90 via-indigo-900/85 to-blue-900/80 text-white border-b border-white/10 shadow-lg shadow-blue-950/40 flex-shrink-0">
           <div className="flex items-center gap-2">
             <Image
               src={telusBlueLogo}
@@ -281,7 +282,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 animate={{ x: 0 }}
                 exit={{ x: -280 }}
                 transition={{ duration: 0.22 }}
-                className="fixed top-0 left-0 z-40 w-72 h-full bg-[#030b1e] p-6 flex flex-col rounded-tr-2xl shadow-lg shadow-blue-950/60 sm:hidden border-r border-white/10 overflow-y-auto"
+                className="fixed top-0 left-0 z-40 w-72 h-full bg-[#030b1e] p-6 flex flex-col rounded-tr-2xl shadow-lg shadow-blue-950/60 min-[900px]:hidden border-r border-white/10 overflow-y-auto"
               >
                 <button
                   className="mb-4 ml-auto rounded-lg p-2 hover:bg-white/10"
@@ -299,7 +300,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 animate={{ opacity: 0.5 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-black/70 z-30 sm:hidden"
+                className="fixed inset-0 bg-black/70 z-30 min-[900px]:hidden"
                 aria-label="Close drawer overlay"
                 onClick={() => setDrawerOpen(false)}
               />
@@ -307,8 +308,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           )}
         </AnimatePresence>
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-10 sm:py-10">
-          <div className="admin-content-shell w-full p-4 sm:p-8">
+        <main className="flex-1 overflow-y-auto px-4 py-6 min-[900px]:px-10 min-[900px]:py-10">
+          <div className="admin-content-shell w-full p-4 min-[900px]:p-8">
             <div className="admin-surface">{children}</div>
           </div>
         </main>

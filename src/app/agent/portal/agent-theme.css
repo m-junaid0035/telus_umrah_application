@@ -1,0 +1,149 @@
+.agent-theme {
+  --agent-bg-start: #0a0118;
+  --agent-bg-mid: #1a0b3b;
+  --agent-bg-end: #060117;
+  --agent-glass: rgba(18, 8, 36, 0.75);
+  --agent-border: rgba(255, 255, 255, 0.12);
+  --agent-card-gradient: linear-gradient(135deg, rgba(139, 92, 246, 0.65), rgba(99, 102, 241, 0.35));
+  --agent-card-overlay: rgba(13, 8, 28, 0.75);
+  --agent-text-strong: #f0eeff;
+  --agent-text-muted: rgba(226, 220, 255, 0.78);
+  --agent-text-soft: rgba(203, 195, 255, 0.65);
+  --agent-shadow: 0 20px 45px rgba(13, 3, 28, 0.65);
+  --agent-shadow-soft: 0 12px 25px rgba(34, 14, 67, 0.45);
+  position: relative;
+  min-height: 100vh;
+  background: radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.28), transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(99, 102, 241, 0.3), transparent 50%),
+    linear-gradient(165deg, var(--agent-bg-mid), var(--agent-bg-end) 55%, #000);
+  color: var(--agent-text-strong);
+  isolation: isolate;
+}
+
+.agent-theme::before,
+.agent-theme::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+}
+
+.agent-theme::before {
+  background: radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.18), transparent 55%),
+    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15), transparent 60%);
+  filter: blur(30px);
+  opacity: 0.9;
+}
+
+.agent-theme::after {
+  background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.03) 0px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 10px
+    ),
+    radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.16), transparent 55%);
+  opacity: 0.75;
+  mix-blend-mode: screen;
+  z-index: -3;
+}
+
+.agent-content-shell {
+  background: var(--agent-glass);
+  border: 1px solid var(--agent-border);
+  border-radius: 2.5rem;
+  box-shadow: var(--agent-shadow);
+  backdrop-filter: blur(18px);
+  min-height: calc(100vh - 6rem);
+}
+
+.agent-theme .agent-surface {
+  background: transparent;
+}
+
+.agent-theme .agent-sidebar {
+  background: rgba(12, 2, 27, 0.8);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.agent-theme [data-slot="card"] {
+  background: var(--agent-card-overlay);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--agent-shadow-soft);
+  color: var(--agent-text-strong);
+  backdrop-filter: blur(12px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.agent-theme [data-slot="card"]:hover {
+  transform: translateY(-3px);
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 18px 35px rgba(18, 8, 45, 0.5);
+}
+
+.agent-theme [data-slot="card-header"] {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.agent-theme [data-slot="card-title"] {
+  color: var(--agent-text-strong);
+  font-weight: 600;
+}
+
+.agent-theme [data-slot="card-description"] {
+  color: var(--agent-text-soft);
+}
+
+.agent-theme [data-slot="table-container"] {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  background: rgba(8, 0, 20, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.05);
+}
+
+.agent-theme [data-slot="table"] {
+  color: var(--agent-text-strong);
+}
+
+.agent-theme [data-slot="table-head"] {
+  color: rgba(226, 220, 255, 0.78);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.agent-theme [data-slot="table-row"] {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.agent-theme [data-slot="table-row"]:hover {
+  background-color: rgba(139, 92, 246, 0.08);
+}
+
+.agent-theme [data-slot="badge"] {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--agent-text-strong);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.agent-theme [data-slot="input"] {
+  background: rgba(12, 2, 32, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--agent-text-strong);
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.08);
+}
+
+.agent-theme [data-slot="input"]::placeholder {
+  color: rgba(203, 195, 255, 0.5);
+}
+
+.agent-theme [data-slot="button"] {
+  border-radius: 999px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}

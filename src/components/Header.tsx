@@ -81,7 +81,7 @@ export function Header() {
     <div className="fixed top-0 left-0 right-0 z-50">
       {/* Top Bar */}
       <div 
-        className={`bg-gradient-to-r from-blue-900 to-blue-800 text-white hidden lg:block transition-all duration-300 overflow-hidden ${
+        className={`bg-gradient-to-r from-blue-900 to-blue-800 text-white hidden min-[900px]:block transition-all duration-300 overflow-hidden ${
           (scrolled || !isHomePage) ? 'h-0 opacity-0 py-0' : 'h-9 opacity-100 py-2'
         }`}
       >
@@ -179,7 +179,7 @@ export function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1 flex-shrink-0">
+            <nav className="hidden min-[900px]:flex items-center gap-1 flex-shrink-0">
               {navItems.map((item, index) => (
                 <Link key={item.path} href={item.path}>
                   <motion.div
@@ -486,7 +486,10 @@ export function Header() {
                       >
                         {t.header.registerNow}
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end" className="w-56">
+                        <div className="px-2 py-2 border-b border-gray-100">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</p>
+                        </div>
                         <DropdownMenuItem
                           onClick={() => {
                             setDialogMode('login');
@@ -507,6 +510,22 @@ export function Header() {
                           <UserPlus className="w-4 h-4 mr-2 text-green-600" />
                           <span>{t.header.signUp}</span>
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <div className="px-2 py-2 border-b border-gray-100">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Travel Agent</p>
+                        </div>
+                        <Link href="/agent/login">
+                          <DropdownMenuItem className="cursor-pointer flex items-center">
+                            <LogIn className="w-4 h-4 mr-2 text-purple-600" />
+                            <span>Agent Login</span>
+                          </DropdownMenuItem>
+                        </Link>
+                        <Link href="/agent/register">
+                          <DropdownMenuItem className="cursor-pointer flex items-center">
+                            <UserPlus className="w-4 h-4 mr-2 text-purple-600" />
+                            <span>Agent Registration</span>
+                          </DropdownMenuItem>
+                        </Link>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -516,7 +535,7 @@ export function Header() {
 
             {/* Mobile Menu Button */}
             <button
-              className={`lg:hidden p-2 rounded-lg transition-colors flex-shrink-0 ${
+              className={`min-[900px]:hidden p-2 rounded-lg transition-colors flex-shrink-0 ${
                 shouldShowWhiteBg ? 'hover:bg-gray-100' : 'hover:bg-white/10'
               }`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -537,7 +556,7 @@ export function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-white border-t border-gray-200 max-h-[calc(100vh-80px)] overflow-y-auto"
+              className="min-[900px]:hidden bg-white border-t border-gray-200 max-h-[calc(100vh-80px)] overflow-y-auto"
             >
               <div className="px-4 py-4 space-y-2 max-w-7xl mx-auto pb-6">
                 {navItems.map((item) => (
@@ -689,7 +708,10 @@ export function Header() {
                         <DropdownMenuTrigger className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center shadow font-medium">
                           {t.header.registerNow}
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-48">
+                        <DropdownMenuContent className="w-56">
+                          <div className="px-2 py-2 border-b border-gray-100">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</p>
+                          </div>
                           <DropdownMenuItem
                             onClick={() => {
                               setDialogMode('login');
@@ -712,6 +734,28 @@ export function Header() {
                             <UserPlus className="w-4 h-4 mr-2 text-green-600" />
                             <span>{t.header.signUp}</span>
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <div className="px-2 py-2 border-b border-gray-100">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Travel Agent</p>
+                          </div>
+                          <Link href="/agent/login">
+                            <DropdownMenuItem 
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="cursor-pointer flex items-center"
+                            >
+                              <LogIn className="w-4 h-4 mr-2 text-purple-600" />
+                              <span>Agent Login</span>
+                            </DropdownMenuItem>
+                          </Link>
+                          <Link href="/agent/register">
+                            <DropdownMenuItem 
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="cursor-pointer flex items-center"
+                            >
+                              <UserPlus className="w-4 h-4 mr-2 text-purple-600" />
+                              <span>Agent Registration</span>
+                            </DropdownMenuItem>
+                          </Link>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
