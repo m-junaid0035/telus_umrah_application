@@ -44,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Loader2, MapPin, Plane, Globe } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { FormOptionType } from "@/models/FormOption";
 
 interface IFormOption {
@@ -54,7 +54,6 @@ interface IFormOption {
   value: string;
   displayOrder: number;
   isActive: boolean;
-  logo?: string;
   createdAt: string;
 }
 
@@ -86,8 +85,6 @@ function FormOptionsTable({
         return "From City";
       case FormOptionType.ToCity:
         return "To City";
-      case FormOptionType.Airline:
-        return "Airline";
       case FormOptionType.AirlineClass:
         return "Airline Class";
       case FormOptionType.Nationality:
@@ -103,8 +100,6 @@ function FormOptionsTable({
         return "bg-blue-100 text-blue-800";
       case FormOptionType.ToCity:
         return "bg-green-100 text-green-800";
-      case FormOptionType.Airline:
-        return "bg-purple-100 text-purple-800";
       case FormOptionType.AirlineClass:
         return "bg-orange-100 text-orange-800";
       case FormOptionType.Nationality:
@@ -213,7 +208,7 @@ export default function FormOptionsPage() {
     setLoading(true);
     const result = await fetchAllFormOptionsAction();
     if (result?.data && Array.isArray(result.data)) {
-      setOptions(result.data);
+      setOptions(result.data.filter((option) => option.type !== "airline"));
     } else {
       toast({
         title: "Error",
@@ -279,7 +274,6 @@ export default function FormOptionsPage() {
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value={FormOptionType.FromCity}>From Cities</SelectItem>
               <SelectItem value={FormOptionType.ToCity}>To Cities</SelectItem>
-              <SelectItem value={FormOptionType.Airline}>Airlines</SelectItem>
               <SelectItem value={FormOptionType.AirlineClass}>Airline Classes</SelectItem>
               <SelectItem value={FormOptionType.Nationality}>Nationalities</SelectItem>
             </SelectContent>

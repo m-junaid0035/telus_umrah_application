@@ -26,7 +26,6 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { FormOptionType } from "@/models/FormOption";
 import Link from "next/link";
-import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export default function EditFormOptionPage() {
   const { id } = useParams();
@@ -48,7 +47,6 @@ export default function EditFormOptionPage() {
     name: "",
     displayOrder: 0,
     isActive: true,
-    logo: "",
   });
 
   useEffect(() => {
@@ -61,7 +59,6 @@ export default function EditFormOptionPage() {
           name: res.data.name,
           displayOrder: res.data.displayOrder || 0,
           isActive: res.data.isActive !== false,
-          logo: res.data.logo || "",
         });
       } else {
         toast({
@@ -189,7 +186,6 @@ export default function EditFormOptionPage() {
                   <SelectContent>
                     <SelectItem value={FormOptionType.FromCity}>From City</SelectItem>
                     <SelectItem value={FormOptionType.ToCity}>To City</SelectItem>
-                    <SelectItem value={FormOptionType.Airline}>Airline</SelectItem>
                     <SelectItem value={FormOptionType.AirlineClass}>Airline Class</SelectItem>
                     <SelectItem value={FormOptionType.Nationality}>Nationality</SelectItem>
                   </SelectContent>
@@ -240,24 +236,6 @@ export default function EditFormOptionPage() {
                   Lower numbers appear first (0 = first)
                 </p>
               </div>
-
-              {formData.type === FormOptionType.Airline && (
-                <div>
-                  <ImageUpload
-                    value={formData.logo}
-                    onChange={(url) => setFormData({ ...formData, logo: url })}
-                    folder="airlines"
-                    label="Logo (Optional)"
-                  />
-                  <input type="hidden" name="logo" value={formData.logo} />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Upload airline logo image
-                  </p>
-                </div>
-              )}
-              {formData.type !== FormOptionType.Airline && (
-                <input type="hidden" name="logo" value={formData.logo || ""} />
-              )}
 
               <div className="md:col-span-2 flex items-center space-x-2">
                 <Switch

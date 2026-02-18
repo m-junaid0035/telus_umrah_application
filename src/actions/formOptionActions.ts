@@ -20,7 +20,6 @@ const formOptionSchema = z.object({
   value: z.string().trim().min(1, "Value is required"),
   displayOrder: z.number().int().optional(),
   isActive: z.boolean().optional(),
-  logo: z.string().trim().optional(),
 });
 
 // ================= UTILITY =================
@@ -43,7 +42,6 @@ function parseFormOptionFormData(formData: FormData) {
     value: str(formData, "value"),
     displayOrder: formData.get("displayOrder") ? Number(formData.get("displayOrder")) : undefined,
     isActive: formData.get("isActive") === "true" || formData.get("isActive") === "on",
-    logo: str(formData, "logo") || undefined,
   };
 }
 

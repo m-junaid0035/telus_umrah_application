@@ -29,6 +29,7 @@ import {
 } from "@/actions/packageActions";
 
 import { fetchAllHotelsAction } from "@/actions/hotelActions";
+import { fetchActiveAirlinesAction } from "@/actions/airlineActions";
 import { fetchAllFeaturesAction } from "@/actions/featureActions";
 import { fetchAllItinerariesAction } from "@/actions/itinerariesActions";
 import { fetchAllIncludesAction } from "@/actions/includeActions";
@@ -69,6 +70,13 @@ interface IExclude {
 interface IPolicy {
   _id: string;
   heading: string;
+}
+interface IAirline {
+  _id: string;
+  name: string;
+  logo?: string;
+  displayOrder: number;
+  isActive: boolean;
 }
 
 type ReactSelectOption = { value: string; label: string };
@@ -136,6 +144,7 @@ export default function EditUmrahPackageForm() {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const [hotels, setHotels] = useState<IHotel[]>([]);
+  const [airlines, setAirlines] = useState<IAirline[]>([]);
   const [features, setFeatures] = useState<IFeature[]>([]);
   const [itineraries, setItineraries] = useState<IItinerary[]>([]);
   const [includes, setIncludes] = useState<IInclude[]>([]);
@@ -161,6 +170,7 @@ export default function EditUmrahPackageForm() {
         const [
           pkgRes,
           hotelsRes,
+          airlinesRes,
           featuresRes,
           itinerariesRes,
           includesRes,
@@ -169,6 +179,7 @@ export default function EditUmrahPackageForm() {
         ] = await Promise.all([
           fetchUmrahPackageByIdAction(packageId),
           fetchAllHotelsAction(),
+          fetchActiveAirlinesAction(),
           fetchAllFeaturesAction(),
           fetchAllItinerariesAction(),
           fetchAllIncludesAction(),
@@ -189,6 +200,7 @@ export default function EditUmrahPackageForm() {
         }
 
         if (hotelsRes?.data) setHotels(hotelsRes.data);
+        if (airlinesRes?.data) setAirlines(airlinesRes.data);
         if (featuresRes?.data) setFeatures(featuresRes.data);
         if (itinerariesRes?.data) setItineraries(itinerariesRes.data);
         if (includesRes?.data) setIncludes(includesRes.data);
@@ -319,7 +331,21 @@ export default function EditUmrahPackageForm() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="airline">Airline</Label>
-                <Input id="airline" name="airline" defaultValue={pkgData.airline} required />
+                <select
+                  id="airline"
+                  name="airline"
+                  defaultValue={pkgData.airline}
+                  required
+                  className="border border-slate-700 bg-slate-800 text-white p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  style={{ backgroundColor: "#1e293b", color: "#fff" }}
+                >
+                  <option value="" style={{ backgroundColor: "#1e293b", color: "#fff" }}>Select airline</option>
+                  {airlines.map((airline) => (
+                    <option key={airline._id} value={airline.name} style={{ backgroundColor: "#1e293b", color: "#fff" }}>
+                      {airline.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label htmlFor="departureCity">Departure City</Label>

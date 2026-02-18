@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchAllUmrahPackagesAction } from '@/actions/packageActions';
 import { fetchAllHotelsAction } from '@/actions/hotelActions';
+import { fetchActiveAirlinesAction } from '@/actions/airlineActions';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import {
@@ -34,20 +35,6 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
-
-
-// Import airline logos
-import sereneAirLogo from '@/assets/serene-air-logo.png';
-import gulfAirLogo from '@/assets/gulf-air-logo.png';
-import turkishAirlinesLogo from '@/assets/turkish-airline-logo.png';
-import qatarAirwaysLogo from '@/assets/qatar-air-logo.png';
-import thaiAirwaysLogo from '@/assets/thai-air.png';
-import saudiaLogo from '@/assets/saudi-air-logo.png';
-import piaLogo from '@/assets/pia-logo.png';
-import etihadLogo from '@/assets/etihad-logo.png';
-import shaheenAirLogo from '@/assets/shaheen-logo.png';
-import emiratesLogo from '@/assets/emirates-logo.png';
-import airblueLogo from '@/assets/airblue-logo.png';
 
 // Import hero carousel images
 import heroImage1 from '@/assets/hero-bg-1.png';
@@ -88,39 +75,6 @@ const stats = [
   { number: '24/7', label: 'Customer Support', icon: Clock },
 ];
 
-// Airline logos data
-const airlines = [
-  { name: 'Emirates', logo: emiratesLogo },
-  { name: 'Etihad Airways', logo: etihadLogo },
-  { name: 'Qatar Airways', logo: qatarAirwaysLogo },
-  { name: 'Turkish Airlines', logo: turkishAirlinesLogo },
-  { name: 'Gulf Air', logo: gulfAirLogo },
-  { name: 'Thai Airways', logo: thaiAirwaysLogo },
-  { name: 'Saudia', logo: saudiaLogo },
-  { name: 'PIA', logo: piaLogo },
-  { name: 'Serene Air', logo: sereneAirLogo },
-  { name: 'Airblue', logo: airblueLogo },
-  { name: 'Shaheen Air', logo: shaheenAirLogo },
-];
-
-// Helper function to get airline logo
-const getAirlineLogo = (airlineName: string) => {
-  const airlineMap: { [key: string]: string } = {
-    'Pakistan International Airlines': piaLogo.src,
-    'Saudi Airlines': saudiaLogo.src,
-    'Emirates': emiratesLogo.src,
-    'Qatar Airways': qatarAirwaysLogo.src,
-    'Turkish Airlines': turkishAirlinesLogo.src,
-    'Etihad Airways': etihadLogo.src,
-    'Gulf Air': gulfAirLogo.src,
-    'Thai Airways': thaiAirwaysLogo.src,
-    'Serene Air': sereneAirLogo.src,
-    'Airblue': airblueLogo.src,
-    'Shaheen Air': shaheenAirLogo.src,
-  };
-  return airlineMap[airlineName] || piaLogo;
-};
-
 // Interface for backend hotel data
 interface BackendHotel {
   _id: string;
@@ -132,6 +86,12 @@ interface BackendHotel {
   images?: string[];
   amenities?: string[];
   description?: string;
+}
+
+interface BackendAirline {
+  _id: string;
+  name: string;
+  logo?: string;
 }
 
 // Our Services Data
@@ -213,7 +173,11 @@ export function HomePage() {
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [hotels, setHotels] = useState<BackendHotel[]>([]);
   const [loadingHotels, setLoadingHotels] = useState(true);
+  const [airlines, setAirlines] = useState<BackendAirline[]>([]);
   const { convertPrice } = useCurrency();
+
+  const getAirlineLogo = (airlineName: string) =>
+    airlines.find((airline) => airline.name === airlineName)?.logo;
 
   // Fetch packages from backend
   useEffect(() => {
@@ -275,6 +239,22 @@ export function HomePage() {
       }
     };
     loadHotels();
+  }, []);
+
+  // Fetch active airlines from backend
+  useEffect(() => {
+    const loadAirlines = async () => {
+      try {
+        const result = await fetchActiveAirlinesAction();
+        if (result?.data && Array.isArray(result.data)) {
+          setAirlines(result.data.filter((airline: BackendAirline) => !!airline.logo));
+        }
+      } catch {
+        // keep section empty on failure
+      }
+    };
+
+    loadAirlines();
   }, []);
 
   // Check scroll position to show/hide arrows
@@ -589,6 +569,13 @@ export function HomePage() {
                   <div className="package-card-footer mt-auto">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
                       <div className="flex items-center gap-2">
+                        {getAirlineLogo(pkg.airline) && (
+                          <img
+                            src={getAirlineLogo(pkg.airline)}
+                            alt={pkg.airline}
+                            className="w-8 h-8 object-contain rounded border bg-white p-1"
+                          />
+                        )}
                         <div>
                           <p className="text-xs text-gray-500">Airline</p>
                           <p className="font-semibold text-sm text-gray-800">{pkg.airline}</p>
@@ -786,7 +773,7 @@ export function HomePage() {
                     whileHover={{ scale: 1.05, y: -4 }}
                   >
                     <img
-                      src={airline.logo.src}
+                      src={airline.logo}
                       alt={airline.name}
                       className="max-w-full max-h-full object-contain transition-all duration-300"
                     />
@@ -801,7 +788,7 @@ export function HomePage() {
                     whileHover={{ scale: 1.05, y: -4 }}
                   >
                     <img
-                      src={airline.logo.src}
+                      src={airline.logo}
                       alt={airline.name}
                       className="max-w-full max-h-full object-contain transition-all duration-300"
                     />

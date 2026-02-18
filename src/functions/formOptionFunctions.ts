@@ -13,7 +13,6 @@ const serializeFormOption = (option: any) => ({
   value: option.value,
   displayOrder: option.displayOrder || 0,
   isActive: option.isActive !== false,
-  logo: option.logo || undefined,
   createdAt: option.createdAt?.toISOString() || "",
   updatedAt: option.updatedAt?.toISOString() || "",
 });
@@ -27,7 +26,6 @@ export const createFormOption = async (data: {
   value: string;
   displayOrder?: number;
   isActive?: boolean;
-  logo?: string;
 }) => {
   await connectToDatabase();
   const option = await new FormOption(data).save();

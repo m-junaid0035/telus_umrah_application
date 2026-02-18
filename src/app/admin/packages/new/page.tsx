@@ -25,6 +25,7 @@ import {
 
 import { createUmrahPackageAction } from "@/actions/packageActions";
 import { fetchAllHotelsAction } from "@/actions/hotelActions";
+import { fetchActiveAirlinesAction } from "@/actions/airlineActions";
 import { fetchAllFeaturesAction } from "@/actions/featureActions";
 import { fetchAllItinerariesAction } from "@/actions/itinerariesActions";
 import { fetchAllIncludesAction } from "@/actions/includeActions";
@@ -63,6 +64,13 @@ export interface IPolicy {
   _id: string;
   heading: string;
   description: string;
+}
+export interface IAirline {
+  _id: string;
+  name: string;
+  logo?: string;
+  displayOrder: number;
+  isActive: boolean;
 }
 
 interface FieldErrors {
@@ -136,6 +144,7 @@ export default function CreateUmrahPackageForm() {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const [hotels, setHotels] = useState<IHotel[]>([]);
+  const [airlines, setAirlines] = useState<IAirline[]>([]);
   const [features, setFeatures] = useState<IFeature[]>([]);
   const [itineraries, setItineraries] = useState<IItinerary[]>([]);
   const [includes, setIncludes] = useState<IInclude[]>([]);
@@ -186,6 +195,7 @@ export default function CreateUmrahPackageForm() {
       try {
         const [
           hotelsRes,
+          airlinesRes,
           featuresRes,
           itinerariesRes,
           includesRes,
@@ -193,6 +203,7 @@ export default function CreateUmrahPackageForm() {
           policiesRes,
         ] = await Promise.all([
           fetchAllHotelsAction(),
+          fetchActiveAirlinesAction(),
           fetchAllFeaturesAction(),
           fetchAllItinerariesAction(),
           fetchAllIncludesAction(),
@@ -201,6 +212,7 @@ export default function CreateUmrahPackageForm() {
         ]);
 
         if (hotelsRes?.data) setHotels(hotelsRes.data);
+        if (airlinesRes?.data) setAirlines(airlinesRes.data);
         if (featuresRes?.data) setFeatures(featuresRes.data);
         if (itinerariesRes?.data) setItineraries(itinerariesRes.data);
         if (includesRes?.data) setIncludes(includesRes.data);
@@ -518,14 +530,23 @@ export default function CreateUmrahPackageForm() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="airline">Airline</Label>
-                <Input 
+                <select
                   id="airline" 
                   name="airline" 
                   required 
                   value={formValues.airline}
                   onChange={(e) => setFormValues({ ...formValues, airline: e.target.value })}
                   aria-invalid={errorFor("airline") ? "true" : "false"}
-                />
+                  className="border border-slate-700 bg-slate-800 text-white p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  style={{ backgroundColor: "#1e293b", color: "#fff" }}
+                >
+                  <option value="" style={{ backgroundColor: "#1e293b", color: "#fff" }}>Select airline</option>
+                  {airlines.map((airline) => (
+                    <option key={airline._id} value={airline.name} style={{ backgroundColor: "#1e293b", color: "#fff" }}>
+                      {airline.name}
+                    </option>
+                  ))}
+                </select>
                 {errorFor("airline") && <p className="text-sm text-red-500">{errorFor("airline")}</p>}
               </div>
               <div>

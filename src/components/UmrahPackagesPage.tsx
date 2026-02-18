@@ -27,6 +27,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
 import { fetchAllUmrahPackagesAction } from '@/actions/packageActions';
+import { fetchActiveAirlinesAction } from '@/actions/airlineActions';
 import { PackageBookingDialog } from './PackageBookingDialog';
 import { toast } from '@/hooks/use-toast';
 
@@ -35,36 +36,11 @@ import { toast } from '@/hooks/use-toast';
 import makkahIcon from '@/assets/makkah-icon.png';
 import madinaIcon from '@/assets/madina-icon.png';
 
-// Import airline logos
-import sereneAirLogo from '@/assets/serene-air-logo.png';
-import gulfAirLogo from '@/assets/gulf-air-logo.png';
-import turkishAirlinesLogo from '@/assets/turkish-airline-logo.png';
-import qatarAirwaysLogo from '@/assets/qatar-air-logo.png';
-import thaiAirwaysLogo from '@/assets/thai-air.png';
-import saudiaLogo from '@/assets/saudi-air-logo.png';
-import piaLogo from '@/assets/pia-logo.png';
-import etihadLogo from '@/assets/etihad-logo.png';
-import shaheenAirLogo from '@/assets/shaheen-logo.png';
-import emiratesLogo from '@/assets/emirates-logo.png';
-import airblueLogo from '@/assets/airblue-logo.png';
-
-// Helper function to get airline logo
-const getAirlineLogo = (airlineName: string) => {
-  const airlineMap: { [key: string]: string } = {
-    'Pakistan International Airlines': piaLogo.src,
-    'Saudi Airlines': saudiaLogo.src,
-    'Emirates': emiratesLogo.src,
-    'Qatar Airways': qatarAirwaysLogo.src,
-    'Turkish Airlines': turkishAirlinesLogo.src,
-    'Etihad Airways': etihadLogo.src,
-    'Gulf Air': gulfAirLogo.src,
-    'Thai Airways': thaiAirwaysLogo.src,
-    'Serene Air': sereneAirLogo.src,
-    'Airblue': airblueLogo.src,
-    'Shaheen Air': shaheenAirLogo.src,
-  };
-  return airlineMap[airlineName] || piaLogo;
-};
+interface IAirline {
+  _id: string;
+  name: string;
+  logo?: string;
+}
 
 interface Package {
   _id: string;
@@ -107,6 +83,7 @@ export function UmrahPackagesPage() {
   const { user } = useAuth();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [packages, setPackages] = useState<Package[]>([]);
+  const [airlines, setAirlines] = useState<IAirline[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState('all');
@@ -141,6 +118,20 @@ export function UmrahPackagesPage() {
     };
     loadPackages();
   }, []);
+
+  useEffect(() => {
+    const loadAirlines = async () => {
+      const result = await fetchActiveAirlinesAction();
+      if (result?.data && Array.isArray(result.data)) {
+        setAirlines(result.data);
+      }
+    };
+
+    loadAirlines();
+  }, []);
+
+  const getAirlineLogo = (airlineName: string) =>
+    airlines.find((airline) => airline.name === airlineName)?.logo;
 
   // Filter packages
   let filteredPackages = packages.filter(pkg => {
@@ -484,6 +475,13 @@ export function UmrahPackagesPage() {
                   <div className="package-card-footer">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
                       <div className="flex items-center gap-2">
+                        {getAirlineLogo(pkg.airline) && (
+                          <img
+                            src={getAirlineLogo(pkg.airline)}
+                            alt={pkg.airline}
+                            className="w-8 h-8 object-contain rounded border bg-white p-1"
+                          />
+                        )}
                         <div>
                           <p className="text-xs text-gray-500">Airline</p>
                           <p className="font-semibold text-sm text-gray-800">{pkg.airline}</p>

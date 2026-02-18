@@ -13,33 +13,13 @@ import { format, isBefore, startOfDay, addDays } from 'date-fns';
 import { createCustomUmrahRequestAction } from '@/actions/customUmrahRequestActions';
 import { fetchAllHotelsAction } from '@/actions/hotelActions';
 import { fetchFormOptionsByTypeAction } from '@/actions/formOptionActions';
+import { fetchActiveAirlinesAction } from '@/actions/airlineActions';
 import { fetchActiveAdditionalServicesAction } from '@/actions/additionalServiceActions';
 import { ServiceTypeDialog } from '@/components/ServiceTypeDialog';
 import { FormOptionType } from '@/models/FormOption';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
 import { LoginDialog } from './LoginDialog';
-
-// Import airline logos
-import sereneAirLogo from '@/assets/serene-air-logo.png';
-import gulfAirLogo from '@/assets/gulf-air-logo.png';
-import turkishAirlinesLogo from '@/assets/turkish-airline-logo.png';
-import qatarAirwaysLogo from '@/assets/qatar-air-logo.png';
-import saudiaLogo from '@/assets/saudi-air-logo.png';
-import piaLogo from '@/assets/pia-logo.png';
-import emiratesLogo from '@/assets/emirates-logo.png';
-
-// Form options now fetched from backend
-// Airlines logos mapping for display
-const airlineLogoMap: Record<string, any> = {
-  'Emirates': emiratesLogo,
-  'Qatar Airways': qatarAirwaysLogo,
-  'Turkish Airlines': turkishAirlinesLogo,
-  'Saudia': saudiaLogo,
-  'PIA': piaLogo,
-  'Gulf Air': gulfAirLogo,
-  'Serene Air': sereneAirLogo,
-};
 
 const serviceTypeIconMap: Record<string, React.ElementType> = {
   umrahVisa: Award,
@@ -154,7 +134,7 @@ export function CustomUmrahForm() {
         const [fromCitiesRes, toCitiesRes, airlinesRes, airlineClassesRes, nationalitiesRes, servicesRes] = await Promise.all([
           fetchFormOptionsByTypeAction(FormOptionType.FromCity),
           fetchFormOptionsByTypeAction(FormOptionType.ToCity),
-          fetchFormOptionsByTypeAction(FormOptionType.Airline),
+          fetchActiveAirlinesAction(),
           fetchFormOptionsByTypeAction(FormOptionType.AirlineClass),
           fetchFormOptionsByTypeAction(FormOptionType.Nationality),
           fetchActiveAdditionalServicesAction(),
@@ -164,23 +144,24 @@ export function CustomUmrahForm() {
           setFromCities(fromCitiesRes.data.map(opt => ({
             name: opt.name,
             value: opt.value,
-            logo: opt.logo,
           })));
         }
         
         if (toCitiesRes?.data) {
-          setToCities(toCitiesRes.data.map(opt => ({
-            name: opt.name,
-            value: opt.value,
-            logo: opt.logo,
-          })));
+          setToCities(
+            toCitiesRes.data.map((opt) => ({
+              name: opt.name,
+              value: opt.value,
+            }))
+          );
         }
         
         if (airlinesRes?.data) {
-          setAirlines(airlinesRes.data.map(opt => ({
+          const airlineItems = airlinesRes.data as Array<{ name: string; logo?: string }>;
+          setAirlines(airlineItems.map((opt) => ({
             name: opt.name,
-            value: opt.value,
-            logo: opt.logo || airlineLogoMap[opt.name],
+            value: opt.name,
+            logo: opt.logo,
           })));
         }
         

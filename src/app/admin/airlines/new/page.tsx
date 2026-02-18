@@ -1,39 +1,26 @@
 "use client";
 
-import { useState, useEffect, startTransition } from "react";
+import { useState, useEffect, useActionState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useActionState } from "react";
-import { createFormOptionAction } from "@/actions/formOptionActions";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "@/components/ui/card";
+import { createAirlineAction } from "@/actions/airlineActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { FormOptionType } from "@/models/FormOption";
 import Link from "next/link";
 
-export default function NewFormOptionPage() {
+export default function NewAirlinePage() {
   const router = useRouter();
-  const [formState, formAction] = useActionState(createFormOptionAction, {});
+  const [formState, formAction] = useActionState(createAirlineAction, {});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
-    type: "" as FormOptionType | "",
     name: "",
+    logo: "",
     displayOrder: 0,
     isActive: true,
   });
@@ -42,9 +29,9 @@ export default function NewFormOptionPage() {
     if (formState?.data) {
       toast({
         title: "Success",
-        description: "Form option created successfully!",
+        description: "Airline created successfully!",
       });
-      router.push("/admin/form-options");
+      router.push("/admin/airlines");
     } else if (formState?.error) {
       const errorMessages = Object.values(formState.error).flat();
       errorMessages.forEach((msg: unknown) => {
@@ -82,8 +69,7 @@ export default function NewFormOptionPage() {
 
   const errorFor = (field: string): boolean => {
     if (!formState?.error) return false;
-    // Check if error is a Record with field errors
-    if (typeof formState.error === 'object' && !('message' in formState.error)) {
+    if (typeof formState.error === "object" && !("message" in formState.error)) {
       return !!(formState.error as Record<string, string[]>)[field];
     }
     return false;
@@ -91,85 +77,47 @@ export default function NewFormOptionPage() {
 
   const getErrorMessage = (field: string): string => {
     if (!formState?.error) return "";
-    if (typeof formState.error === 'object' && !('message' in formState.error)) {
-      const fieldErrors = (formState.error as Record<string, string[]>)[field];
-      return Array.isArray(fieldErrors) && fieldErrors.length > 0 ? fieldErrors[0] : "";
+    if (typeof formState.error === "object" && !("message" in formState.error)) {
+      const errors = (formState.error as Record<string, string[]>)[field];
+      return errors?.[0] || "";
     }
     return "";
   };
 
-  useEffect(() => {
-    if (formState?.formData) {
-      setFormData((prev) => ({ ...prev, ...formState.formData }));
-    }
-  }, [formState?.formData]);
-
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/form-options">
+        <Link href="/admin/airlines">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">Create Form Option</h1>
-          <p className="text-gray-600 mt-1">Add a new option for custom Umrah form</p>
+          <h1 className="text-3xl font-bold">Create Airline</h1>
+          <p className="text-gray-600 mt-1">Add an airline with logo for universal usage</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Form Option Details</CardTitle>
+          <CardTitle>Airline Details</CardTitle>
           <CardDescription>
-            Create options that will appear in the custom Umrah booking form
+            This airline will be available across admin and website dropdowns/sections
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <Label htmlFor="type">
-                  Option Type <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={formData.type || undefined}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, type: value as FormOptionType })
-                  }
-                  required
-                >
-                  <SelectTrigger
-                    className={errorFor("type") ? "border-red-500" : ""}
-                    aria-invalid={errorFor("type")}
-                  >
-                    <SelectValue placeholder="Select option type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={FormOptionType.FromCity}>From City</SelectItem>
-                    <SelectItem value={FormOptionType.ToCity}>To City</SelectItem>
-                    <SelectItem value={FormOptionType.AirlineClass}>Airline Class</SelectItem>
-                    <SelectItem value={FormOptionType.Nationality}>Nationality</SelectItem>
-                  </SelectContent>
-                </Select>
-                <input type="hidden" name="type" value={formData.type} required />
-                {errorFor("type") && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {getErrorMessage("type") || "Type is required"}
-                  </p>
-                )}
-              </div>
-
-              <div>
                 <Label htmlFor="name">
-                  Name <span className="text-red-500">*</span>
+                  Airline Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
                   name="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Karachi, Pakistan"
+                  placeholder="e.g., Qatar Airways"
                   required
                   className={errorFor("name") ? "border-red-500" : ""}
                   aria-invalid={errorFor("name")}
@@ -179,12 +127,16 @@ export default function NewFormOptionPage() {
                     {getErrorMessage("name") || "Name is required"}
                   </p>
                 )}
-                {/* Auto-generated value from name */}
-                <input 
-                  type="hidden" 
-                  name="value" 
-                  value={formData.name.toLowerCase().replace(/\s+/g, "-")} 
+              </div>
+
+              <div className="md:col-span-2">
+                <ImageUpload
+                  value={formData.logo}
+                  onChange={(url) => setFormData({ ...formData, logo: url })}
+                  folder="airlines"
+                  label="Airline Logo"
                 />
+                <input type="hidden" name="logo" value={formData.logo} />
               </div>
 
               <div>
@@ -193,15 +145,13 @@ export default function NewFormOptionPage() {
                   id="displayOrder"
                   name="displayOrder"
                   type="number"
+                  min="0"
                   value={formData.displayOrder}
                   onChange={(e) =>
                     setFormData({ ...formData, displayOrder: Number(e.target.value) || 0 })
                   }
                   placeholder="0"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Lower numbers appear first (0 = first)
-                </p>
               </div>
 
               <div className="md:col-span-2 flex items-center space-x-2">
@@ -215,7 +165,7 @@ export default function NewFormOptionPage() {
                 />
                 <input type="hidden" name="isActive" value={formData.isActive ? "true" : "false"} />
                 <Label htmlFor="isActive" className="cursor-pointer">
-                  Active (visible in forms)
+                  Active (visible on website and forms)
                 </Label>
               </div>
             </div>
@@ -224,18 +174,18 @@ export default function NewFormOptionPage() {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => router.push("/admin/form-options")}
+                onClick={() => router.push("/admin/airlines")}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button type="submit" disabled={isSubmitting || isPending}>
+                {isSubmitting || isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Creating...
                   </>
                 ) : (
-                  "Create Option"
+                  "Create Airline"
                 )}
               </Button>
             </div>
@@ -245,4 +195,3 @@ export default function NewFormOptionPage() {
     </div>
   );
 }
-

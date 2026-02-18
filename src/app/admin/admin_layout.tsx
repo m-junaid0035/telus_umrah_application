@@ -25,6 +25,7 @@ import {
   Calendar,
   Settings,
   Sparkles,
+  Plane,
 } from "lucide-react";
 import { logoutAdminAction } from "@/actions/authActions";
 import telusBlueLogo from "@/assets/telus-umrah-blue.png";
@@ -169,6 +170,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         <div className="mb-2">
           <p className={sectionHeadingClass}>Content</p>
+          <Link
+            href="/admin/airlines"
+            className={linkClasses("/admin/airlines")}
+            onClick={() => setDrawerOpen(false)}
+          >
+            <Plane className="w-4 h-4" />
+            Airlines
+          </Link>
           <Link
             href="/admin/form-options"
             className={linkClasses("/admin/form-options")}

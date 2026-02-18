@@ -3,7 +3,6 @@ import mongoose, { Schema, Document, Model, Types } from "mongoose";
 export enum FormOptionType {
   FromCity = "fromCity",
   ToCity = "toCity",
-  Airline = "airline",
   AirlineClass = "airlineClass",
   Nationality = "nationality",
 }
@@ -15,7 +14,6 @@ export interface IFormOption extends Document {
   value: string; // The actual value used in forms
   displayOrder?: number; // For sorting
   isActive?: boolean;
-  logo?: string; // For airlines
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,10 +42,6 @@ const formOptionSchema = new Schema<IFormOption>(
     isActive: {
       type: Boolean,
       default: true,
-    },
-    logo: {
-      type: String,
-      trim: true,
     },
   },
   {
