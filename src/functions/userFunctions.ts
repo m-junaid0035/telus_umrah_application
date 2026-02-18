@@ -106,7 +106,7 @@ export const deleteUser = async (id: string) => {
 /**
  * Update user profile information
  */
-export const updateUserProfile = async (userId: string, data: { name?: string; phone?: string; countryCode?: string }) => {
+export const updateUserProfile = async (userId: string, data: { name?: string; phone?: string; countryCode?: string; avatar?: string }) => {
   await connectToDatabase();
   
   const user = await User.findById(userId);
@@ -126,6 +126,7 @@ export const updateUserProfile = async (userId: string, data: { name?: string; p
   if (data.name !== undefined) user.name = data.name;
   if (data.phone !== undefined) user.phone = data.phone;
   if (data.countryCode !== undefined) user.countryCode = data.countryCode;
+  if (data.avatar !== undefined) user.avatar = data.avatar;
 
   await user.save();
   

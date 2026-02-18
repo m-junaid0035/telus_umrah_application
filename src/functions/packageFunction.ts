@@ -98,13 +98,25 @@
 export const getAllUmrahPackages = async () => {
   const packages = await UmrahPackage.find().sort({ createdAt: -1 }).lean();
   
-  // Populate hotels and features for all packages
+  // Populate hotels, features, itinerary, includes, excludes, and policies for all packages
   const packagesWithData = await Promise.all(
     packages.map(async (pkg) => {
       const makkahHotel = pkg.hotels?.makkah ? await Hotel.findById(pkg.hotels.makkah).lean() : null;
       const madinahHotel = pkg.hotels?.madinah ? await Hotel.findById(pkg.hotels.madinah).lean() : null;
       const features = pkg.features && pkg.features.length > 0
         ? await PackageFeature.find({ _id: { $in: pkg.features } }).lean()
+        : [];
+      const itineraries = pkg.itinerary && pkg.itinerary.length > 0
+        ? await Itinerary.find({ _id: { $in: pkg.itinerary } }).lean()
+        : [];
+      const includes = pkg.includes && pkg.includes.length > 0
+        ? await PackageInclude.find({ _id: { $in: pkg.includes } }).lean()
+        : [];
+      const excludes = pkg.excludes && pkg.excludes.length > 0
+        ? await PackageExclude.find({ _id: { $in: pkg.excludes } }).lean()
+        : [];
+      const policies = pkg.policies && pkg.policies.length > 0
+        ? await PackagePolicy.find({ _id: { $in: pkg.policies } }).lean()
         : [];
 
       return {
@@ -129,6 +141,23 @@ export const getAllUmrahPackages = async () => {
           _id: f._id.toString(),
           feature_text: f.feature_text,
         })),
+        itinerary: itineraries.map((i: any) => ({
+          _id: i._id.toString(),
+          day: i.day,
+          description: i.description,
+        })),
+        includes: includes.map((i: any) => ({
+          _id: i._id.toString(),
+          include_text: i.include_text,
+        })),
+        excludes: excludes.map((e: any) => ({
+          _id: e._id.toString(),
+          exclude_text: e.exclude_text,
+        })),
+        policies: policies.map((p: any) => ({
+          _id: p._id.toString(),
+          description: p.description || p.heading,
+        })),
       };
     })
   );
@@ -152,6 +181,10 @@ export const getAllUmrahPackages = async () => {
     rating: pkg.rating,
     reviews: pkg.reviews,
     flights: pkg.flights || { departure: {}, arrival: {} },
+    itinerary: pkg.itinerary || [],
+    includes: pkg.includes || [],
+    excludes: pkg.excludes || [],
+    policies: pkg.policies || [],
     createdAt: pkg.createdAt?.toISOString(),
     updatedAt: pkg.updatedAt?.toISOString(),
   }));

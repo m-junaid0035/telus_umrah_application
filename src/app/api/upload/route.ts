@@ -5,13 +5,14 @@ import { existsSync } from "fs";
 import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
-  // Check authentication - only admin can upload files
+  // Check authentication - allow admin and logged-in user
   const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
+  const adminToken = cookieStore.get("token")?.value;
+  const userToken = cookieStore.get("userToken")?.value;
 
-  if (!token) {
+  if (!adminToken && !userToken) {
     return NextResponse.json(
-      { error: "Unauthorized. Admin authentication required." },
+      { error: "Unauthorized. Authentication required." },
       { status: 401 }
     );
   }

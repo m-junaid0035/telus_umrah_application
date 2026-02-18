@@ -178,6 +178,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             Form Options
           </Link>
           <Link
+            href="/admin/settings"
+            className={linkClasses("/admin/settings")}
+            onClick={() => setDrawerOpen(false)}
+          >
+            <Settings className="w-4 h-4" />
+            Agent Pricing
+          </Link>
+          <Link
             href="/admin/additional-services"
             className={linkClasses("/admin/additional-services")}
             onClick={() => setDrawerOpen(false)}

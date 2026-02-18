@@ -8,6 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getCurrentUserAction, logoutUserAction } from "@/actions/authActions";
@@ -18,6 +26,69 @@ import { fetchAllCustomUmrahRequestsAction } from "@/actions/customUmrahRequestA
 import { User, Mail, Phone, MapPin, Calendar, Package, Hotel, FileText, Edit2, Save, X, Loader2, LogOut, Shield, Camera, Upload, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Link from "next/link";
+import Cropper, { type Area } from "react-easy-crop";
+
+type CropArea = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const createImage = (url: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Failed to load image"));
+    image.src = url;
+  });
+
+const getCroppedImageBlob = async (
+  imageSrc: string,
+  cropPixels: CropArea,
+  requestedType: string
+): Promise<Blob> => {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement("canvas");
+  canvas.width = cropPixels.width;
+  canvas.height = cropPixels.height;
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Failed to initialize image editor");
+  }
+
+  context.drawImage(
+    image,
+    cropPixels.x,
+    cropPixels.y,
+    cropPixels.width,
+    cropPixels.height,
+    0,
+    0,
+    cropPixels.width,
+    cropPixels.height
+  );
+
+  const normalizedType =
+    requestedType === "image/png" || requestedType === "image/webp"
+      ? requestedType
+      : "image/jpeg";
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Failed to crop image"));
+          return;
+        }
+        resolve(blob);
+      },
+      normalizedType,
+      normalizedType === "image/png" ? undefined : 0.92
+    );
+  });
+};
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -25,6 +96,12 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarCropOpen, setAvatarCropOpen] = useState(false);
+  const [avatarSource, setAvatarSource] = useState<string | null>(null);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
   const [user, setUser] = useState<any>(null);
   const [packageBookings, setPackageBookings] = useState<any[]>([]);
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
@@ -46,6 +123,14 @@ export default function ProfilePage() {
   useEffect(() => {
     loadUserData();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (avatarSource) {
+        URL.revokeObjectURL(avatarSource);
+      }
+    };
+  }, [avatarSource]);
 
   const loadUserData = async () => {
     try {
@@ -254,6 +339,18 @@ export default function ProfilePage() {
     }
   };
 
+  const resetAvatarEditor = () => {
+    if (avatarSource) {
+      URL.revokeObjectURL(avatarSource);
+    }
+    setAvatarSource(null);
+    setSelectedAvatarFile(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+    setAvatarCropOpen(false);
+  };
+
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -278,17 +375,53 @@ export default function ProfilePage() {
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
+    setSelectedAvatarFile(file);
+    setAvatarSource(objectUrl);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+    setAvatarCropOpen(true);
+    event.target.value = "";
+  };
+
+  const handleConfirmAvatarUpload = async () => {
+    if (!avatarSource || !selectedAvatarFile || !croppedAreaPixels) {
+      toast({
+        title: "Error",
+        description: "Please adjust the crop area before uploading",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setUploadingAvatar(true);
-      
-      // Create FormData and upload to the server
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "profile-pictures");
+
+      const croppedBlob = await getCroppedImageBlob(
+        avatarSource,
+        croppedAreaPixels,
+        selectedAvatarFile.type
+      );
+
+      const mimeType = croppedBlob.type || "image/jpeg";
+      const extension =
+        mimeType === "image/png"
+          ? "png"
+          : mimeType === "image/webp"
+          ? "webp"
+          : "jpg";
+      const croppedFile = new File([croppedBlob], `avatar-${Date.now()}.${extension}`, {
+        type: mimeType,
+      });
+
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", croppedFile);
+      uploadFormData.append("folder", "profile-pictures");
 
       const response = await fetch("/api/upload", {
         method: "POST",
-        body: formData,
+        body: uploadFormData,
       });
 
       const data = await response.json();
@@ -297,14 +430,20 @@ export default function ProfilePage() {
         throw new Error(data.error || "Failed to upload image");
       }
 
-      // Update user avatar with the server URL
-      const updatedUser = { ...user, avatar: data.url };
-      setUser(updatedUser);
-      
+      const profileUpdate = await updateUserProfileAction(user._id || user.id, {
+        avatar: data.url,
+      });
+
+      if (profileUpdate.error) {
+        throw new Error(profileUpdate.error.message?.[0] || "Failed to save profile picture");
+      }
+
+      setUser(profileUpdate.data);
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
+      resetAvatarEditor();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -313,7 +452,6 @@ export default function ProfilePage() {
       });
     } finally {
       setUploadingAvatar(false);
-      event.target.value = "";
     }
   };
 
@@ -935,6 +1073,86 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog
+        open={avatarCropOpen}
+        onOpenChange={(open) => {
+          if (!open && !uploadingAvatar) {
+            resetAvatarEditor();
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Edit Profile Picture</DialogTitle>
+            <DialogDescription>
+              Crop your image to a square for the best profile picture fit.
+            </DialogDescription>
+          </DialogHeader>
+
+          {avatarSource && (
+            <>
+              <div className="relative h-72 w-full overflow-hidden rounded-md bg-black/60">
+                <Cropper
+                  image={avatarSource}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={(_, areaPixels: Area) => {
+                    setCroppedAreaPixels({
+                      x: Math.round(areaPixels.x),
+                      y: Math.round(areaPixels.y),
+                      width: Math.round(areaPixels.width),
+                      height: Math.round(areaPixels.height),
+                    });
+                  }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="avatar-zoom">Zoom</Label>
+                <input
+                  id="avatar-zoom"
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={resetAvatarEditor}
+              disabled={uploadingAvatar}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmAvatarUpload}
+              disabled={uploadingAvatar || !croppedAreaPixels}
+            >
+              {uploadingAvatar ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Crop & Upload"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

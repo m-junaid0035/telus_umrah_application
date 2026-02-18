@@ -59,7 +59,7 @@ export async function deleteUserAction(id: string) {
   }
 }
 
-export async function updateUserProfileAction(userId: string, data: { name?: string; phone?: string; countryCode?: string }) {
+export async function updateUserProfileAction(userId: string, data: { name?: string; phone?: string; countryCode?: string; avatar?: string }) {
   await connectToDatabase();
   try {
     const updatedUser = await updateUserProfile(userId, data);
